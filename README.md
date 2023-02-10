@@ -62,7 +62,7 @@ The nf-core/seqqc pipeline comes with documentation about the pipeline [usage](h
 
 ## Credits
 
-nf-core/seqqc was originally written by Zohaib Anwar, Jimmy Liu, Jun Duan, Aishwarya Sridhar, David Tong, Mathew Nguyen, Miguel Prieto, Michael Trimble, Soyean Kim and William Hsiao.
+nf-core/seqqc was originally written by [CIDGOH](https://cidgoh.ca) genomics group.
 
 We thank the following people for their extensive assistance in the development of this pipeline:
 
