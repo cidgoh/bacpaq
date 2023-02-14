@@ -38,7 +38,7 @@ ch_multiqc_custom_methods_description = params.multiqc_methods_description ? fil
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
 //
 include { INPUT_CHECK } from '../subworkflows/local/input_check'
-
+include { TAXONOMY_QC } from '../subworkflows/local/taxonomy_qc'
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     IMPORT NF-CORE MODULES/SUBWORKFLOWS
@@ -72,14 +72,27 @@ workflow SEQQC {
         ch_input
     )
     ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
+    
 
     //
     // MODULE: Run FastQC
     //
+    ch_reads_fastqc = INPUT_CHECK.out.reads
     FASTQC (
-        INPUT_CHECK.out.reads
+        ch_reads_fastqc
     )
     ch_versions = ch_versions.mix(FASTQC.out.versions.first())
+    //
+    // MODULE: Run sub-workflow taxonomy qc
+    //
+    
+    ch_reads_taxonomy = INPUT_CHECK.out.reads
+    TAXONOMY_QC (
+        ch_reads_taxonomy,
+        params.classified_reads,
+        params.unclassified_reads
+    )    
+    //ch_versions = ch_versions.mix(TAXONOMY_QC.out.versions.first())
 
     CUSTOM_DUMPSOFTWAREVERSIONS (
         ch_versions.unique().collectFile(name: 'collated_versions.yml')
@@ -107,6 +120,7 @@ workflow SEQQC {
         ch_multiqc_logo.toList()
     )
     multiqc_report = MULTIQC.out.report.toList()
+    
 }
 
 /*
