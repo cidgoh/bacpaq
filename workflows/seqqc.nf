@@ -38,6 +38,7 @@ ch_multiqc_custom_methods_description = params.multiqc_methods_description ? fil
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
 //
 include { INPUT_CHECK } from '../subworkflows/local/input_check'
+include { RAW_READS_QC } from '../subworkflows/local/raw_reads_qc'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -62,9 +63,9 @@ include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoft
 def multiqc_report = []
 
 workflow SEQQC {
-
+    
     ch_versions = Channel.empty()
-
+    
     //
     // SUBWORKFLOW: Read in samplesheet, validate and stage input files
     //
@@ -80,6 +81,11 @@ workflow SEQQC {
         INPUT_CHECK.out.reads
     )
     ch_versions = ch_versions.mix(FASTQC.out.versions.first())
+
+    ch_raw_reads_qc = INPUT_CHECK.out.reads
+    RAW_READS_QC(ch_raw_reads_qc)
+
+
 
     CUSTOM_DUMPSOFTWAREVERSIONS (
         ch_versions.unique().collectFile(name: 'collated_versions.yml')
