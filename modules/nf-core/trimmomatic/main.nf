@@ -31,7 +31,7 @@ process TRIMMOMATIC {
     def qual_trim = task.ext.args2 ?: ''
     """
     trimmomatic \\
-        $trimmed \\
+        PE \\
         -threads $task.cpus \\
         -trimlog ${prefix}.log \\
         -summary ${prefix}.summary \\

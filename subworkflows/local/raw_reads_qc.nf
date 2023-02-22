@@ -1,8 +1,10 @@
-include { FASTP                        } from '../../modules/nf-core/fastp'
-include { FASTQC                    } from '../../modules/nf-core/fastqc'
-include { MULTIQC                           } from '../../modules/nf-core/multiqc'
-include { CAT_FASTQ                   } from '../../modules/nf-core/cat/fastq/main'
-include { CAT_CAT } from '../../modules/nf-core/cat/cat/main' 
+include { FASTP                    } from '../../modules/nf-core/fastp'
+include { TRIMMOMATIC              } from '../../modules/nf-core/trimmomatic'
+include { TRIMGALORE               } from '../../modules/nf-core/trimgalore'
+include { FASTQC                   } from '../../modules/nf-core/fastqc'
+include { MULTIQC                  } from '../../modules/nf-core/multiqc'
+include { CAT_FASTQ                } from '../../modules/nf-core/cat/fastq/main'
+include { CAT_CAT                  } from '../../modules/nf-core/cat/cat/main'
 
 
 workflow RAW_READS_QC {
@@ -11,16 +13,24 @@ workflow RAW_READS_QC {
 
     main:
     ch_versions = Channel.empty()
-    if (params.trimming_tool=="fastp") {
+    if (params.trim_tool=="fastp") {
 
         ch_adaptor=Channel.from(params.adapter_fasta)
         FASTP (
             ch_raw_reads_qc, ch_adaptor, params.save_trimmed_fail, params.save_merged
         )
-        // ch_short_reads = FASTP.out.reads
-        // ch_versions = ch_versions.mix(FASTP.out.versions.first())
+        ch_short_reads = FASTP.out.reads
+        ch_versions = ch_versions.mix(FASTP.out.versions.first())
+    }
+    else if (params.trim_tool=="trimommatic") {
+        TRIMMOMATIC (ch_raw_reads_qc)
+        ch_short_reads = TRIMMOMATIC.out.trimmed_reads
+        ch_versions = ch_versions.mix(TRIMMOMATIC.out.versions.first())
     }
     else {
+        TRIMGALORE (ch_raw_reads_qc)
+       // ch_short_reads = TRIMGALORE.out.trimmed_reads
+        ch_versions = ch_versions.mix(TRIMGALORE.out.versions.first())
 
     }
 
@@ -55,7 +65,7 @@ workflow RAW_READS_QC {
     // .mix(ch_fastq.single)
     // .set { ch_cat_fastq }
     // ch_versions = ch_versions.mix(CAT_FASTQ.out.versions.first().ifEmpty(null))
-    
+
 
 }
 

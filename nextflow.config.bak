@@ -14,14 +14,14 @@ params {
  input                      = null
     fasta                      = "test.fa"
     schema_ignore_params = "fasta"
-
+    
     //trimmer options
-    trim_tool                 = "fastp"
+    trimming_tool             = "fastp"
     adapter_fasta             = "/home/dj/work/nf-seqqc/test.fa"
     save_trimmed_fail         = false
     save_merged               = true
 
-    // MultiQC options
+// MultiQC options
     multiqc_config             = null
     multiqc_title              = null
     multiqc_logo               = null
