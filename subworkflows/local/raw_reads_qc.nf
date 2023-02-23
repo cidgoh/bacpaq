@@ -1,11 +1,16 @@
 include { FASTP                    } from '../../modules/nf-core/fastp'
 include { TRIMMOMATIC              } from '../../modules/nf-core/trimmomatic'
 include { TRIMGALORE               } from '../../modules/nf-core/trimgalore'
-include { FASTQC                   } from '../../modules/nf-core/fastqc'
-include { MULTIQC                  } from '../../modules/nf-core/multiqc'
+include { FASTQC as TRIM_FASTQC    } from '../../modules/nf-core/fastqc'
+include { MULTIQC as TRIM_MULTIQC  } from '../../modules/nf-core/multiqc'
+include { RASUSA                   } from '../../modules/nf-core/rasusa'
 include { CAT_FASTQ                } from '../../modules/nf-core/cat/fastq/main'
 include { CAT_CAT                  } from '../../modules/nf-core/cat/cat/main'
 
+ch_multiqc_config          = Channel.fromPath("$projectDir/assets/multiqc_config.yml", checkIfExists: true)
+ch_multiqc_custom_config   = params.multiqc_config ? Channel.fromPath( params.multiqc_config, checkIfExists: true ) : Channel.empty()
+ch_multiqc_logo            = params.multiqc_logo   ? Channel.fromPath( params.multiqc_logo, checkIfExists: true ) : Channel.empty()
+ch_multiqc_custom_methods_description = params.multiqc_methods_description ? file(params.multiqc_methods_description, checkIfExists: true) : file("$projectDir/assets/methods_description_template.yml", checkIfExists: true)
 
 workflow RAW_READS_QC {
     take:
@@ -13,6 +18,19 @@ workflow RAW_READS_QC {
 
     main:
     ch_versions = Channel.empty()
+
+    // use rasusa to randomly subsample sequencing reads
+    if (params.subsampling) {
+
+        ch_genomesize= Channel.of(params.genomesize)
+        ch_raw_reads_qc
+                    .combine(ch_genomesize)
+                    .set { ch_sub_reads_qc }
+        RASUSA (ch_sub_reads_qc, params.depth_cut_off)
+        ch_raw_reads_qc = RASUSA.out.reads
+    }
+
+    // trim reads using fastp, trimommatic or trimgalore
     if (params.trim_tool=="fastp") {
 
         ch_adaptor=Channel.from(params.adapter_fasta)
@@ -23,49 +41,35 @@ workflow RAW_READS_QC {
         ch_versions = ch_versions.mix(FASTP.out.versions.first())
     }
     else if (params.trim_tool=="trimommatic") {
+
         TRIMMOMATIC (ch_raw_reads_qc)
         ch_short_reads = TRIMMOMATIC.out.trimmed_reads
         ch_versions = ch_versions.mix(TRIMMOMATIC.out.versions.first())
     }
-    else {
-        TRIMGALORE (ch_raw_reads_qc)
-       // ch_short_reads = TRIMGALORE.out.trimmed_reads
-        ch_versions = ch_versions.mix(TRIMGALORE.out.versions.first())
+    else if (params.trim_tool=="trimgalore") {
 
+        TRIMGALORE (ch_raw_reads_qc)
+        ch_short_reads = TRIMGALORE.out.reads
+        ch_versions = ch_versions.mix(TRIMGALORE.out.versions.first())
     }
 
-    // INPUT_CHECK (
-    //     ch_input
-    // )
-    // .reads
-    // .map {
-    //     meta, fastq ->
-    //         new_id = meta.id - ~/_T\d+/
-    //         [ meta + [id: new_id], fastq ]
-    // }
-    // .groupTuple()
-    // .branch {
-    //     meta, fastq ->
-    //         single  : fastq.size() == 1
-    //             return [ meta, fastq.flatten() ]
-    //         multiple: fastq.size() > 1
-    //             return [ meta, fastq.flatten() ]
-    // }
-    // .set { ch_fastq }
-    // ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
+    // FASTQC check for trimmed reads
+    TRIM_FASTQC (
+        ch_short_reads
+    )
+    ch_versions = ch_versions.mix(TRIM_FASTQC.out.versions.first())
 
-    // ch_fastq.view()
-    // //
-    // // MODULE: Concatenate FastQ files from same sample if required
-    // //
-    // CAT_FASTQ (
-    //     ch_fastq.multiple
-    // )
-    // .reads
-    // .mix(ch_fastq.single)
-    // .set { ch_cat_fastq }
-    // ch_versions = ch_versions.mix(CAT_FASTQ.out.versions.first().ifEmpty(null))
 
+    // MultiQC report for trimmed reads
+    ch_multiqc_files = Channel.empty()
+    ch_multiqc_files = ch_multiqc_files.mix(TRIM_FASTQC.out.zip.collect{it[1]}.ifEmpty([]))
+
+    TRIM_MULTIQC (
+        ch_multiqc_files.collect(),
+        ch_multiqc_config.toList(),
+        ch_multiqc_custom_config.toList(),
+        ch_multiqc_logo.toList()
+    )
 
 }
 
