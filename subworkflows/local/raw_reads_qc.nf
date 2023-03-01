@@ -4,6 +4,7 @@ include { TRIMGALORE               } from '../../modules/nf-core/trimgalore'
 include { FASTQC as TRIM_FASTQC    } from '../../modules/nf-core/fastqc'
 include { MULTIQC as TRIM_MULTIQC  } from '../../modules/nf-core/multiqc'
 include { RASUSA                   } from '../../modules/nf-core/rasusa'
+include { CONFINDR                 } from '../../modules/local/confindr'
 include { CAT_FASTQ                } from '../../modules/nf-core/cat/fastq/main'
 include { CAT_CAT                  } from '../../modules/nf-core/cat/cat/main'
 
@@ -33,9 +34,9 @@ workflow RAW_READS_QC {
     // trim reads using fastp, trimommatic or trimgalore
     if (params.trim_tool=="fastp") {
 
-        ch_adaptor=Channel.from(params.adapter_fasta)
+        adaptor=file params.adapter_fasta
         FASTP (
-            ch_raw_reads_qc, ch_adaptor, params.save_trimmed_fail, params.save_merged
+            ch_raw_reads_qc, adaptor, params.save_trimmed_fail, params.save_merged
         )
         ch_short_reads = FASTP.out.reads
         ch_versions = ch_versions.mix(FASTP.out.versions.first())
@@ -70,6 +71,9 @@ workflow RAW_READS_QC {
         ch_multiqc_custom_config.toList(),
         ch_multiqc_logo.toList()
     )
+
+    //Use confindr to detect contamination
+    CONFINDR(ch_raw_reads_qc, params.confindr_db)
 
 }
 
