@@ -14,6 +14,7 @@ include { BWA_MEM } from '../../modules/nf-core/bwa/mem/main'
 include { BWA_INDEX } from '../../modules/nf-core/bwa/index/main'
 include { CENTRIFUGE_CENTRIFUGE } from '../../modules/nf-core/centrifuge/centrifuge/main'
 include { CENTRIFUGE_KREPORT } from '../../modules/nf-core/centrifuge/kreport/main'
+include { SAMTOOLS_INDEX } from '../../modules/nf-core/samtools/index/main'
 include { SAMTOOLS_FLAGSTAT } from '../../modules/nf-core/samtools/flagstat/main'
 include { SAMTOOLS_VIEW } from '../../modules/nf-core/samtools/view/main'
 include { SAMTOOLS_FASTQ } from '../../modules/nf-core/samtools/fastq/main'
@@ -27,56 +28,56 @@ workflow TAXONOMY_QC {
 
     main:
     ch_versions = Channel.empty()
-    if (params.classifier=="centrifuge"){
-        ch_centrifuge_db=Channel.from(params.centrifuge_db)
-        CENTRIFUGE_CENTRIFUGE(
-            ch_reads_taxonomy,
-            ch_centrifuge_db,
-            params.save_unaligned,
-            params.save_aligned,
-            params.sam_format
-        )
-        CENTRIFUGE_KREPORT(
-            CENTRIFUGE_CENTRIFUGE.out.report,
-            ch_centrifuge_db
-        )
-    }
-    else{
-        ch_kraken2_db=Channel.from(params.kraken2_db)
-        if (!params.skip_kraken2) {
-            KRAKEN2_KRAKEN2(
-                ch_reads_taxonomy,
-                ch_kraken2_db,
-                classified_reads,
-                unclassified_reads
-            )
-            if (!params.skip_combinekreports) {
-                KRAKENTOOLS_COMBINEKREPORTS(
-                    KRAKEN2_KRAKEN2.out.report.collect()
-                )
+    // if (params.classifier=="centrifuge"){
+    //     ch_centrifuge_db=Channel.from(params.centrifuge_db)
+    //     CENTRIFUGE_CENTRIFUGE(
+    //         ch_reads_taxonomy,
+    //         ch_centrifuge_db,
+    //         params.save_unaligned,
+    //         params.save_aligned,
+    //         params.sam_format
+    //     )
+    //     CENTRIFUGE_KREPORT(
+    //         CENTRIFUGE_CENTRIFUGE.out.report,
+    //         ch_centrifuge_db
+    //     )
+    // }
+    // else{
+    //     ch_kraken2_db=Channel.from(params.kraken2_db)
+    //     if (!params.skip_kraken2) {
+    //         KRAKEN2_KRAKEN2(
+    //             ch_reads_taxonomy,
+    //             ch_kraken2_db,
+    //             classified_reads,
+    //             unclassified_reads
+    //         )
+    //         if (!params.skip_combinekreports) {
+    //             KRAKENTOOLS_COMBINEKREPORTS(
+    //                 KRAKEN2_KRAKEN2.out.report.collect()
+    //             )
                     
-            }
-            if (!params.skip_kreport2krona) {
-                KRAKENTOOLS_KREPORT2KRONA(
-                    KRAKEN2_KRAKEN2.out.report
-                )
+    //         }
+    //         if (!params.skip_kreport2krona) {
+    //             KRAKENTOOLS_KREPORT2KRONA(
+    //                 KRAKEN2_KRAKEN2.out.report
+    //             )
         
-            }
-            if (!params.skip_bracken) {
-                BRACKEN_BRACKEN(
-                    KRAKEN2_KRAKEN2.out.report,
-                    ch_kraken2_db
-                )
-            }
-            if (!params.skip_combinebrackenoutputs) {
-                BRACKEN_COMBINEBRACKENOUTPUTS(
-                    BRACKEN_BRACKEN.out.reports.collect()
-                )
-            }
+    //         }
+    //         if (!params.skip_bracken) {
+    //             BRACKEN_BRACKEN(
+    //                 KRAKEN2_KRAKEN2.out.report,
+    //                 ch_kraken2_db
+    //             )
+    //         }
+    //         if (!params.skip_combinebrackenoutputs) {
+    //             BRACKEN_COMBINEBRACKENOUTPUTS(
+    //                 BRACKEN_BRACKEN.out.reports.collect()
+    //             )
+    //         }
 
-        }
+    //     }
          
-    }
+    // }
     
 
 
@@ -106,15 +107,30 @@ workflow TAXONOMY_QC {
             bam_format  = params.bam_format //true
             cigar_paf_format = params.cigar_paf_format //false
             cigar_bam = params.cigar_bam //false
-            MINIMAP2_ALIGN ( reads, ref_genome, bam_format, cigar_paf_format, cigar_bam )
+            MINIMAP2_ALIGN ( 
+                reads, 
+                ref_genome, 
+                bam_format, 
+                cigar_paf_format, 
+                cigar_bam 
+            )
             ch_mapped_bam=MINIMAP2_ALIGN.out.bam
         }
 
-        // SAMTOOLS_FLAGSTAT(
-        //     ch_mapped_bam)
+        SAMTOOLS_INDEX(
+            ch_mapped_bam
+        )
+        ch_mapped_bai=SAMTOOLS_INDEX.out.bai
 
-        // SAMTOOLS_VIEW(
-        //     ch_mapped_bam)
+        SAMTOOLS_FLAGSTAT(
+            ch_mapped_bam.combine(ch_mapped_bai, by: 0)
+        )
+
+        SAMTOOLS_VIEW(
+            ch_mapped_bam.combine(ch_mapped_bai, by: 0),
+            ref_genome,
+            []
+        )
 
         // SAMTOOLS_FASTQ(
         //     SAMTOOLS_VIEW.out.bam)
