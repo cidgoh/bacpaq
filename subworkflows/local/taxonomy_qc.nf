@@ -83,7 +83,15 @@ workflow TAXONOMY_QC {
 
     if (!params.skip_dehosting){
         if (params.dehosting_aligner=='bwa') {
-                
+
+            BWA_INDEX(
+                [[id: params.ref_genome_id], reference_genome]
+            )
+            BWA_MEM(
+                ch_reads_taxonomy,
+                BWA_INDEX.out.index,
+                params.sort_bam
+            )
         }
         else {
             // Minimap2

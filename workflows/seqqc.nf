@@ -90,7 +90,8 @@ workflow SEQQC {
     TAXONOMY_QC (
         ch_reads_taxonomy,
         params.classified_reads,
-        params.unclassified_reads
+        params.unclassified_reads,
+        params.reference_genome
     )    
     //ch_versions = ch_versions.mix(TAXONOMY_QC.out.versions.first())
 
