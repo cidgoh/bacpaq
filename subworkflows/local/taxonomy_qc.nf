@@ -14,6 +14,7 @@ include { BWA_MEM } from '../../modules/nf-core/bwa/mem/main'
 include { BWA_INDEX } from '../../modules/nf-core/bwa/index/main'
 include { CENTRIFUGE_CENTRIFUGE } from '../../modules/nf-core/centrifuge/centrifuge/main'
 include { CENTRIFUGE_KREPORT } from '../../modules/nf-core/centrifuge/kreport/main'
+include { SAMTOOLS_INDEX } from '../../modules/nf-core/samtools/index/main'
 include { SAMTOOLS_FLAGSTAT } from '../../modules/nf-core/samtools/flagstat/main'
 include { SAMTOOLS_VIEW } from '../../modules/nf-core/samtools/view/main'
 include { SAMTOOLS_FASTQ } from '../../modules/nf-core/samtools/fastq/main'
@@ -78,7 +79,6 @@ workflow TAXONOMY_QC {
         }
          
     }
-    
 
 
     if (!params.skip_dehosting){
@@ -98,16 +98,18 @@ workflow TAXONOMY_QC {
             ch_mapped_bam=BWA_MEM.out.bam
         }
         else {
-            // Minimap2
-            // MINIMAP2_INDEX(
-            //     [[id: params.ref_genome_id], reference_genome]
-            // )
             ref_genome = reference_genome
             reads = ch_reads_taxonomy
             bam_format  = params.bam_format //true
             cigar_paf_format = params.cigar_paf_format //false
             cigar_bam = params.cigar_bam //false
-            MINIMAP2_ALIGN ( reads, ref_genome, bam_format, cigar_paf_format, cigar_bam )
+            MINIMAP2_ALIGN ( 
+                reads, 
+                ref_genome, 
+                bam_format, 
+                cigar_paf_format, 
+                cigar_bam 
+            )
             ch_mapped_bam=MINIMAP2_ALIGN.out.bam
         }
 
