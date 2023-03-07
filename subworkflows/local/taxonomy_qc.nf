@@ -17,6 +17,7 @@ include { CENTRIFUGE_KREPORT } from '../../modules/nf-core/centrifuge/kreport/ma
 include { SAMTOOLS_FLAGSTAT } from '../../modules/nf-core/samtools/flagstat/main'
 include { SAMTOOLS_VIEW } from '../../modules/nf-core/samtools/view/main'
 include { SAMTOOLS_FASTQ } from '../../modules/nf-core/samtools/fastq/main'
+include { SAMTOOLS_INDEX } from '../../modules/nf-core/samtools/index/main'
 
 workflow TAXONOMY_QC {
     take:
@@ -110,14 +111,22 @@ workflow TAXONOMY_QC {
             ch_mapped_bam=MINIMAP2_ALIGN.out.bam
         }
 
-        // SAMTOOLS_FLAGSTAT(
-        //     ch_mapped_bam)
+        SAMTOOLS_INDEX(
+            ch_mapped_bam
+            )
+        bam_index = SAMTOOLS_INDEX.out.bai
 
-        // SAMTOOLS_VIEW(
-        //     ch_mapped_bam)
+        SAMTOOLS_FLAGSTAT(
+            ch_mapped_bam.combine(bam_index, by: 0)
+            )
 
-        // SAMTOOLS_FASTQ(
-        //     SAMTOOLS_VIEW.out.bam)
+        SAMTOOLS_VIEW(
+            ch_mapped_bam.combine(bam_index, by: 0),
+            [],
+            [])
+
+        SAMTOOLS_FASTQ(
+             SAMTOOLS_VIEW.out.bam, false)
     }
     // versions = TAXONOMY_QC.out.versions.first()
     
