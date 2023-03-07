@@ -10,6 +10,8 @@ include { BRACKEN_BRACKEN } from '../../modules/nf-core/bracken/bracken/main'
 include { BRACKEN_COMBINEBRACKENOUTPUTS } from '../../modules/nf-core/bracken/combinebrackenoutputs/main'
 include { MINIMAP2_ALIGN } from '../../modules/nf-core/minimap2/align/main'
 include { MINIMAP2_INDEX } from '../../modules/nf-core/minimap2/index/main'
+include { BWA_MEM } from '../../modules/nf-core/bwa/mem/main'
+include { BWA_INDEX } from '../../modules/nf-core/bwa/index/main'
 include { CENTRIFUGE_CENTRIFUGE } from '../../modules/nf-core/centrifuge/centrifuge/main'
 include { CENTRIFUGE_KREPORT } from '../../modules/nf-core/centrifuge/kreport/main'
 
@@ -19,6 +21,7 @@ workflow TAXONOMY_QC {
     ch_reads_taxonomy
     classified_reads
     unclassified_reads 
+    reference_genome
 
     main:
     ch_versions = Channel.empty()
@@ -37,7 +40,6 @@ workflow TAXONOMY_QC {
         )
     }
     else{
-        
         ch_kraken2_db=Channel.from(params.kraken2_db)
         if (!params.skip_kraken2) {
             KRAKEN2_KRAKEN2(
@@ -76,9 +78,15 @@ workflow TAXONOMY_QC {
     
 
 
-    //if (!params.skip_dehosting){
+    if (!params.skip_dehosting){
+        if (params.dehosting_aligner=='bwa') {
 
-    //}
+        }
+        else {
+            // Minimap2
+        }
+        // samtools
+    }
     
     emit:
     classified_reads                           // channel: [ val(meta), [ reads ] ]
