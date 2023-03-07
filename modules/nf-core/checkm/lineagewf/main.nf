@@ -26,7 +26,7 @@ process CHECKM_LINEAGEWF {
     prefix    = task.ext.prefix ?: "${meta.id}"
     checkm_db = db ? "export CHECKM_DATA_PATH=${db}" : ""
     """
-    $checkm_db
+    mkdir $checkm_db
 
     checkm \\
         lineage_wf \\
