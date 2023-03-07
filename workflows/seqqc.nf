@@ -38,6 +38,8 @@ ch_multiqc_custom_methods_description = params.multiqc_methods_description ? fil
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
 //
 include { INPUT_CHECK } from '../subworkflows/local/input_check'
+include { WGS_ASSEMBLY } from '../subworkflows/local/wgs_assembly'
+include { ASSEMBLY_QC } from '../subworkflows/local/assembly_qc'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -85,6 +87,16 @@ workflow SEQQC {
         ch_versions.unique().collectFile(name: 'collated_versions.yml')
     )
 
+    // SUBWORKFLOW: Run WGS ASSEMBLY on reads
+    WGS_ASSEMBLY(
+        INPUT_CHECK.out.reads
+    )
+
+    // SUBWORKFLOW: RUN ASSEMBLY QC on assemblies
+    ASSEMBLY_QC(
+        WGS_ASSEMBLY.out.contigs
+    )
+
     //
     // MODULE: MultiQC
     //
@@ -100,13 +112,13 @@ workflow SEQQC {
     ch_multiqc_files = ch_multiqc_files.mix(CUSTOM_DUMPSOFTWAREVERSIONS.out.mqc_yml.collect())
     ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect{it[1]}.ifEmpty([]))
 
-    MULTIQC (
-        ch_multiqc_files.collect(),
-        ch_multiqc_config.toList(),
-        ch_multiqc_custom_config.toList(),
-        ch_multiqc_logo.toList()
-    )
-    multiqc_report = MULTIQC.out.report.toList()
+    // MULTIQC (
+    //     ch_multiqc_files.collect(),
+    //     ch_multiqc_config.toList(),
+    //     ch_multiqc_custom_config.toList(),
+    //     ch_multiqc_logo.toList()
+    // )
+    // multiqc_report = MULTIQC.out.report.toList()
 }
 
 /*
