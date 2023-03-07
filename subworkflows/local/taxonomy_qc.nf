@@ -14,7 +14,6 @@ include { BWA_MEM } from '../../modules/nf-core/bwa/mem/main'
 include { BWA_INDEX } from '../../modules/nf-core/bwa/index/main'
 include { CENTRIFUGE_CENTRIFUGE } from '../../modules/nf-core/centrifuge/centrifuge/main'
 include { CENTRIFUGE_KREPORT } from '../../modules/nf-core/centrifuge/kreport/main'
-include { MINIMAP2_ALIGN } from '../../modules/nf-core/minimap2/align/main'
 include { SAMTOOLS_FLAGSTAT } from '../../modules/nf-core/samtools/flagstat/main'
 include { SAMTOOLS_VIEW } from '../../modules/nf-core/samtools/view/main'
 include { SAMTOOLS_FASTQ } from '../../modules/nf-core/samtools/fastq/main'
@@ -87,7 +86,7 @@ workflow TAXONOMY_QC {
             BWA_INDEX(
                 [[id: params.ref_genome_id], reference_genome]
             )
-            ref_genome = MINIMAP2_INDEX.out.index
+            ref_genome = BWA_INDEX.out.index
             reads = ch_reads_taxonomy
             sorted=params.bwa_sort_bam
             BWA_MEM(
@@ -111,19 +110,19 @@ workflow TAXONOMY_QC {
             ch_mapped_bam=MINIMAP2_ALIGN.out.bam
         }
 
-        SAMTOOLS_FLAGSTAT(
-            ch_mapped_bam)
+        // SAMTOOLS_FLAGSTAT(
+        //     ch_mapped_bam)
 
-        SAMTOOLS_VIEW(
-            ch_mapped_bam)
+        // SAMTOOLS_VIEW(
+        //     ch_mapped_bam)
 
-        SAMTOOLS_FASTQ(
-            SAMTOOLS_VIEW.out.bam)
+        // SAMTOOLS_FASTQ(
+        //     SAMTOOLS_VIEW.out.bam)
     }
-    versions = TAXONOMY_QC.out.versions.first()
+    // versions = TAXONOMY_QC.out.versions.first()
     
     emit:
     classified_reads                           // channel: [ val(meta), [ reads ] ]
     unclassified_reads                         // channel: [ val(meta), [ reads ] ]
-    versions                                  // channel: [ versions.yml ]
+    // versions                                  // channel: [ versions.yml ]
 }
