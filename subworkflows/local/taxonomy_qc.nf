@@ -87,15 +87,22 @@ workflow TAXONOMY_QC {
             BWA_INDEX(
                 [[id: params.ref_genome_id], reference_genome]
             )
+            ref_genome = MINIMAP2_INDEX.out.index
+            reads = ch_reads_taxonomy
+            sorted=params.bwa_sort_bam
             BWA_MEM(
-                ch_reads_taxonomy,
-                BWA_INDEX.out.index,
-                params.sort_bam
+                reads,
+                ref_genome,
+                sorted
             )
+            ch_mapped_bam=BWA_MEM.out.bam
         }
         else {
             // Minimap2
-            
+            MINIMAP2_INDEX(
+                [[id: params.ref_genome_id], reference_genome]
+            )
+            ref_genome = MINIMAP2_INDEX.out.index
             reads = ch_reads_taxonomy
             bam_format  = params.bam_format //true
             cigar_paf_format = params.cigar_paf_format //false
@@ -112,7 +119,6 @@ workflow TAXONOMY_QC {
 
         SAMTOOLS_FASTQ(
             SAMTOOLS_VIEW.out.bam)
-        // samtools
     }
     versions = TAXONOMY_QC.out.versions.first()
     
