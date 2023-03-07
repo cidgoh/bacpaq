@@ -103,7 +103,6 @@ workflow TAXONOMY_QC {
             // )
             ref_genome = reference_genome
             reads = ch_reads_taxonomy
-            println reads
             bam_format  = params.bam_format //true
             cigar_paf_format = params.cigar_paf_format //false
             cigar_bam = params.cigar_bam //false
