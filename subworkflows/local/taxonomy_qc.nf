@@ -126,9 +126,9 @@ workflow TAXONOMY_QC {
             ch_mapped_bam.combine(bam_index, by: 0),
             [],
             [])
-
+        interleaved=params.interleaved
         SAMTOOLS_FASTQ(
-             SAMTOOLS_VIEW.out.bam, false)
+             SAMTOOLS_VIEW.out.bam, interleaved)
     }
     // versions = TAXONOMY_QC.out.versions.first()
     
