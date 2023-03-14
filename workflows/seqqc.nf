@@ -42,6 +42,8 @@ include { WGS_ASSEMBLY } from '../subworkflows/local/wgs_assembly'
 include { ASSEMBLY_QC } from '../subworkflows/local/assembly_qc'
 include { RSMLST } from '../subworkflows/local/rmlst'
 include { TAXONOMY_QC } from '../subworkflows/local/taxonomy_qc'
+include { RAW_READS_QC } from '../subworkflows/local/raw_reads_qc'
+
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     IMPORT NF-CORE MODULES/SUBWORKFLOWS
@@ -75,10 +77,10 @@ workflow SEQQC {
         ch_input
     )
     ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
-    
+
 
     //
-    // MODULE: Run FastQC
+    // SUBWORKFLOW: RAW_READS_QC (Perform resampling, trimming, QC check for raw reads )
     //
     //ch_reads_fastqc = INPUT_CHECK.out.reads
     //FASTQC (
@@ -88,13 +90,20 @@ workflow SEQQC {
     //
     // MODULE: Run sub-workflow taxonomy qc
     //
-    
+
     ch_reads_taxonomy = INPUT_CHECK.out.reads
     TAXONOMY_QC (
         ch_reads_taxonomy,
         params.reference_genome
-    )    
+    )
     //ch_versions = ch_versions.mix(TAXONOMY_QC.out.versions.first())
+    ch_raw_reads_qc = INPUT_CHECK.out.reads
+    RAW_READS_QC(ch_raw_reads_qc)
+
+
+
+
+
 
     CUSTOM_DUMPSOFTWAREVERSIONS (
         ch_versions.unique().collectFile(name: 'collated_versions.yml')
@@ -109,7 +118,7 @@ workflow SEQQC {
     RSMLST(
         WGS_ASSEMBLY.out.contigs
 
-    )    
+    )
 
     // SUBWORKFLOW: RUN ASSEMBLY QC on assemblies
     ASSEMBLY_QC(
@@ -132,13 +141,13 @@ workflow SEQQC {
     //ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect{it[1]}.ifEmpty([]))
 
     MULTIQC (
-        ch_multiqc_files.collect(), 
+        ch_multiqc_files.collect(),
         ch_multiqc_config.toList(),
         ch_multiqc_custom_config.toList(),
         ch_multiqc_logo.toList()
     )
     multiqc_report = MULTIQC.out.report.toList()
-    
+
 }
 
 /*

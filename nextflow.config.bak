@@ -11,67 +11,22 @@ params {
 
     // TODO nf-core: Specify your pipeline's command line flags
     // Input options
-    input                      = null
-    classifier                 = 'kraken2'
+ input                      = null
     fasta                      = "test.fa"
-    schema_ignore_params       = "fasta"
-
-    //rasusa subsampling options
-    subsampling               = true
-    depth_cut_off             = 1
-    genomesize                = 10000000
-
-    //confindr options
-    confindr_db               = "$HOME/object_database/confindr/confindr_db"
-
+    schema_ignore_params = "fasta"
+    
     //trimmer options
-    trim_tool                 = "fastp"
-    adapter_fasta             = "https://object-arbutus.cloud.computecanada.ca/cidgohshare/database/adaptors/test.fa"
+    trimming_tool             = "fastp"
+    adapter_fasta             = "/home/dj/work/nf-seqqc/test.fa"
     save_trimmed_fail         = false
     save_merged               = true
 
-    // MultiQC options
+// MultiQC options
     multiqc_config             = null
     multiqc_title              = null
     multiqc_logo               = null
     max_multiqc_email_size     = '25.MB'
     multiqc_methods_description = null
-
-// Taxonomy module options
-    skip_kraken                = false
-    skip_combinekreports       = false
-    skip_kreport2krona         = false
-    skip_bracken               = false
-    skip_kraken2               = false
-    skip_combinebrackenoutputs = false
-    skip_dehosting             = false
-
-// kraken2 options
-    kraken2_db                 = "/project/cidgoh-object-storage/database/minikraken2/minikraken2_v2_8GB_201904_UPDATE"
-    classified_reads           = true
-    unclassified_reads         = true
-
-// centrifuge options
-    centrifuge_db              = "/project/cidgoh-object-storage/database/centrifuge/"
-    save_unaligned             = true
-    save_aligned               = true
-    sam_format                 = true
-
-// Dehosting options
-    dehosting_aligner          = 'minimap2'
-    reference_genome           = "/project/cidgoh-object-storage/database/reference_genomes/human/GRCh38.p14/GCF_000001405.40/GCF_000001405.40_GRCh38.p14_genomic.fna"
-    ref_genome_id              = 'test'
-
-    // bwa options
-    bwa_sort_bam               = 'sort'
-
-    // minimap2 options
-    bam_format                 = true
-    cigar_paf_format           = false
-    cigar_bam                  = false
-
-    // samtools options
-    interleaved                = false
 
     // Boilerplate options
     outdir                     = null
@@ -88,21 +43,6 @@ params {
     show_hidden_params         = false
     schema_ignore_params       = 'genomes'
 
-    // Shovill options
-    assembler                  = 'spades'
-
-    // CheckM options
-    checkm_db                  = false
-
-    // QUAST options
-    reference                  = false
-    reference_gff              = false
-    combine_quast              = false
-
-    // BUSCO options
-    busco_lineage              = "auto"
-    busco_lineages_path        = false
-    busco_config               = false
 
     // Config options
     custom_config_version      = 'master'
@@ -143,7 +83,7 @@ try {
 profiles {
     debug { process.beforeScript = 'echo $HOSTNAME' }
     conda {
-        conda.enabled          = false
+        conda.enabled          = true
         docker.enabled         = false
         singularity.enabled    = false
         podman.enabled         = false
@@ -206,7 +146,6 @@ profiles {
     }
     test      { includeConfig 'conf/test.config'      }
     test_full { includeConfig 'conf/test_full.config' }
-    eagle { includeConfig 'conf/eagle.config' }
 }
 
 
