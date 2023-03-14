@@ -40,6 +40,7 @@ ch_multiqc_custom_methods_description = params.multiqc_methods_description ? fil
 include { INPUT_CHECK } from '../subworkflows/local/input_check'
 include { WGS_ASSEMBLY } from '../subworkflows/local/wgs_assembly'
 include { ASSEMBLY_QC } from '../subworkflows/local/assembly_qc'
+include { RSMLST } from '../subworkflows/local/rmlst'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -91,6 +92,12 @@ workflow SEQQC {
     WGS_ASSEMBLY(
         INPUT_CHECK.out.reads
     )
+
+    // SUBWORKFLOW: Do ribosomal MLST on assembled contigs, using BIGSdb Restful API
+    RSMLST(
+        WGS_ASSEMBLY.out.contigs
+
+    )    
 
     // SUBWORKFLOW: RUN ASSEMBLY QC on assemblies
     ASSEMBLY_QC(
