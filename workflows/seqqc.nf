@@ -77,11 +77,11 @@ workflow SEQQC {
     //
     // MODULE: Run FastQC
     //
-    ch_reads_fastqc = INPUT_CHECK.out.reads
-    FASTQC (
-        ch_reads_fastqc
-    )
-    ch_versions = ch_versions.mix(FASTQC.out.versions.first())
+    //ch_reads_fastqc = INPUT_CHECK.out.reads
+    //FASTQC (
+    //    ch_reads_fastqc
+    //)
+    //ch_versions = ch_versions.mix(FASTQC.out.versions.first())
     //
     // MODULE: Run sub-workflow taxonomy qc
     //
@@ -89,8 +89,6 @@ workflow SEQQC {
     ch_reads_taxonomy = INPUT_CHECK.out.reads
     TAXONOMY_QC (
         ch_reads_taxonomy,
-        params.classified_reads,
-        params.unclassified_reads,
         params.reference_genome
     )    
     //ch_versions = ch_versions.mix(TAXONOMY_QC.out.versions.first())
@@ -112,10 +110,10 @@ workflow SEQQC {
     ch_multiqc_files = ch_multiqc_files.mix(ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'))
     ch_multiqc_files = ch_multiqc_files.mix(ch_methods_description.collectFile(name: 'methods_description_mqc.yaml'))
     ch_multiqc_files = ch_multiqc_files.mix(CUSTOM_DUMPSOFTWAREVERSIONS.out.mqc_yml.collect())
-    ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect{it[1]}.ifEmpty([]))
+    //ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect{it[1]}.ifEmpty([]))
 
     MULTIQC (
-        ch_multiqc_files.collect(),
+        ch_multiqc_files.collect(), 
         ch_multiqc_config.toList(),
         ch_multiqc_custom_config.toList(),
         ch_multiqc_logo.toList()
