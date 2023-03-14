@@ -9,7 +9,7 @@ process RASUSA {
 
     input:
     tuple val(meta), path(reads), val(genome_size)
-    val   depth_cutoff
+    each from depth_cutoff
 
     output:
     tuple val(meta), path('*.fastq.gz'), emit: reads
@@ -21,14 +21,14 @@ process RASUSA {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def output   = meta.single_end ? "--output ${prefix}.fastq.gz" : "--output ${prefix}_1.fastq.gz ${prefix}_2.fastq.gz"
+    def output   = meta.single_end ? "--output ${prefix}-${depth_cutoff}.fastq.gz" : "--output ${prefix}-${depth_cutoff}_1.fastq.gz ${prefix}-${depth_cutoff}_2.fastq.gz"
     """
     rasusa \\
         $args \\
         --coverage $depth_cutoff \\
         --genome-size $genome_size \\
         --input $reads \\
-        $output
+        $output 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         rasusa: \$(rasusa --version 2>&1 | sed -e "s/rasusa //g")

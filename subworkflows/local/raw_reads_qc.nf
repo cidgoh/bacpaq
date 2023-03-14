@@ -7,6 +7,7 @@ include { MULTIQC as TRIM_MULTIQC  } from '../../modules/nf-core/multiqc'
 include { MULTIQC as RAW_MULTIQC  } from '../../modules/nf-core/multiqc'
 include { RASUSA                   } from '../../modules/nf-core/rasusa'
 include { CONFINDR                 } from '../../modules/local/confindr'
+include { AGGREGATE_CONFINDR_RESULTS                } from '../../modules/local/aggregate_confindr_results'
 include { CAT_FASTQ                } from '../../modules/nf-core/cat/fastq/main'
 include { CAT_CAT                  } from '../../modules/nf-core/cat/cat/main'
 
@@ -26,6 +27,12 @@ ch_multiqc_custom_config   = params.multiqc_config ? Channel.fromPath( params.mu
 ch_multiqc_logo            = params.multiqc_logo   ? Channel.fromPath( params.multiqc_logo, checkIfExists: true ) : Channel.empty()
 ch_multiqc_custom_methods_description = params.multiqc_methods_description ? file(params.multiqc_methods_description, checkIfExists: true) : file("$projectDir/assets/methods_description_template.yml", checkIfExists: true)
 
+//if (params.depth_cut_off) {
+//            def values = params.depth_cut_off.split(',')
+//            println values[1]
+//            ch_depth = Channel.of(values)
+//            ch_depth.view()
+//        }
 
 workflow RAW_READS_QC {
     take:
@@ -38,10 +45,13 @@ workflow RAW_READS_QC {
     if (params.subsampling) {
 
         ch_genomesize= Channel.of(params.genomesize)
+       
         ch_raw_reads_qc
                     .combine(ch_genomesize)
                     .set { ch_sub_reads_qc }
+        
         RASUSA (ch_sub_reads_qc, params.depth_cut_off)
+
         ch_raw_reads_qc = RASUSA.out.reads
     }
 
@@ -84,7 +94,14 @@ workflow RAW_READS_QC {
     ch_versions = ch_versions.mix(TRIM_FASTQC.out.versions.first())
 
      //Use confindr to detect contamination
-    CONFINDR(ch_raw_reads_qc, params.confindr_db)
+    ch_confindr_results = CONFINDR(ch_raw_reads_qc, params.confindr_db)
+    ch_versions = ch_versions.mix(CONFINDR.out.versions.first())
+
+    //Aggregate confindr results
+    ch_test = Channel.empty()
+    ch_test = ch_test.mix(CONFINDR.out.report.collect({it[1]}))
+    ch_test.view()
+    AGGREGATE_CONFINDR_RESULTS(ch_test)
 
     // MultiQC report for raw reads
     ch_raw_multiqc_files = Channel.empty()

@@ -7,7 +7,7 @@ process AGGREGATE_CONFINDR_RESULTS {
         'quay.io/biocontainers/python:3.8.3' }"
 
     input:
-    path conf_results
+    path(conf_results)
 
     output:
     path '*.csv'       , emit: csv
