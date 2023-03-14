@@ -9,7 +9,7 @@ process RASUSA {
 
     input:
     tuple val(meta), path(reads), val(genome_size)
-    each from depth_cutoff
+    val depth_cutoff
 
     output:
     tuple val(meta), path('*.fastq.gz'), emit: reads
