@@ -4,10 +4,8 @@
 
 
 include { KRAKEN2_KRAKEN2               } from '../../modules/nf-core/kraken2/kraken2/main'
-include { KRAKENTOOLS_COMBINEKREPORTS   } from '../../modules/nf-core/krakentools/combinekreports/main'
 include { KRAKENTOOLS_KREPORT2KRONA     } from '../../modules/nf-core/krakentools/kreport2krona/main'
 include { BRACKEN_BRACKEN               } from '../../modules/nf-core/bracken/bracken/main'
-include { BRACKEN_COMBINEBRACKENOUTPUTS } from '../../modules/nf-core/bracken/combinebrackenoutputs/main'
 include { MINIMAP2_ALIGN                } from '../../modules/nf-core/minimap2/align/main'
 include { MINIMAP2_INDEX                } from '../../modules/nf-core/minimap2/index/main'
 include { BWA_MEM                       } from '../../modules/nf-core/bwa/mem/main'
@@ -16,11 +14,11 @@ include { CENTRIFUGE_CENTRIFUGE         } from '../../modules/nf-core/centrifuge
 include { CENTRIFUGE_KREPORT            } from '../../modules/nf-core/centrifuge/kreport/main'
 include { KRONA_KTUPDATETAXONOMY        } from '../../modules/nf-core/krona/ktupdatetaxonomy/main'
 include { KRONA_KTIMPORTTAXONOMY        } from '../../modules/nf-core/krona/ktimporttaxonomy/main'
+include { KRONA_KTIMPORTTEXT            } from '../../modules/nf-core/krona/ktimporttext/main'
 include { SAMTOOLS_INDEX                } from '../../modules/nf-core/samtools/index/main'
 include { SAMTOOLS_FLAGSTAT             } from '../../modules/nf-core/samtools/flagstat/main'
 include { SAMTOOLS_VIEW                 } from '../../modules/nf-core/samtools/view/main'
 include { SAMTOOLS_FASTQ                } from '../../modules/nf-core/samtools/fastq/main'
-include { SAMTOOLS_INDEX                } from '../../modules/nf-core/samtools/index/main'
 
 workflow TAXONOMY_QC {
     take:
@@ -51,22 +49,16 @@ workflow TAXONOMY_QC {
     else{
         unclassified_reads=params.unclassified_reads
         classified_reads=params.classified_reads
-        ch_kraken2_db=Channel.from(params.kraken2_db)
+        //ch_kraken2_db=Channel.from(params.kraken2_db)
         if (!params.skip_kraken2) {
             KRAKEN2_KRAKEN2(
                 ch_reads_taxonomy,
-                ch_kraken2_db,
+                params.kraken2_db,
                 classified_reads,
                 unclassified_reads
             )
             ch_tax_qc_reads = KRAKEN2_KRAKEN2.out.classified_reads_fastq
             ch_tax_qc_unaligned_reads = KRAKEN2_KRAKEN2.out.unclassified_reads_fastq
-            if (!params.skip_combinekreports) {
-                KRAKENTOOLS_COMBINEKREPORTS(
-                    KRAKEN2_KRAKEN2.out.report.collect()
-                )
-                    
-            }
             if (!params.skip_kreport2krona) {
                 KRAKENTOOLS_KREPORT2KRONA(
                     KRAKEN2_KRAKEN2.out.report
@@ -74,21 +66,14 @@ workflow TAXONOMY_QC {
                 KRONA_KTUPDATETAXONOMY(
 
                 )
-                
-                KRONA_KTIMPORTTAXONOMY(
-                    KRAKENTOOLS_KREPORT2KRONA.out.txt,
-                    KRONA_KTUPDATETAXONOMY.out.db
+                KRONA_KTIMPORTTEXT(
+                    KRAKENTOOLS_KREPORT2KRONA.out.txt
                 )
             }
             if (!params.skip_bracken) {
                 BRACKEN_BRACKEN(
                     KRAKEN2_KRAKEN2.out.report,
-                    ch_kraken2_db
-                )
-            }
-            if (!params.skip_combinebrackenoutputs) {
-                BRACKEN_COMBINEBRACKENOUTPUTS(
-                    BRACKEN_BRACKEN.out.reports.collect()
+                    params.kraken2_db
                 )
             }
 
