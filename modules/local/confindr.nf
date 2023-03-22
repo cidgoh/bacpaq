@@ -4,7 +4,7 @@ process CONFINDR {
 
     conda "bioconda::confindr=0.7.4"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/confindr%3A0.7.3--py_0':
+        'https://depot.galaxyproject.org/singularity/confindr%3A0.7.4--py_0':
         'quay.io/biocontainers/biocontainers/confindr' }"
 
     input:
@@ -12,10 +12,10 @@ process CONFINDR {
     path db
 
     output:
-    tuple val(meta), path('confindr_results/*contamination.csv'),   emit: csv
+    tuple val(meta), path('confindr_results/*contamination.csv'),   emit: csv optional true
     tuple val(meta), path('confindr_results/*confindr_log.txt'),    emit: log
     tuple val(meta), path('confindr_results/*confindr_report.csv'), emit: report
-    tuple val(meta), path('confindr_results/*_rmlst.csv'),          emit: rmlst
+    tuple val(meta), path('confindr_results/*_rmlst.csv'),          emit: rmlst optional true
     path "versions.yml",                                      emit: versions
 
     when:
@@ -31,7 +31,7 @@ process CONFINDR {
 
     """
 
-    mkdir "input_dir"
+    mkdir -p "input_dir"
     cp -P *.gz input_dir
     confindr.py \\
         -i input_dir \\

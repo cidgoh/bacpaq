@@ -36,7 +36,7 @@ workflow RAW_READS_QC {
     ch_versions = Channel.empty()
 
     // use rasusa to randomly subsample sequencing reads
-    if (params.subsampling) {
+    if (!params.skip_subsampling) {
 
         ch_genomesize= Channel.of(params.genomesize)
 
@@ -78,23 +78,23 @@ workflow RAW_READS_QC {
         ch_versions = ch_versions.mix(TRIMGALORE.out.versions.first())
     }
 
-
-
-
     // FASTQC check for trimmed reads
     TRIM_FASTQC (
         ch_short_reads
     )
     ch_versions = ch_versions.mix(TRIM_FASTQC.out.versions.first())
 
-     //Use confindr to detect contamination
-    ch_confindr_results = CONFINDR(ch_raw_reads_qc, params.confindr_db)
-    ch_versions = ch_versions.mix(CONFINDR.out.versions.first())
+    if(!params.skip_confindr){
+        //Use confindr to detect contamination
+        ch_confindr_results = CONFINDR(ch_raw_reads_qc, params.confindr_db)
+        ch_versions = ch_versions.mix(CONFINDR.out.versions.first())
 
-    //Aggregate confindr results
-    ch_confindr_results = Channel.empty()
-    ch_confindr_results = ch_confindr_results.mix(CONFINDR.out.report.collect({it[1]}))
-    AGGREGATE_CONFINDR_RESULTS(ch_confindr_results)
+        //Aggregate confindr results
+        ch_confindr_results = Channel.empty()
+        ch_confindr_results = ch_confindr_results.mix(CONFINDR.out.report.collect({it[1]}))
+        AGGREGATE_CONFINDR_RESULTS(ch_confindr_results)
+    }
+    
 
     // MultiQC report for raw reads
     ch_raw_multiqc_files = Channel.empty()
@@ -115,7 +115,8 @@ workflow RAW_READS_QC {
         ch_multiqc_custom_config.toList(),
         ch_multiqc_logo.toList()
     )
-
+    emit:
+    short_reads=ch_short_reads
 
 
 }
