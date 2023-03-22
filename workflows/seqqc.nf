@@ -37,11 +37,11 @@ ch_multiqc_custom_methods_description = params.multiqc_methods_description ? fil
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
 //
-include { INPUT_CHECK } from '../subworkflows/local/input_check'
+include { INPUT_CHECK  } from '../subworkflows/local/input_check'
 include { WGS_ASSEMBLY } from '../subworkflows/local/wgs_assembly'
-include { ASSEMBLY_QC } from '../subworkflows/local/assembly_qc'
-include { RSMLST } from '../subworkflows/local/rmlst'
-include { TAXONOMY_QC } from '../subworkflows/local/taxonomy_qc'
+include { ASSEMBLY_QC  } from '../subworkflows/local/assembly_qc'
+include { RSMLST       } from '../subworkflows/local/rmlst'
+include { TAXONOMY_QC  } from '../subworkflows/local/taxonomy_qc'
 include { RAW_READS_QC } from '../subworkflows/local/raw_reads_qc'
 
 /*
@@ -90,41 +90,58 @@ workflow SEQQC {
     //
     // MODULE: Run sub-workflow taxonomy qc
     //
+    
+    if (!params.skip_QC){
+        if(!params.skip_raw_qc){
+            ch_raw_reads_qc = INPUT_CHECK.out.reads
+            RAW_READS_QC(ch_raw_reads_qc)
+            ch_reads_qc = RAW_READS_QC.out.short_reads
+            ch_assembly_reads = RAW_READS_QC.out.short_reads
+        }
+        else{
+            ch_reads_qc = INPUT_CHECK.out.reads   
+        }
+    
+        if(!params.skip_taxonomy_qc){
+        TAXONOMY_QC (
+            ch_reads_qc,
+            params.reference_genome
+            )
+            ch_assembly_reads = TAXONOMY_QC.out.ch_tax_qc_reads
+        }
+        else{
+            ch_assembly_reads = ch_reads_qc
+        }        
+    }
+    else{
+        ch_assembly_reads = INPUT_CHECK.out.reads
+    }
 
-    ch_reads_taxonomy = INPUT_CHECK.out.reads
-    TAXONOMY_QC (
-        ch_reads_taxonomy,
-        params.reference_genome
-    )
+    if (!params.skip_assembly){
+        // SUBWORKFLOW: Run WGS ASSEMBLY on reads
+        WGS_ASSEMBLY(
+            ch_assembly_reads
+        )
+        
+        if (!params.skip_assembly_qc){
+            // SUBWORKFLOW: Do ribosomal MLST on assembled contigs, using BIGSdb Restful API
+            RSMLST(
+                WGS_ASSEMBLY.out.contigs
+            )
+
+            // SUBWORKFLOW: RUN ASSEMBLY QC on assemblies
+            ASSEMBLY_QC(
+                WGS_ASSEMBLY.out.contigs
+            )
+        }
+    }
     //ch_versions = ch_versions.mix(TAXONOMY_QC.out.versions.first())
-    ch_raw_reads_qc = INPUT_CHECK.out.reads
-    RAW_READS_QC(ch_raw_reads_qc)
-
-
-
-
-
-
+    
     CUSTOM_DUMPSOFTWAREVERSIONS (
         ch_versions.unique().collectFile(name: 'collated_versions.yml')
     )
 
-    // SUBWORKFLOW: Run WGS ASSEMBLY on reads
-    WGS_ASSEMBLY(
-        INPUT_CHECK.out.reads
-    )
-
-    // SUBWORKFLOW: Do ribosomal MLST on assembled contigs, using BIGSdb Restful API
-    RSMLST(
-        WGS_ASSEMBLY.out.contigs
-
-    )
-
-    // SUBWORKFLOW: RUN ASSEMBLY QC on assemblies
-    ASSEMBLY_QC(
-        WGS_ASSEMBLY.out.contigs
-    )
-
+    
     //
     // MODULE: MultiQC
     //
