@@ -7,6 +7,6 @@ testing/
 testing*
 *.pyc
 null/*
-samplesheet.csv
 *.out
 *.error
+*.sh
