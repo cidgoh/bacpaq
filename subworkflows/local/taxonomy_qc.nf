@@ -36,7 +36,7 @@ workflow TAXONOMY_QC {
             params.save_aligned,
             params.sam_format
         )
-        ch_tax_qc_reads = CENTRIFUGE_CENTRIFUGE.out.fastq_mapped
+        ch_tax_reads = CENTRIFUGE_CENTRIFUGE.out.fastq_mapped
         ch_tax_qc_unaligned_reads = CENTRIFUGE_CENTRIFUGE.out.fastq_unmapped
         CENTRIFUGE_KREPORT(
             CENTRIFUGE_CENTRIFUGE.out.report,
@@ -57,7 +57,7 @@ workflow TAXONOMY_QC {
                 classified_reads,
                 unclassified_reads
             )
-            ch_tax_qc_reads = KRAKEN2_KRAKEN2.out.classified_reads_fastq
+            ch_tax_reads = KRAKEN2_KRAKEN2.out.classified_reads_fastq
             ch_tax_qc_unaligned_reads = KRAKEN2_KRAKEN2.out.unclassified_reads_fastq
             if (!params.skip_kreport2krona) {
                 KRAKENTOOLS_KREPORT2KRONA(
@@ -130,18 +130,18 @@ workflow TAXONOMY_QC {
         SAMTOOLS_FASTQ(
              SAMTOOLS_VIEW.out.bam, interleaved)
         if (interleaved == false){
-            ch_tax_qc_reads = SAMTOOLS_FASTQ.out.fastq
-            ch_tax_qc_unaligned_reads = SAMTOOLS_FASTQ.out.other
+            ch_tax_reads = SAMTOOLS_FASTQ.out.fastq
+            ch_tax_unaligned_reads = SAMTOOLS_FASTQ.out.other
         }
         else{
-            ch_tax_qc_reads = SAMTOOLS_FASTQ.out.interleaved
-            ch_tax_qc_unaligned_reads = SAMTOOLS_FASTQ.out.other
+            ch_tax_reads = SAMTOOLS_FASTQ.out.interleaved
+            ch_tax_unaligned_reads = SAMTOOLS_FASTQ.out.other
         }
         
     }
     
     emit:
-    ch_tax_qc_reads                              // channel: [ val(meta), [ reads ] ]
-    ch_tax_qc_unaligned_reads                    // channel: [ val(meta), [ reads ] ]
+    ch_tax_qc_reads = ch_tax_reads                              // channel: [ val(meta), [ reads ] ]
+    //ch_tax_unaligned_reads = ch_tax_qc_unaligned_reads                    // channel: [ val(meta), [ reads ] ]
     //versions = TAXONOMY_QC.out.versions                                  // channel: [ versions.yml ]
 }
