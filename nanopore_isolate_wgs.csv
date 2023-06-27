@@ -1,0 +1,4 @@
+sample,fastq_1,fastq_2
+ERR7565110,/mnt/cidgoh-object-storage/hackathon/seqqc/isolate_wgs/nanopore/sra/ERR7565110/ERR7565110.fastq.gz,
+ERR7565112,/mnt/cidgoh-object-storage/hackathon/seqqc/isolate_wgs/nanopore/sra/ERR7565112/ERR7565112.fastq.gz,
+ERR7565113,/mnt/cidgoh-object-storage/hackathon/seqqc/isolate_wgs/nanopore/sra/ERR7565113/ERR7565113.fastq.gz,
