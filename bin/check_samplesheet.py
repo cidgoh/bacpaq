@@ -8,6 +8,7 @@ import argparse
 import csv
 import logging
 import sys
+import os
 from collections import Counter
 from pathlib import Path
 
@@ -27,6 +28,8 @@ class RowChecker:
     VALID_FORMATS = (
         ".fq.gz",
         ".fastq.gz",
+        ".fastq",
+        ".fq"
     )
 
     def __init__(
@@ -35,11 +38,13 @@ class RowChecker:
         first_col="fastq_1",
         second_col="fastq_2",
         single_col="single_end",
+        mode="illumina",
         **kwargs,
     ):
         """
         Initialize the row checker with the expected column names.
 
+        For mode == "illumina"
         Args:
             sample_col (str): The name of the column that contains the sample name
                 (default "sample").
@@ -50,17 +55,31 @@ class RowChecker:
             single_col (str): The name of the new column that will be inserted and
                 records whether the sample contains single- or paired-end sequencing
                 reads (default "single_end").
+        For mode == "nanopore"
+        Args:
+            sample_col (str): The name of the column that contains the sample name
+                (default "sample").
+            first_col (str): The name of the column that contains the path to  
+                DIRECTORY that contains FASTQ files (default "fastq_dir").
+            single_col (str): The name of the new column that will be inserted and
+                records whether the sample contains single- or paired-end sequencing
+                reads (default "single_end").
 
         """
         super().__init__(**kwargs)
+
         self._sample_col = sample_col
         self._first_col = first_col
+        if mode == 'nanopore':
+            self._first_col = "fastq_dir"
         self._second_col = second_col
         self._single_col = single_col
         self._seen = set()
         self.modified = []
 
-    def validate_and_transform(self, row):
+
+
+    def validate_and_transform(self, row, mode):
         """
         Perform all validations on the given row and insert the read pairing status.
 
@@ -70,9 +89,12 @@ class RowChecker:
 
         """
         self._validate_sample(row)
-        self._validate_first(row)
-        self._validate_second(row)
-        self._validate_pair(row)
+        self._validate_first(row, mode)
+
+        if mode == "illumina":
+            self._validate_second(row)
+            self._validate_pair(row)
+        
         self._seen.add((row[self._sample_col], row[self._first_col]))
         self.modified.append(row)
 
@@ -83,11 +105,15 @@ class RowChecker:
         # Sanitize samples slightly.
         row[self._sample_col] = row[self._sample_col].replace(" ", "_")
 
-    def _validate_first(self, row):
+    def _validate_first(self, row, mode):
         """Assert that the first FASTQ entry is non-empty and has the right format."""
         if len(row[self._first_col]) <= 0:
-            raise AssertionError("At least the first FASTQ file is required.")
-        self._validate_fastq_format(row[self._first_col])
+            raise AssertionError("At least the first file path is required.")
+        if mode == "illumina":
+            self._validate_fastq_format(row[self._first_col])
+        elif mode == "nanopore":
+            self._validate_directory_format(row[self._first_col])
+            row[self._single_col] = True
 
     def _validate_second(self, row):
         """Assert that the second FASTQ entry has the right format if it exists."""
@@ -112,6 +138,17 @@ class RowChecker:
                 f"The FASTQ file has an unrecognized extension: {filename}\n"
                 f"It should be one of: {', '.join(self.VALID_FORMATS)}"
             )
+    
+    def _validate_directory_format(self, filename):
+        if not os.path.exists(filename):
+            raise AssertionError(
+                f"The following path does not exist: {filename}\n"
+            )
+        if not os.path.isdir(filename):
+            raise AssertionError(
+                f"The following path is not a directory: {filename}\n"
+            )
+        
 
     def validate_unique_samples(self):
         """
@@ -165,7 +202,7 @@ def sniff_format(handle):
     return dialect
 
 
-def check_samplesheet(file_in, file_out):
+def check_samplesheet(file_in, file_out, mode):
     """
     Check that the tabular samplesheet has the structure expected by nf-core pipelines.
 
@@ -177,6 +214,8 @@ def check_samplesheet(file_in, file_out):
             CSV, TSV, or any other format automatically recognized by ``csv.Sniffer``.
         file_out (pathlib.Path): Where the validated and transformed samplesheet should
             be created; always in CSV format.
+        mode (string): Indicates the assembly mode (e.g. Illumina, Nanopore) to determine
+            the appropriate samples sheet (samples.csv) format
 
     Example:
         This function checks that the samplesheet follows the following structure,
@@ -191,7 +230,10 @@ def check_samplesheet(file_in, file_out):
         https://raw.githubusercontent.com/nf-core/test-datasets/viralrecon/samplesheet/samplesheet_test_illumina_amplicon.csv
 
     """
-    required_columns = {"sample", "fastq_1", "fastq_2"}
+    if mode == "illumina":
+        required_columns = {"sample", "fastq_1", "fastq_2"}
+    elif mode == "nanopore":
+        required_columns = {"sample", "fastq_dir"}
     # See https://docs.python.org/3.9/library/csv.html#id3 to read up on `newline=""`.
     with file_in.open(newline="") as in_handle:
         reader = csv.DictReader(in_handle, dialect=sniff_format(in_handle))
@@ -201,10 +243,10 @@ def check_samplesheet(file_in, file_out):
             logger.critical(f"The sample sheet **must** contain these column headers: {req_cols}.")
             sys.exit(1)
         # Validate each row.
-        checker = RowChecker()
+        checker = RowChecker(mode = mode)
         for i, row in enumerate(reader):
             try:
-                checker.validate_and_transform(row)
+                checker.validate_and_transform(row, mode)
             except AssertionError as error:
                 logger.critical(f"{str(error)} On line {i + 2}.")
                 sys.exit(1)
@@ -238,6 +280,14 @@ def parse_args(argv=None):
         help="Transformed output samplesheet in CSV format.",
     )
     parser.add_argument(
+        "--mode",
+        metavar="mode",
+        type=str,
+        choices=("nanopore", "illumina"),
+        help="Assembly mode",
+        default="illumina"
+    )
+    parser.add_argument(
         "-l",
         "--log-level",
         help="The desired log level (default WARNING).",
@@ -255,7 +305,7 @@ def main(argv=None):
         logger.error(f"The given input file {args.file_in} was not found!")
         sys.exit(2)
     args.file_out.parent.mkdir(parents=True, exist_ok=True)
-    check_samplesheet(args.file_in, args.file_out)
+    check_samplesheet(args.file_in, args.file_out, args.mode)
 
 
 if __name__ == "__main__":
