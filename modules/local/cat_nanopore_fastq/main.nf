@@ -15,6 +15,10 @@ process CAT_NANOPORE_FASTQ {
     def args     = task.ext.args ?: ''
     def prefix   = task.ext.prefix ?: "${meta.id}"
     """
-    cat ${barcode_dir}/*.fastq.gz > ${prefix}.merged.fastq.gz
+    if (file ${barcode_dir}/*{fq,fastq}* | grep gzip) ; then 
+        cat `find ${barcode_dir}/ -name "*fastq*" -or -name "*fq*"` > ${prefix}.merged.fastq.gz
+    else 
+        cat `find ${barcode_dir}/ -name "*fastq*" -or -name "*fq*"` | gzip > ${prefix}.merged.fastq.gz
+    fi 
     """
 }
