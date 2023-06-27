@@ -37,12 +37,13 @@ ch_multiqc_custom_methods_description = params.multiqc_methods_description ? fil
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
 //
-include { INPUT_CHECK  } from '../subworkflows/local/input_check'
-include { WGS_ASSEMBLY } from '../subworkflows/local/wgs_assembly'
-include { ASSEMBLY_QC  } from '../subworkflows/local/assembly_qc'
-include { RSMLST       } from '../subworkflows/local/rmlst'
-include { TAXONOMY_QC  } from '../subworkflows/local/taxonomy_qc'
-include { RAW_READS_QC } from '../subworkflows/local/raw_reads_qc'
+include { INPUT_CHECK           } from '../subworkflows/local/input_check'
+include { WGS_ASSEMBLY          } from '../subworkflows/local/wgs_assembly'
+include { ASSEMBLY_QC           } from '../subworkflows/local/assembly_qc'
+include { RSMLST                } from '../subworkflows/local/rmlst'
+include { TAXONOMY_QC           } from '../subworkflows/local/taxonomy_qc'
+include { RAW_READS_QC          } from '../subworkflows/local/raw_reads_qc'
+include { NANOPORE_RAW_READS_QC } from '../subworkflows/local/nanopore_raw_reads_qc'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -70,9 +71,9 @@ workflow SEQQC {
 
     ch_versions = Channel.empty()
 
-    //
+    // 
     // SUBWORKFLOW: Read in samplesheet, validate and stage input files
-    //
+    // 
     INPUT_CHECK (
         ch_input
     )
@@ -92,26 +93,35 @@ workflow SEQQC {
     //
     
     if (!params.skip_QC){
-        if(!params.skip_raw_qc){
-            ch_raw_reads_qc = INPUT_CHECK.out.reads
-            RAW_READS_QC(ch_raw_reads_qc)
-            ch_reads_qc = RAW_READS_QC.out.short_reads
-            ch_assembly_reads = RAW_READS_QC.out.short_reads
+        // SUBWORKFLOW: Run raw reads QC on nanopore reads
+        // Concatenate reads of each barcode into one
+        if (params.mode=="nanopore") {
+            ch_barcode_dirs = INPUT_CHECK.out.reads
+            NANOPORE_RAW_READS_QC(ch_barcode_dirs)
+            ch_barcode_reads = NANOPORE_RAW_READS_QC.out.barcode_reads
         }
-        else{
-            ch_reads_qc = INPUT_CHECK.out.reads   
+        else {
+            if(!params.skip_raw_qc){
+                ch_raw_reads_qc = INPUT_CHECK.out.reads
+                RAW_READS_QC(ch_raw_reads_qc)
+                ch_reads_qc = RAW_READS_QC.out.short_reads
+                ch_assembly_reads = RAW_READS_QC.out.short_reads
+            }
+            else{
+                ch_reads_qc = INPUT_CHECK.out.reads   
+            }
+        
+            if(!params.skip_taxonomy_qc){
+            TAXONOMY_QC (
+                ch_reads_qc,
+                params.reference_genome
+                )
+                ch_assembly_reads = TAXONOMY_QC.out.ch_tax_qc_reads
+            }
+            else{
+                ch_assembly_reads = ch_reads_qc
+            }        
         }
-    
-        if(!params.skip_taxonomy_qc){
-        TAXONOMY_QC (
-            ch_reads_qc,
-            params.reference_genome
-            )
-            ch_assembly_reads = TAXONOMY_QC.out.ch_tax_qc_reads
-        }
-        else{
-            ch_assembly_reads = ch_reads_qc
-        }        
     }
     else{
         ch_assembly_reads = INPUT_CHECK.out.reads
