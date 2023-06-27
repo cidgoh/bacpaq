@@ -112,7 +112,6 @@ class RowChecker:
         if mode == "illumina":
             self._validate_fastq_format(row[self._first_col])
         elif mode == "nanopore":
-            self._validate_directory_format(row[self._first_col])
             row[self._single_col] = True
 
     def _validate_second(self, row):
