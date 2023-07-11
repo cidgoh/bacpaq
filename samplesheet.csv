@@ -1,3 +1,4 @@
+sample,fastq_1,fastq_2
 sample1,/mnt/cidgoh-object-storage/hackathon/seqqc/isolate_wgs/illumina/test/SRR23388138/SRR23388138_1.fastq.gz,/mnt/cidgoh-object-storage/hackathon/seqqc/isolate_wgs/illumina/test/SRR23388138/SRR23388138_2.fastq.gz
 sample2,/mnt/cidgoh-object-storage/hackathon/seqqc/isolate_wgs/illumina/test/SRR23388139/SRR23388139_1.fastq.gz,/mnt/cidgoh-object-storage/hackathon/seqqc/isolate_wgs/illumina/test/SRR23388139/SRR23388139_2.fastq.gz
 sample3,/mnt/cidgoh-object-storage/hackathon/seqqc/isolate_wgs/illumina/test/SRR23388155/SRR23388155_1.fastq.gz,/mnt/cidgoh-object-storage/hackathon/seqqc/isolate_wgs/illumina/test/SRR23388155/SRR23388155_2.fastq.gz
