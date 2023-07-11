@@ -116,7 +116,7 @@ workflow SEQQC {
             if(!params.skip_taxonomy_qc){
             TAXONOMY_QC (
                 ch_reads_qc,
-                params.reference_genome
+                params.host_genome
                 )
                 ch_assembly_reads = TAXONOMY_QC.out.ch_tax_qc_reads
             }
