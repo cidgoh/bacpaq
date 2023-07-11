@@ -9,7 +9,7 @@ workflow WGS_ASSEMBLY {
     reads
 
     main:
-    if (params.sequencing_platform=="nanopore"){
+    if (params.mode=="nanopore"){
         reads | DRAGONFLYE
 
         contigs = DRAGONFLYE.out.contigs

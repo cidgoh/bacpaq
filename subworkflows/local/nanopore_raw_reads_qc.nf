@@ -26,7 +26,7 @@ workflow NANOPORE_RAW_READS_QC {
 
         ch_merged_reads
                     .combine(ch_genomesize)
-                    .set { ch_sub_reads_qc }
+                    .set{ch_sub_reads_qc}
 
         RASUSA_NANOPORE(ch_sub_reads_qc, params.depth_cut_off)
 
@@ -34,7 +34,13 @@ workflow NANOPORE_RAW_READS_QC {
     }
     if (!params.skip_quality_report) {
         if (!params.skip_nanocomp) {
-            NANOCOMP(ch_merged_reads)
+            ch_merged_reads
+                .map { [it[1]] }
+                .collect()
+                .map { reads -> [ [id: params.nanopore_summary_file_id], reads ] }
+                .set { ch_collected_reads}
+
+            NANOCOMP(ch_collected_reads)
         }
         if (!params.skip_pycoqc) {
             PYCOQC(

@@ -101,7 +101,7 @@ workflow SEQQC {
                 ch_barcode_dirs,
                 params.nanopore_summary_file
             )
-            ch_merged_reads = NANOPORE_RAW_READS_QC.out.merged_reads
+            ch_assembly_reads = NANOPORE_RAW_READS_QC.out.merged_reads
         }
         else {
             if(!params.skip_raw_qc){
