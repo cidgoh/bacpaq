@@ -19,6 +19,23 @@ nextflow.enable.dsl = 2
 */
 
 WorkflowMain.initialise(workflow, params, log)
+include { validateParameters; paramsHelp; paramsSummaryLog; fromSamplesheet } from 'plugin/nf-validation'
+
+// Print help message, supply typical command line usage for the pipeline
+if (params.help) {
+   log.info paramsHelp("nextflow run my_pipeline --input input_file.csv")
+   exit 0
+}
+
+// Validate input parameters
+validateParameters()
+
+// Print summary of supplied parameters
+log.info paramsSummaryLog(workflow)
+
+// Create a new channel of metadata from a sample sheet
+// NB: `input` corresponds to `params.input` and associated sample sheet schema
+ch_input = Channel.fromSamplesheet("input")
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -32,7 +49,9 @@ include { SEQQC } from './workflows/seqqc'
 // WORKFLOW: Run main nf-core/seqqc analysis pipeline
 //
 workflow NFCORE_SEQQC {
-    SEQQC ()
+    SEQQC (
+        ch_input
+    )
 }
 
 /*
