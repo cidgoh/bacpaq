@@ -6,7 +6,8 @@
 include { KRAKEN2_KRAKEN2               } from '../../modules/nf-core/kraken2/kraken2/main'
 include { KRAKENTOOLS_KREPORT2KRONA     } from '../../modules/nf-core/krakentools/kreport2krona/main'
 include { BRACKEN_BRACKEN               } from '../../modules/nf-core/bracken/bracken/main'
-include { MINIMAP2_ALIGN                } from '../../modules/nf-core/minimap2/align/main'
+include { MINIMAP2_ALIGN as MINIMAP_ILLUMINA               } from '../../modules/nf-core/minimap2/align/main'
+include { MINIMAP2_ALIGN as MINIMAP_NANOPORE               } from '../../modules/nf-core/minimap2/align/main'
 include { MINIMAP2_INDEX                } from '../../modules/nf-core/minimap2/index/main'
 include { BWA_MEM                       } from '../../modules/nf-core/bwa/mem/main'
 include { BWA_INDEX                     } from '../../modules/nf-core/bwa/index/main'
@@ -103,14 +104,26 @@ workflow TAXONOMY_QC {
             bam_format  = params.bam_format //true
             cigar_paf_format = params.cigar_paf_format //false
             cigar_bam = params.cigar_bam //false
-            MINIMAP2_ALIGN ( 
+            if(params.mode == 'nanopore'){
+                MINIMAP2_NANOPORE ( 
                 reads, 
                 ref_genome, 
                 bam_format, 
                 cigar_paf_format, 
                 cigar_bam 
             )
-            ch_mapped_bam=MINIMAP2_ALIGN.out.bam
+            ch_mapped_bam=MINIMAP2_NANOPORE.out.bam
+            }
+            else{
+                MINIMAP2_ILLUMINA ( 
+                reads, 
+                ref_genome, 
+                bam_format, 
+                cigar_paf_format, 
+                cigar_bam 
+            )
+            ch_mapped_bam=MINIMAP2_ILLUMINA.out.bam
+            } 
         }
 
         SAMTOOLS_INDEX(
