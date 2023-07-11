@@ -1,6 +1,7 @@
 include { PORECHOP_ABI } from '../../modules/nf-core/porechop/abi'
 include { CAT_NANOPORE_FASTQ } from '../../modules/local/cat_nanopore_fastq'
 include { RASUSA as RASUSA_NANOPORE } from '../../modules/nf-core/rasusa'
+include { NANOCOMP } from '../../modules/nf-core/nanocomp'
 
 workflow NANOPORE_RAW_READS_QC {
     take:
@@ -28,6 +29,9 @@ workflow NANOPORE_RAW_READS_QC {
         RASUSA_NANOPORE(ch_sub_reads_qc, params.depth_cut_off)
 
         ch_merged_reads = RASUSA_NANOPORE.out.reads
+    }
+    if (!params.skip_quality_report) {
+        NANOCOMP(ch_merged_reads)
     }
 
     emit:
