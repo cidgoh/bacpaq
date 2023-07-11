@@ -11,7 +11,7 @@ WorkflowSeqqc.initialise(params, log)
 
 // TODO nf-core: Add all file path parameters for the pipeline to the list below
 // Check input path parameters to see if they exist
-def checkPathParamList = [ params.input, params.multiqc_config, params.fasta ]
+def checkPathParamList = [  params.multiqc_config, params.fasta ]
 for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
 
 // Check mandatory parameters
@@ -68,6 +68,7 @@ def multiqc_report = []
 
 workflow SEQQC {
 
+    main:
     ch_versions = Channel.empty()
 
     //
@@ -77,20 +78,11 @@ workflow SEQQC {
         ch_input
     )
     ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
-
-
-    //
-    // SUBWORKFLOW: RAW_READS_QC (Perform resampling, trimming, QC check for raw reads )
-    //
-    //ch_reads_fastqc = INPUT_CHECK.out.reads
-    //FASTQC (
-    //    ch_reads_fastqc
-    //)
-    //ch_versions = ch_versions.mix(FASTQC.out.versions.first())
-    //
-    // MODULE: Run sub-workflow taxonomy qc
-    //
     
+    //
+    // SUBWORKFLOW: QC sub-workflow
+    //
+
     if (!params.skip_QC){
         if(!params.skip_raw_qc){
             ch_raw_reads_qc = INPUT_CHECK.out.reads
