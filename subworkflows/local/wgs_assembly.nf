@@ -42,5 +42,5 @@ workflow WGS_ASSEMBLY {
     ch_raw_contigs = raw_contigs
     ch_gfa = gfa
     ch_dragonflye_info = dragonflye_info
-    ch_versios = versions
+    ch_versions = versions
 }
