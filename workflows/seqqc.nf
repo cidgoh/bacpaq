@@ -97,7 +97,10 @@ workflow SEQQC {
         // Concatenate reads of each barcode into one
         if (params.mode=="nanopore") {
             ch_barcode_dirs = INPUT_CHECK.out.reads
-            NANOPORE_RAW_READS_QC(ch_barcode_dirs)
+            NANOPORE_RAW_READS_QC(
+                ch_barcode_dirs,
+                params.nanopore_summary_file
+            )
             ch_merged_reads = NANOPORE_RAW_READS_QC.out.merged_reads
         }
         else {

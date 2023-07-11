@@ -1,11 +1,13 @@
-include { PORECHOP_ABI } from '../../modules/nf-core/porechop/abi'
-include { CAT_NANOPORE_FASTQ } from '../../modules/local/cat_nanopore_fastq'
+include { PORECHOP_ABI              } from '../../modules/nf-core/porechop/abi'
+include { CAT_NANOPORE_FASTQ        } from '../../modules/local/cat_nanopore_fastq'
 include { RASUSA as RASUSA_NANOPORE } from '../../modules/nf-core/rasusa'
-include { NANOCOMP } from '../../modules/nf-core/nanocomp'
+include { NANOCOMP                  } from '../../modules/nf-core/nanocomp'
+include { PYCOQC                    } from '../../modules/nf-core/pycoqc'
 
 workflow NANOPORE_RAW_READS_QC {
     take:
     ch_barcode_dirs
+    nanopore_summary_file
 
     main:
     ch_versions = Channel.empty()
@@ -31,7 +33,14 @@ workflow NANOPORE_RAW_READS_QC {
         ch_merged_reads = RASUSA_NANOPORE.out.reads
     }
     if (!params.skip_quality_report) {
-        NANOCOMP(ch_merged_reads)
+        if (!params.skip_nanocomp) {
+            NANOCOMP(ch_merged_reads)
+        }
+        if (!params.skip_pycoqc) {
+            PYCOQC(
+                [[id: params.nanopore_summary_file_id], nanopore_summary_file]
+            )
+        }
     }
 
     emit:
