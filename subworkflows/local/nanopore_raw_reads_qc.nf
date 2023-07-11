@@ -1,24 +1,18 @@
 include { PORECHOP_ABI              } from '../../modules/nf-core/porechop/abi'
-include { CAT_NANOPORE_FASTQ        } from '../../modules/local/cat_nanopore_fastq'
 include { RASUSA as RASUSA_NANOPORE } from '../../modules/nf-core/rasusa'
 include { NANOCOMP                  } from '../../modules/nf-core/nanocomp'
 include { PYCOQC                    } from '../../modules/nf-core/pycoqc'
 
 workflow NANOPORE_RAW_READS_QC {
     take:
-    ch_barcode_dirs
+    ch_merged_reads
     nanopore_summary_file
 
     main:
     ch_versions = Channel.empty()
 
-    // Concatenate fastq files
-    CAT_NANOPORE_FASTQ(ch_barcode_dirs)
-
-    ch_merged_reads = CAT_NANOPORE_FASTQ.out.reads
-
     if (!params.skip_porechop) {
-        PORECHOP_ABI(CAT_NANOPORE_FASTQ.out.reads)
+        PORECHOP_ABI(ch_merged_reads)
         ch_merged_reads = PORECHOP_ABI.out.reads
     }
     if (!params.skip_subsampling) {
