@@ -43,6 +43,7 @@ include { ASSEMBLY_QC           } from '../subworkflows/local/assembly_qc'
 include { RSMLST                } from '../subworkflows/local/rmlst'
 include { TAXONOMY_QC           } from '../subworkflows/local/taxonomy_qc'
 include { RAW_READS_QC          } from '../subworkflows/local/raw_reads_qc'
+include { CAT_NANOPORE_FASTQ    } from '../modules/local/cat_nanopore_fastq/main'
 include { NANOPORE_RAW_READS_QC } from '../subworkflows/local/nanopore_raw_reads_qc'
 
 /*
@@ -57,6 +58,7 @@ include { NANOPORE_RAW_READS_QC } from '../subworkflows/local/nanopore_raw_reads
 include { FASTQC                      } from '../modules/nf-core/fastqc/main'
 include { MULTIQC                     } from '../modules/nf-core/multiqc/main'
 include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoftwareversions/main'
+
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -80,17 +82,22 @@ workflow SEQQC {
     )
     ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
     
+    if (params.mode=='nanopore') {
+        // Concatenate fastq files
+        CAT_NANOPORE_FASTQ(INPUT_CHECK.out.reads)
+
+        ch_merged_reads = CAT_NANOPORE_FASTQ.out.reads
+    }
+
     //
     // SUBWORKFLOW: QC sub-workflow
     //
-
     if (!params.skip_QC){
         // SUBWORKFLOW: Run raw reads QC on nanopore reads
         // Concatenate reads of each barcode into one
         if (params.mode=="nanopore") {
-            ch_barcode_dirs = INPUT_CHECK.out.reads
             NANOPORE_RAW_READS_QC(
-                ch_barcode_dirs,
+                ch_merged_reads,
                 params.nanopore_summary_file
             )
             ch_assembly_reads = NANOPORE_RAW_READS_QC.out.merged_reads
@@ -119,7 +126,12 @@ workflow SEQQC {
         }
     }
     else{
-        ch_assembly_reads = INPUT_CHECK.out.reads
+        if (params.mode=='nanopore'){
+            ch_assembly_reads = ch_merged_reads
+        }
+        else {
+            ch_assembly_reads = INPUT_CHECK.out.reads
+        }
     }
 
     if (!params.skip_assembly){
