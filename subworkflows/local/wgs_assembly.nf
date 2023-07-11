@@ -1,6 +1,6 @@
 // import modules
 include { SHOVILL } from '../../modules/nf-core/shovill'
-include { RENAME_CTG as RENAME_CTG_SHOVILL; RENAME_CTG as RENAME_CTG_DRAGONFLYE } from '../../modules/local/rename_shovill'
+include { RENAME_CTG as RENAME_CTG_SHOVILL; RENAME_CTG as RENAME_CTG_DRAGONFLYE } from '../../modules/local/rename_ctg'
 // include {  } from '../../modules/local/rename_shovill'
 include { DRAGONFLYE } from '../../modules/nf-core/dragonflye'
 
