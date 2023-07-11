@@ -9,6 +9,7 @@ process SAMPLESHEET_CHECK {
 
     input:
     path samplesheet
+    val mode
 
     output:
     path '*.csv'       , emit: csv
@@ -21,7 +22,8 @@ process SAMPLESHEET_CHECK {
     """
     check_samplesheet.py \\
         $samplesheet \\
-        samplesheet.valid.csv
+        samplesheet.valid.csv \\
+        --mode ${mode}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

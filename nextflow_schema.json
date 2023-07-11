@@ -22,7 +22,7 @@
           "default": "auto"
         },
         "busco_lineages_path": {
-          "type": "boolean"
+          "type": "string"
         },
         "busco_config": {
           "type": "boolean"
@@ -440,6 +440,46 @@
     "ref_genome_id": {
       "type": "string",
       "default": "test"
+    },
+    "mode": {
+      "type": "string",
+      "default": "nanopore"
+    },
+    "nanopore_summary_file": {
+      "type": "string",
+      "default": "/mnt/cidgoh-object-storage/hackathon/seqqc/isolate_wgs/nanopore/run_summary/sequencing_summary_FAT24492_18678559.txt"
+    },
+    "nanopore_summary_file_id": {
+      "type": "string",
+      "default": "test"
+    },
+    "min_contig_len": {
+      "type": "integer",
+      "default": 500
+    },
+    "min_contig_coverage": {
+      "type": "integer",
+      "default": 2
+    },
+    "min_input_read_len": {
+      "type": "integer",
+      "default": 1000
+    },
+    "min_input_quality": {
+      "type": "integer",
+      "default": 0
+    },
+    "racon_rounds": {
+      "type": "integer",
+      "default": 1
+    },
+    "medaka_rounds": {
+      "type": "integer",
+      "default": 0
+    },
+    "medaka_model": {
+      "type": "string",
+      "default": ""
     }
   }
 }
