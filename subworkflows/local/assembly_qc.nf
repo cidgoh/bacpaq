@@ -24,18 +24,18 @@ workflow ASSEMBLY_QC {
     if ( params.combine_quast ) {
         QUAST(
             assembly.map{it[1]}.collect(),
-            params.reference ? params.reference : [],
-            params.reference_gff ? params.reference_gff : [],
-            params.reference ? assembly.map{ true } : params.reference,
-            params.reference_gff ? assembly.map{ true } : params.reference_gff
+            params.reference_genome_fasta ? params.reference_genome_fasta : assembly.map{ [] },
+            params.reference_genome_gff ? params.reference_genome_gff : assembly.map{ [] },
+            params.reference_genome_fasta ? assembly.map{ true } : params.reference_genome_fasta,
+            params.reference_genome_gff ? assembly.map{ true } : params.reference_genome_gff
         )
     } else {
         QUAST(
             assembly.map{it[1]},
-            params.reference ? params.reference : assembly.map{ [] },
-            params.reference_gff ? params.reference_gff : assembly.map{ [] },
-            params.reference ? assembly.map{ true } : params.reference,
-            params.reference_gff ? assembly.map{ true } : params.reference_gff
+            params.reference_genome_fasta ? params.reference_genome_fasta : assembly.map{ [] },
+            params.reference_genome_gff ? params.reference_genome_gff : assembly.map{ [] },
+            params.reference_genome_fasta ? assembly.map{ true } : params.reference_genome_fasta,
+            params.reference_genome_gff ? assembly.map{ true } : params.reference_genome_gff
         )
     }
 
