@@ -120,10 +120,9 @@ workflow SEQQC {
                 )
                 ch_assembly_reads = TAXONOMY_QC.out.ch_tax_qc_reads
             }
-            else{
+        else{
                 ch_assembly_reads = ch_reads_qc
-            } 
-            
+            }      
     }
     else{
         if (params.mode=='nanopore'){
