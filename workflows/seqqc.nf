@@ -116,13 +116,14 @@ workflow SEQQC {
         if(!params.skip_taxonomy_qc){
             TAXONOMY_QC (
                 ch_reads_qc,
-                params.reference_genome
-            )
-            ch_assembly_reads = TAXONOMY_QC.out.ch_tax_qc_reads
-        }
-        else{
-            ch_assembly_reads = ch_reads_qc
-        }        
+                params.host_genome
+                )
+                ch_assembly_reads = TAXONOMY_QC.out.ch_tax_qc_reads
+            }
+            else{
+                ch_assembly_reads = ch_reads_qc
+            } 
+            
     }
     else{
         if (params.mode=='nanopore'){
@@ -141,10 +142,11 @@ workflow SEQQC {
         
         if (!params.skip_assembly_qc){
             // SUBWORKFLOW: Do ribosomal MLST on assembled contigs, using BIGSdb Restful API
-            RSMLST(
-                WGS_ASSEMBLY.out.ch_contigs
-            )
-
+            if (!params.skip_rmlst){
+                RSMLST(
+                    WGS_ASSEMBLY.out.ch_contigs
+                )
+            }
             // SUBWORKFLOW: RUN ASSEMBLY QC on assemblies
             ASSEMBLY_QC(
                 WGS_ASSEMBLY.out.ch_contigs
