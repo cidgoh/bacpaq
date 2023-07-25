@@ -144,7 +144,7 @@ workflow SEQQC {
             // SUBWORKFLOW: Do ribosomal MLST on assembled contigs, using BIGSdb Restful API
             if (!params.skip_rmlst){
                 RSMLST(
-                    WGS_ASSEMBLY.out.contigs
+                    WGS_ASSEMBLY.out.ch_contigs
                 )
             }
             // SUBWORKFLOW: RUN ASSEMBLY QC on assemblies
