@@ -5,8 +5,28 @@
   "description": "Quality control workflow for short-reads (Illumina) and long-reads (Oxford Nanopore) sequencing data including WGS, Amplicon and Metagenomics",
   "type": "object",
   "definitions": {
-    "assembly_qc_options": {
-      "title": "Assembly QC options",
+    "sequencing_parameters": {
+      "title": "Sequencing parameters",
+      "type": "object",
+      "description": "",
+      "default": "",
+      "properties": {
+        "mode": {
+          "type": "string",
+          "default": "illumina",
+          "enum": ["illumina", "nanopore"]
+        },
+        "nanopore_summary_file": {
+          "type": "string"
+        },
+        "nanopore_summary_file_id": {
+          "type": "string"
+        }
+      },
+      "required": ["mode"]
+    },
+    "assembly_qc": {
+      "title": "Assembly QC",
       "type": "object",
       "description": "",
       "default": "",
@@ -27,10 +47,25 @@
         "busco_config": {
           "type": "boolean"
         },
-        "reference": {
+        "skip_checkm": {
           "type": "boolean"
         },
-        "reference_gff": {
+        "skip_quast": {
+          "type": "boolean"
+        },
+        "skip_busco": {
+          "type": "boolean"
+        },
+        "reference_genome_fasta": {
+          "type": "string"
+        },
+        "reference_genome_gff": {
+          "type": "string"
+        },
+        "skip_assembly_qc": {
+          "type": "boolean"
+        },
+        "skip_rmlst": {
           "type": "boolean"
         }
       }
@@ -43,10 +78,8 @@
       "properties": {
         "classifier": {
           "type": "string",
-          "default": "kraken2"
-        },
-        "skip_kraken": {
-          "type": "boolean"
+          "default": "kraken2",
+          "enum": ["kraken2", "centrifuge"]
         },
         "skip_combinekreports": {
           "type": "boolean"
@@ -67,8 +100,7 @@
           "type": "boolean"
         },
         "kraken2_db": {
-          "type": "string",
-          "default": "/mnt/cidgoh-object-storage/database/minikraken2/minikraken2_v2_8GB_201904_UPDATE"
+          "type": "string"
         },
         "classified_reads": {
           "type": "boolean",
@@ -79,8 +111,7 @@
           "default": true
         },
         "centrifuge_db": {
-          "type": "string",
-          "default": "/mnt/cidgoh-object-storage/database/centrifuge/"
+          "type": "string"
         },
         "save_unaligned": {
           "type": "boolean",
@@ -92,11 +123,8 @@
         },
         "dehosting_aligner": {
           "type": "string",
-          "default": "minimap2"
-        },
-        "reference_genome": {
-          "type": "string",
-          "default": "/mnt/cidgoh-object-storage/database/reference_genomes/human/GRCh38.p14/GCF_000001405.40/GCF_000001405.40_GRCh38.p14_genomic.fna"
+          "default": "minimap2",
+          "enum": ["minimap2", "bwa"]
         },
         "sam_format": {
           "type": "boolean",
@@ -118,6 +146,15 @@
         },
         "interleaved": {
           "type": "boolean"
+        },
+        "host_genome": {
+          "type": "string"
+        },
+        "host_genome_id": {
+          "type": "string"
+        },
+        "skip_taxonomy_qc": {
+          "type": "boolean"
         }
       }
     },
@@ -127,26 +164,56 @@
       "description": "",
       "default": "",
       "properties": {
-        "assembler": {
+        "min_contig_len": {
+          "type": "integer",
+          "default": 500
+        },
+        "min_contig_coverage": {
+          "type": "integer",
+          "default": 2
+        },
+        "min_input_read_len": {
+          "type": "integer",
+          "default": 1000
+        },
+        "min_input_quality": {
+          "type": "integer",
+          "default": 0
+        },
+        "racon_rounds": {
+          "type": "integer",
+          "default": 1
+        },
+        "medaka_rounds": {
+          "type": "integer",
+          "default": 0
+        },
+        "medaka_model": {
+          "type": "string",
+          "default": "r941_min_fast_g507"
+        },
+        "sr_assembler": {
           "type": "string",
           "default": "skesa",
-          "enum": ["spades", "skesa", "megahit"]
+          "enum": ["skesa", "spades", "megahit"]
+        },
+        "skip_assembly": {
+          "type": "boolean"
+        },
+        "assembly_genomesize": {
+          "type": "string",
+          "default": "\"''\""
         }
       }
     },
-    "illumina_qc_options": {
-      "title": "Illumina QC options",
+    "raw_reads_qc_options": {
+      "title": "Raw Reads QC options",
       "type": "object",
       "description": "",
       "default": "",
       "properties": {
-        "genomesize": {
-          "type": "integer",
-          "default": 5000000
-        },
         "adapter_fasta": {
-          "type": "string",
-          "default": "https://object-arbutus.cloud.computecanada.ca/cidgohshare/database/adaptors/test.fa"
+          "type": "string"
         },
         "skip_subsampling": {
           "type": "boolean"
@@ -160,10 +227,26 @@
         },
         "trim_tool": {
           "type": "string",
-          "default": "fastp"
+          "default": "fastp",
+          "enum": ["fastp", "trimgalore", "trimmomatic"]
         },
         "save_trimmed_fail": {
           "type": "boolean"
+        },
+        "depth_cut_off": {
+          "type": "string"
+        },
+        "confindr_db": {
+          "type": "string"
+        },
+        "skip_QC": {
+          "type": "boolean"
+        },
+        "skip_raw_qc": {
+          "type": "boolean"
+        },
+        "subsampling_genomesize": {
+          "type": "integer"
         }
       }
     },
@@ -400,7 +483,10 @@
   },
   "allOf": [
     {
-      "$ref": "#/definitions/assembly_qc_options"
+      "$ref": "#/definitions/sequencing_parameters"
+    },
+    {
+      "$ref": "#/definitions/assembly_qc"
     },
     {
       "$ref": "#/definitions/taxonomy_qc_options"
@@ -409,7 +495,7 @@
       "$ref": "#/definitions/assembly_options"
     },
     {
-      "$ref": "#/definitions/illumina_qc_options"
+      "$ref": "#/definitions/raw_reads_qc_options"
     },
     {
       "$ref": "#/definitions/input_output_options"
@@ -428,58 +514,6 @@
     "fasta": {
       "type": "string",
       "default": "test.fa"
-    },
-    "depth_cut_off": {
-      "type": "integer",
-      "default": 50
-    },
-    "confindr_db": {
-      "type": "string",
-      "default": "/project/cidgoh-object-storage/database/confindr/confindr_db"
-    },
-    "ref_genome_id": {
-      "type": "string",
-      "default": "test"
-    },
-    "mode": {
-      "type": "string",
-      "default": "nanopore"
-    },
-    "nanopore_summary_file": {
-      "type": "string",
-      "default": "/mnt/cidgoh-object-storage/hackathon/seqqc/isolate_wgs/nanopore/run_summary/sequencing_summary_FAT24492_18678559.txt"
-    },
-    "nanopore_summary_file_id": {
-      "type": "string",
-      "default": "test"
-    },
-    "min_contig_len": {
-      "type": "integer",
-      "default": 500
-    },
-    "min_contig_coverage": {
-      "type": "integer",
-      "default": 2
-    },
-    "min_input_read_len": {
-      "type": "integer",
-      "default": 1000
-    },
-    "min_input_quality": {
-      "type": "integer",
-      "default": 0
-    },
-    "racon_rounds": {
-      "type": "integer",
-      "default": 1
-    },
-    "medaka_rounds": {
-      "type": "integer",
-      "default": 0
-    },
-    "medaka_model": {
-      "type": "string",
-      "default": ""
     }
   }
 }
