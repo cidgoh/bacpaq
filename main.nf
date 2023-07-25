@@ -30,7 +30,7 @@ if (!params.skip_kraken2 && !fileExists(params.kraken2_db)) {
     exit 1
 }
 if ((params.classifier == 'centrifuge') && !fileExists(params.centrifuge_db)) {
-    log.error "Path to Centrigue database is not valid"
+    log.error "Path to Centrifuge database is not valid"
     exit 1
 }
 if (!params.skip_checkm && !fileExists(params.checkm_db)) {
