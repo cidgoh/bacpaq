@@ -1,4 +1,4 @@
-process RENAME_SHOVILL {
+process RENAME_CTG {
     tag "$meta.id"
     label 'process_low'
 

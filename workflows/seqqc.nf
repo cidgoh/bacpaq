@@ -37,12 +37,14 @@ ch_multiqc_custom_methods_description = params.multiqc_methods_description ? fil
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
 //
-include { INPUT_CHECK  } from '../subworkflows/local/input_check'
-include { WGS_ASSEMBLY } from '../subworkflows/local/wgs_assembly'
-include { ASSEMBLY_QC  } from '../subworkflows/local/assembly_qc'
-include { RSMLST       } from '../subworkflows/local/rmlst'
-include { TAXONOMY_QC  } from '../subworkflows/local/taxonomy_qc'
-include { RAW_READS_QC } from '../subworkflows/local/raw_reads_qc'
+include { INPUT_CHECK           } from '../subworkflows/local/input_check'
+include { WGS_ASSEMBLY          } from '../subworkflows/local/wgs_assembly'
+include { ASSEMBLY_QC           } from '../subworkflows/local/assembly_qc'
+include { RSMLST                } from '../subworkflows/local/rmlst'
+include { TAXONOMY_QC           } from '../subworkflows/local/taxonomy_qc'
+include { RAW_READS_QC          } from '../subworkflows/local/raw_reads_qc'
+include { CAT_NANOPORE_FASTQ    } from '../modules/local/cat_nanopore_fastq/main'
+include { NANOPORE_RAW_READS_QC } from '../subworkflows/local/nanopore_raw_reads_qc'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -56,6 +58,7 @@ include { RAW_READS_QC } from '../subworkflows/local/raw_reads_qc'
 include { FASTQC                      } from '../modules/nf-core/fastqc/main'
 include { MULTIQC                     } from '../modules/nf-core/multiqc/main'
 include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoftwareversions/main'
+
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -71,42 +74,64 @@ workflow SEQQC {
     main:
     ch_versions = Channel.empty()
 
-    //
+    // 
     // SUBWORKFLOW: Read in samplesheet, validate and stage input files
-    //
+    // 
     INPUT_CHECK (
         ch_input
     )
     ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
     
+    if (params.mode=='nanopore') {
+        // Concatenate fastq files
+        CAT_NANOPORE_FASTQ(INPUT_CHECK.out.reads)
+
+        ch_merged_reads = CAT_NANOPORE_FASTQ.out.reads
+    }
+
     //
     // SUBWORKFLOW: QC sub-workflow
     //
-
     if (!params.skip_QC){
-        if(!params.skip_raw_qc){
-            ch_raw_reads_qc = INPUT_CHECK.out.reads
-            RAW_READS_QC(ch_raw_reads_qc)
-            ch_reads_qc = RAW_READS_QC.out.short_reads
-            ch_assembly_reads = RAW_READS_QC.out.short_reads
-        }
-        else{
-            ch_reads_qc = INPUT_CHECK.out.reads   
-        }
-    
-        if(!params.skip_taxonomy_qc){
-        TAXONOMY_QC (
-            ch_reads_qc,
-            params.reference_genome
+        // SUBWORKFLOW: Run raw reads QC on nanopore reads
+        // Concatenate reads of each barcode into one
+        if (params.mode=="nanopore") {
+            NANOPORE_RAW_READS_QC(
+                ch_merged_reads,
+                params.nanopore_summary_file
             )
-            ch_assembly_reads = TAXONOMY_QC.out.ch_tax_qc_reads
+            ch_assembly_reads = NANOPORE_RAW_READS_QC.out.merged_reads
         }
-        else{
-            ch_assembly_reads = ch_reads_qc
-        }        
+        else {
+            if(!params.skip_raw_qc){
+                ch_raw_reads_qc = INPUT_CHECK.out.reads
+                RAW_READS_QC(ch_raw_reads_qc)
+                ch_reads_qc = RAW_READS_QC.out.short_reads
+                ch_assembly_reads = RAW_READS_QC.out.short_reads
+            }
+            else{
+                ch_reads_qc = INPUT_CHECK.out.reads   
+            }
+        
+            if(!params.skip_taxonomy_qc){
+            TAXONOMY_QC (
+                ch_reads_qc,
+                params.host_genome
+                )
+                ch_assembly_reads = TAXONOMY_QC.out.ch_tax_qc_reads
+            }
+            else{
+                ch_assembly_reads = ch_reads_qc
+            }        
+        }
     }
     else{
-        ch_assembly_reads = INPUT_CHECK.out.reads
+        if (params.mode=='nanopore'){
+            ch_assembly_reads = ch_merged_reads
+        }
+        else {
+            ch_assembly_reads = INPUT_CHECK.out.reads
+        }
     }
 
     if (!params.skip_assembly){
@@ -117,13 +142,14 @@ workflow SEQQC {
         
         if (!params.skip_assembly_qc){
             // SUBWORKFLOW: Do ribosomal MLST on assembled contigs, using BIGSdb Restful API
-            RSMLST(
-                WGS_ASSEMBLY.out.contigs
-            )
-
+            if (!params.skip_rmlst){
+                RSMLST(
+                    WGS_ASSEMBLY.out.contigs
+                )
+            }
             // SUBWORKFLOW: RUN ASSEMBLY QC on assemblies
             ASSEMBLY_QC(
-                WGS_ASSEMBLY.out.contigs
+                WGS_ASSEMBLY.out.ch_contigs
             )
         }
     }
