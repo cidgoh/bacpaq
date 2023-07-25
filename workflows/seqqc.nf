@@ -100,7 +100,7 @@ workflow SEQQC {
                 ch_merged_reads,
                 params.nanopore_summary_file
             )
-            ch_assembly_reads = NANOPORE_RAW_READS_QC.out.merged_reads
+            ch_reads_qc = NANOPORE_RAW_READS_QC.out.merged_reads
         }
         else {
             if(!params.skip_raw_qc){
@@ -112,8 +112,8 @@ workflow SEQQC {
             else{
                 ch_reads_qc = INPUT_CHECK.out.reads   
             }
-        
-            if(!params.skip_taxonomy_qc){
+        }
+        if(!params.skip_taxonomy_qc){
             TAXONOMY_QC (
                 ch_reads_qc,
                 params.host_genome
@@ -122,8 +122,8 @@ workflow SEQQC {
             }
             else{
                 ch_assembly_reads = ch_reads_qc
-            }        
-        }
+            } 
+            
     }
     else{
         if (params.mode=='nanopore'){
