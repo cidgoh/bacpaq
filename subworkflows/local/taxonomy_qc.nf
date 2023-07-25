@@ -111,7 +111,7 @@ workflow TAXONOMY_QC {
                 bam_format, 
                 cigar_paf_format, 
                 cigar_bam 
-            )
+                )
             ch_mapped_bam=MINIMAP2_NANOPORE.out.bam
             }
             else{
@@ -121,7 +121,7 @@ workflow TAXONOMY_QC {
                 bam_format, 
                 cigar_paf_format, 
                 cigar_bam 
-            )
+                )
             ch_mapped_bam=MINIMAP2_ILLUMINA.out.bam
             } 
         }
@@ -142,19 +142,22 @@ workflow TAXONOMY_QC {
         interleaved=params.interleaved
         SAMTOOLS_FASTQ(
              SAMTOOLS_VIEW.out.bam, interleaved)
-        if (interleaved == false){
-            ch_tax_reads = SAMTOOLS_FASTQ.out.fastq
-            ch_tax_unaligned_reads = SAMTOOLS_FASTQ.out.other
+        if (!params.mode == "nanopore"){
+            if (interleaved == false){
+                ch_dehosted_reads = SAMTOOLS_FASTQ.out.fastq
+            }
+            else{
+                ch_dehosted_reads = SAMTOOLS_FASTQ.out.interleaved
+            }
         }
         else{
-            ch_tax_reads = SAMTOOLS_FASTQ.out.interleaved
-            ch_tax_unaligned_reads = SAMTOOLS_FASTQ.out.other
+            ch_dehosted_reads = SAMTOOLS_FASTQ.out.other
         }
         
     }
     
     emit:
-    ch_tax_qc_reads = ch_tax_reads                              // channel: [ val(meta), [ reads ] ]
+    ch_tax_qc_reads = ch_dehosted_reads                              // channel: [ val(meta), [ reads ] ]
     //ch_tax_unaligned_reads = ch_tax_qc_unaligned_reads                    // channel: [ val(meta), [ reads ] ]
     //versions = TAXONOMY_QC.out.versions                                  // channel: [ versions.yml ]
 }
