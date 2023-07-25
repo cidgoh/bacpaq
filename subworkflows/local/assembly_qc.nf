@@ -38,16 +38,16 @@ workflow ASSEMBLY_QC {
                 assembly.map{it[1]}.collect(),
                 params.reference_genome_fasta != "null" ? params.reference_genome_fasta : [],
                 params.reference_genome_gff != "null" ? params.reference_genome_gff : [],
-                params.reference_genome_fasta != "null" ? assembly.map{ true } : params.reference_genome_fasta,
-                params.reference_genome_gff != "null" ? assembly.map{ true } : params.reference_genome_gff
+                params.reference_genome_fasta != "null" ? assembly.map{ true } : assembly.map{ false },
+                params.reference_genome_gff != "null" ? assembly.map{ true } : assembly.map{ false }
             )
         } else {
             QUAST(
                 assembly.map{it[1]},
                 params.reference_genome_fasta != "null" ? params.reference_genome_fasta : assembly.map{ [] },
                 params.reference_genome_gff != "null" ? params.reference_genome_gff : assembly.map{ [] },
-                params.reference_genome_fasta != "null" ? assembly.map{ true } : params.reference_genome_fasta,
-                params.reference_genome_gff != "null" ? assembly.map{ true } : params.reference_genome_gff
+                params.reference_genome_fasta != "null" ? assembly.map{ true } : assembly.map{ false },
+                params.reference_genome_gff != "null" ? assembly.map{ true } : assembly.map{ false }
             )
         }
         quast_verions = QUAST.out.versions
@@ -66,7 +66,7 @@ workflow ASSEMBLY_QC {
             assembly,
             params.busco_lineage,
             params.busco_lineages_path != "null" ? params.busco_lineages_path : assembly.map{ [] },
-            params.busco_config != "null" ? params.busco_config : assembly.map{ [] }
+            params.busco_config ? params.busco_config : assembly.map{ [] }
         )
         busco_batch_summary = BUSCO.out.batch_summary
         busco_short_summaries_txt = BUSCO.out.short_summaries_txt 
