@@ -4,7 +4,7 @@ include { BUSCO } from '../../modules/nf-core/busco'
 include { QUAST } from '../../modules/nf-core/quast'
 
 workflow ASSEMBLY_QC {
-    take: 
+    take:
     assembly
 
     main:
@@ -16,21 +16,21 @@ workflow ASSEMBLY_QC {
 
         CHECKM_LINEAGEWF(
             assembly,
-            assembly_ext,   
-            params.checkm_db ? params.checkm_db : []
+            assembly_ext,
+            params.checkm_db != "null" ? params.checkm_db : assembly.map{ [] }
         )
         checkm_output = CHECKM_LINEAGEWF.out.checkm_output
         marker_file = CHECKM_LINEAGEWF.out.marker_file
         checkm_tsv = CHECKM_LINEAGEWF.out.checkm_tsv
-        checkm_versions = CHECKM_LINEAGEWF.out.versions    
+        checkm_versions = CHECKM_LINEAGEWF.out.versions
     }else{
         //empty output
         checkm_output = []
         marker_file = []
         checkm_tsv = []
-        checkm_versions = []    
+        checkm_versions = []
     }
-    
+
     // RUN QUAST
     if (!params.skip_quast) {
         if ( params.combine_quast ) {
@@ -57,7 +57,7 @@ workflow ASSEMBLY_QC {
         //empty output
         quast_verions = []
         quast_results = []
-        quast_tsv = []    
+        quast_tsv = []
     }
 
     // RUN BUSCO
@@ -69,7 +69,7 @@ workflow ASSEMBLY_QC {
             params.busco_config ? params.busco_config : assembly.map{ [] }
         )
         busco_batch_summary = BUSCO.out.batch_summary
-        busco_short_summaries_txt = BUSCO.out.short_summaries_txt 
+        busco_short_summaries_txt = BUSCO.out.short_summaries_txt
         busco_short_summaries_json = BUSCO.out.short_summaries_json
         busco_dir = BUSCO.out.busco_dir
         busco_versions = BUSCO.out.versions
@@ -86,14 +86,14 @@ workflow ASSEMBLY_QC {
     checkm_output = checkm_output
     marker_file = marker_file
     checkm_tsv = checkm_tsv
-    checkm_versions = checkm_versions   
+    checkm_versions = checkm_versions
     // QUAST OUTPUTS
     quast_verions = quast_verions
     quast_results = quast_results
     quast_tsv = quast_tsv
     // BUSCO OUTPUTS
     busco_batch_summary = busco_batch_summary
-    busco_short_summaries_txt = busco_short_summaries_txt 
+    busco_short_summaries_txt = busco_short_summaries_txt
     busco_short_summaries_json = busco_short_summaries_json
     busco_dir = busco_dir
     busco_versions = busco_versions
