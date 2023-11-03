@@ -81,7 +81,7 @@ workflow TAXONOMY_QC {
         }
          
     }
-
+    ch_tax_qc_reads = ch_reads_taxonomy
     if (!params.skip_dehosting){
         if (params.dehosting_aligner=='bwa') {
 
@@ -153,11 +153,11 @@ workflow TAXONOMY_QC {
         else{
             ch_dehosted_reads = SAMTOOLS_FASTQ.out.other
         }
-        
+       ch_tax_qc_reads = ch_dehosted_reads  
     }
     
     emit:
-    ch_tax_qc_reads = ch_dehosted_reads                              // channel: [ val(meta), [ reads ] ]
+    ch_tax_qc_reads                              // channel: [ val(meta), [ reads ] ]
     //ch_tax_unaligned_reads = ch_tax_qc_unaligned_reads                    // channel: [ val(meta), [ reads ] ]
     //versions = TAXONOMY_QC.out.versions                                  // channel: [ versions.yml ]
 }
