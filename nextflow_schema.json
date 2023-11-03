@@ -32,7 +32,8 @@
       "default": "",
       "properties": {
         "checkm_db": {
-          "type": "boolean"
+          "type": "string",
+          "default": "\"null\""
         },
         "combine_quast": {
           "type": "boolean"
