@@ -73,13 +73,26 @@ if (params.help) {
 */
 
 include { SEQQC } from './workflows/seqqc'
-
+include { ANNOTATION } from './workflows/genome_annotation'
 //
 // WORKFLOW: Run main nf-core/seqqc analysis pipeline
 //
-workflow NFCORE_SEQQC {
-    SEQQC ()
+
+workflow {
+
+    main:  
+    if (params.workflow == 'seqqc') {
+        SEQQC ()
+    }
+    else if (params.workflow == 'annotation') {
+        ANNOTATION ()
+    }   
+    else {
+        log.error "Workflow not recognised"
+        exit 1
+    }
 }
+
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -91,10 +104,10 @@ workflow NFCORE_SEQQC {
 // WORKFLOW: Execute a single named workflow for the pipeline
 // See: https://github.com/nf-core/rnaseq/issues/619
 //
-workflow {
+/*workflow {
     NFCORE_SEQQC ()
 }
-
+*/
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     THE END
