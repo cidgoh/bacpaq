@@ -20,6 +20,7 @@ process CCTYPER {
     tuple val(meta), path("${prefix}/plots.svg"), emit: plot_svg, optional: true
     tuple val(meta), path("${prefix}/plots.png"), emit: plot_png, optional: true
     tuple val(meta), path("${prefix}/spacers/*.fa"), emit: spacer_fa
+    path "versions.yml"                       , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -33,5 +34,10 @@ process CCTYPER {
         ${args} \
         ${fasta} \
         ${prefix}
+
+    cat <<-END_VERSIONS > versions.yml
+        "${task.process}":
+            cctyper: \$(cctyper -h | grep version | sed 's/CRISPRCasTyper version //g')
+    END_VERSIONS
     """
 }
