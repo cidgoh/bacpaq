@@ -20,8 +20,6 @@ process RESFINDER {
     script:
     def args     = task.ext.args ?: ''
     def prefix   = task.ext.prefix ?: "${meta.id}"
-    def set_acquired = acquired ? "--acquired" : ''
-    def set_point = point ? "--point" : ''
     """
     run_resfinder.py \\
         -ifa ${fasta} \\
