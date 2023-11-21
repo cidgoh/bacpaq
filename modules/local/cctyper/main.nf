@@ -27,7 +27,7 @@ process CCTYPER {
     
     script:
     def args     = task.ext.args ?: ''
-    prefix = task.ext.prefix ?: 'out'
+    prefix = task.ext.prefix ?: "${meta.id}"
     """
     cctyper \
         -t ${task.cpus} \
