@@ -29,6 +29,7 @@ for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true
 //
 //include { INPUT_CHECK           } from '../subworkflows/local/input_check'
 //include { GENE_ANNOTATION       } from '../subworkflows/local/gene_annotation'
+include { PANGENOME_ANALYSIS    } from '../subworkflows/local/pangenome_analysis'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -75,7 +76,9 @@ workflow ANNOTATION {
         
     }
     */
-     
+
+    PANGENOME_ANALYSIS()
+    ch_versions = ch_versions.mix(PANGENOME_ANALYSIS.out.versions)
     
 }
 
