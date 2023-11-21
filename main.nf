@@ -25,30 +25,7 @@ public static Boolean fileExists(filename) {
 
 WorkflowMain.initialise(workflow, params, log)
 
-if (!params.skip_kraken2 && !fileExists(params.kraken2_db)) {
-    log.error "Path to Kraken2 database is not valid"
-    exit 1
-}
-if ((params.classifier == 'centrifuge') && !fileExists(params.centrifuge_db)) {
-    log.error "Path to Centrifuge database is not valid"
-    exit 1
-}
-if (!params.skip_checkm && !fileExists(params.checkm_db)) {
-    log.error "Path to CheckM database is not valid"
-    exit 1
-}
-if (!params.skip_confindr && !fileExists(params.confindr_db)) {
-    log.error "Path to Confindr database is not valid"
-    exit 1
-}
-if (!params.skip_busco && !fileExists(params.busco_lineages_path)) {
-    log.error "Path to BUSCO lineages database is not valid"
-    exit 1
-}
-
 //include { validateParameters; paramsHelp; paramsSummaryLog; } from 'plugin/nf-validation'
-
-
 
 // Print help message, supply typical command line usage for the pipeline
 if (params.help) {
