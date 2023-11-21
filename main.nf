@@ -33,10 +33,10 @@ if ((params.classifier == 'centrifuge') && !fileExists(params.centrifuge_db)) {
     log.error "Path to Centrifuge database is not valid"
     exit 1
 }
-if (!params.skip_checkm && !fileExists(params.checkm_db)) {
-    log.error "Path to CheckM database is not valid"
-    exit 1
-}
+// if (!params.skip_checkm && !fileExists(params.checkm_db)) {
+//     log.error "Path to CheckM database is not valid"
+//     exit 1
+// }
 if (!params.skip_confindr && !fileExists(params.confindr_db)) {
     log.error "Path to Confindr database is not valid"
     exit 1

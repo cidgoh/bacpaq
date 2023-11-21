@@ -1,4 +1,5 @@
 include { ROARY } from '../../modules/nf-core/roary/main'
+include { PIRATE } from '../../modules/nf-core/pirate/main'
 
 workflow PANGENOME_ANALYSIS {
     ch_gff = [
@@ -14,9 +15,23 @@ workflow PANGENOME_ANALYSIS {
     // ch_gff
 
     main:
-    ROARY(ch_gff)
+
+    ch_versions = Channel.empty()
+    
+    // skip setup, also add to nextflow.config
+    if(!params.skip_roary) {
+        ROARY(ch_gff)
+        ch_versions = ch_versions.mix( ROARY.out.versions.first() )
+    }
+
+    if (!params.skip_pirate) {
+        PIRATE(ch_gff)
+        ch_versions = ch_versions.mix( PIRATE.out.versions.first() )
+    }
 
     emit:
-    results = ROARY.out.results
-    versions = ROARY.out.versions
+    // what happens if .out.results are null? best practices for these?
+    // roary = ROARY.out.results
+    // pirate = PIRATE.out.results
+    versions = ch_versions
 }
