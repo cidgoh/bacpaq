@@ -9,6 +9,7 @@ process ABRICATE_RUN {
 
     input:
     tuple val(meta), path(assembly)
+    val(db)
 
     output:
     tuple val(meta), path("*.txt"), emit: report
@@ -19,10 +20,13 @@ process ABRICATE_RUN {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = task.ext.prefix ?: "${meta.id}.$db"
+    def database = db ? "--db $db" : ''
+
     """
     abricate \\
         $assembly \\
+        $database \\
         $args \\
         --threads $task.cpus > ${prefix}.txt
 
