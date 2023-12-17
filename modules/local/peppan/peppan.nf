@@ -44,18 +44,3 @@ process PEPPAN_PEPPAN {
     END_VERSIONS
     """
 }
-
-params.gff_reference = null
-
-workflow {
-    
-    ch_gff              =   Channel.fromPath(params.gff_peppan)
-    ch_reference_gff    =   Channel.fromPath(params.gff_reference)
-    ch_gff
-        .collect()
-        .map {tuple([ id:'test' ], it) }
-        .set{ch_all}
-
-     PEPPAN_PEPPAN(ch_all,
-            ch_reference_gff)
-}
