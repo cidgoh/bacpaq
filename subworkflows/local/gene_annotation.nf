@@ -1,13 +1,13 @@
 // INCLUDING MODULES
 // Importing the necessary modules for the workflow
-include { BAKTA_BAKTA } from '../../modules/nf-core/bakta/bakta/main' 
+include { BAKTA_BAKTA } from '../../modules/nf-core/bakta/bakta/main'
 include { BAKTA_BAKTADBDOWNLOAD } from '../../modules/nf-core/bakta/baktadbdownload/main'
-include { PROKKA } from '../../modules/nf-core/prokka/main'                                                                          
+include { PROKKA } from '../../modules/nf-core/prokka/main'
 
 // Defining the workflow
 workflow GENE_ANNOTATION{
     // Defining the input channel
-    take: 
+    take:
         ch_genome
 
     // Defining the main process
@@ -37,6 +37,8 @@ workflow GENE_ANNOTATION{
         if (!params.skip_prokka){
             PROKKA(ch_genome, proteins, prodigal)
             prokka_gff = PROKKA.out.gff
+            prokka_fna = PROKKA.out.fna
+            prokka_faa = PROKKA.out.faa
             ch_versions   = ch_versions.mix(PROKKA.out.versions)
         }
 
@@ -51,17 +53,23 @@ workflow GENE_ANNOTATION{
             }
             else{
                 bakta_db = Channel.from(params.bakta_db)
-                
+
             }
-            
+
             BAKTA_BAKTA(ch_genome, bakta_db, proteins, prodigal)
             bakta_gff = BAKTA_BAKTA.out.gff
+            bakta_fna = BAKTA_BAKTA.out.fna
+            bakta_faa = BAKTA_BAKTA.out.faa
             ch_versions = ch_versions.mix(BAKTA_BAKTA.out.versions)
         }
-        
+
     // Defining the output channels
     emit:
         bakta_gff
+        bakta_fna
+        bakta_faa
         prokka_gff
+        prokka_fna
+        prokka_faa
         ch_versions
 }
