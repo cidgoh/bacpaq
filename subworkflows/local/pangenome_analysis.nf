@@ -39,6 +39,7 @@ workflow PANGENOME_ANALYSIS {
     }
     
     if (!params.skip_panaroo) {
+        // must specify --clean_mode parameter in command line to work
         PANAROO_RUN(ch_gff)
         ch_versions = ch_versions.mix( PANAROO_RUN.out.versions.first() )
     }
