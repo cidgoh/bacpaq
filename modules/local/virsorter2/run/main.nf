@@ -1,7 +1,7 @@
-process VIRSORTER2 {
+process VIRSORTER2_RUN {
     tag "$meta.id"
     label 'process_medium'
-    conda "bioconda::virsorter=2.2.3-pyhdfd78af_1"
+    conda "bioconda::virsorter=2.2.3"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'docker://jiarong/virsorter:2.2.3' :
         'jiarong/virsorter:2.2.3' }"
