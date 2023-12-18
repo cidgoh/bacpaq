@@ -8,6 +8,7 @@ process VIRSORTER2_RUN {
 
     input:
     tuple val(meta), path(fasta)
+    tuple val(meta), path(db)
 
     output:
     path "${prefix}/final-viral-boundary.tsv" , emit: boundary                                     
@@ -20,11 +21,11 @@ process VIRSORTER2_RUN {
 
     script:
     def args     = task.ext.args ?: ''
-    def db       = params.virsorter_db ?: '/db'
-    def prefix       = task.ext.prefix ?: '.'
+    def db_path  = db ?: '/db'
+    def prefix   = task.ext.prefix ?: '.'
     """
     virsorter run \
-        -d ${db} \
+        -d ${db_path} \
         -j ${task.cpus} \
         -w ${prefix} \
         -i ${fasta} \
