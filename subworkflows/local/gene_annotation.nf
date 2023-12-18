@@ -46,7 +46,7 @@ workflow GENE_ANNOTATION{
 
         if(!params.skip_bakta){
             // Checking if BAKTA download is skipped
-            if (!params.skip_bakta_download){
+            if (!params.bakta_db){
                 BAKTA_BAKTADBDOWNLOAD()
                 bakta_db = BAKTA_BAKTADBDOWNLOAD.out.db
                 ch_versions = ch_versions.mix(BAKTA_BAKTADBDOWNLOAD.out.versions)
