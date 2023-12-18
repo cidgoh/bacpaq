@@ -1,12 +1,13 @@
 include { ROARY } from '../../modules/nf-core/roary/main'
 include { PIRATE } from '../../modules/nf-core/pirate/main'
+include { PANAROO_RUN } from '../../modules/nf-core/panaroo/run/main'
 
 workflow PANGENOME_ANALYSIS {
     ch_gff = [
         [ id:'GCA_010673125.1', single_end:false ],
         [
-            "/home/jyh25/scratch/hackathon/GCA_010673125.1.gff",
-            "/home/jyh25/scratch/hackathon/GCA_010798115.1.gff"
+            "/home/$USER/scratch/hackathon/GCA_010673125.1.gff",
+            "/home/$USER/scratch/hackathon/GCA_010798115.1.gff"
         ]
     ]
     
@@ -28,10 +29,12 @@ workflow PANGENOME_ANALYSIS {
         PIRATE(ch_gff)
         ch_versions = ch_versions.mix( PIRATE.out.versions.first() )
     }
+    
+    if (!params.skip_panaroo) {
+        PANAROO_RUN(ch_gff)
+        ch_versions = ch_versions.mix( PANAROO_RUN.out.versions.first() )
+    }
 
     emit:
-    // what happens if .out.results are null? best practices for these?
-    // roary = ROARY.out.results
-    // pirate = PIRATE.out.results
     versions = ch_versions
 }
