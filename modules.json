@@ -5,6 +5,31 @@
     "https://github.com/nf-core/modules.git": {
       "modules": {
         "nf-core": {
+          "abricate/run": {
+            "branch": "master",
+            "git_sha": "8fc1d24c710ebe1d5de0f2447ec9439fd3d9d66a",
+            "installed_by": ["modules"]
+          },
+          "abricate/summary": {
+            "branch": "master",
+            "git_sha": "8fc1d24c710ebe1d5de0f2447ec9439fd3d9d66a",
+            "installed_by": ["modules"]
+          },
+          "abritamr/run": {
+            "branch": "master",
+            "git_sha": "8fc1d24c710ebe1d5de0f2447ec9439fd3d9d66a",
+            "installed_by": ["modules"]
+          },
+          "amrfinderplus/run": {
+            "branch": "master",
+            "git_sha": "8fc1d24c710ebe1d5de0f2447ec9439fd3d9d66a",
+            "installed_by": ["modules"]
+          },
+          "amrfinderplus/update": {
+            "branch": "master",
+            "git_sha": "8fc1d24c710ebe1d5de0f2447ec9439fd3d9d66a",
+            "installed_by": ["modules"]
+          },
           "bedtools/bamtobed": {
             "branch": "master",
             "git_sha": "1d48427957205cb6acf1ffe330bd35b6bb8baa90",
@@ -165,6 +190,26 @@
             "git_sha": "49b18b1639f4f7104187058866a8fab33332bdfe",
             "installed_by": ["modules"]
           },
+          "hamronization/abricate": {
+            "branch": "master",
+            "git_sha": "3f5420aa22e00bd030a2556dfdffc9e164ec0ec5",
+            "installed_by": ["modules"]
+          },
+          "hamronization/amrfinderplus": {
+            "branch": "master",
+            "git_sha": "3f5420aa22e00bd030a2556dfdffc9e164ec0ec5",
+            "installed_by": ["modules"]
+          },
+          "hamronization/rgi": {
+            "branch": "master",
+            "git_sha": "3f5420aa22e00bd030a2556dfdffc9e164ec0ec5",
+            "installed_by": ["modules"]
+          },
+          "hamronization/summarize": {
+            "branch": "master",
+            "git_sha": "3f5420aa22e00bd030a2556dfdffc9e164ec0ec5",
+            "installed_by": ["modules"]
+          },
           "igv/js": {
             "branch": "master",
             "git_sha": "ce166d3039700fc2eb7192f0e93b95b6f1c68b88",
@@ -243,6 +288,11 @@
           "rasusa": {
             "branch": "master",
             "git_sha": "e745e167c1020928ef20ea1397b6b4d230681b4d",
+            "installed_by": ["modules"]
+          },
+          "rgi/main": {
+            "branch": "master",
+            "git_sha": "8fc1d24c710ebe1d5de0f2447ec9439fd3d9d66a",
             "installed_by": ["modules"]
           },
           "samtools/bam2fq": {
