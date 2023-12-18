@@ -8,7 +8,7 @@ process VIRSORTER2_RUN {
 
     input:
     tuple val(meta), path(fasta)
-    tuple val(meta), path(db)
+    path(db)
 
     output:
     path "${prefix}/final-viral-boundary.tsv" , emit: boundary                                     
