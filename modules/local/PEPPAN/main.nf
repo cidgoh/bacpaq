@@ -8,7 +8,7 @@ process PEPPAN {
 
     input:
     tuple val(meta), path(gff)
-    path (reference_gff)
+    path reference_gff
 
     output:
     tuple val(meta), path("*.gff"), path("*.fna")   ,             emit: gff_peppan
