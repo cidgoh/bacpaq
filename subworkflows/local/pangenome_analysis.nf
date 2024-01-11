@@ -32,24 +32,40 @@ workflow PANGENOME_ANALYSIS {
     // skip setup, also add to nextflow.config
     if(!params.skip_roary) {
         ROARY(ch_gff)
+        roary_results = ROARY.out.results
+        roary_alignment = ROARY.out.aln
         ch_versions = ch_versions.mix( ROARY.out.versions )
     }
 
     if (!params.skip_pirate) {
         PIRATE(ch_gff)
+        pirate_results = PIRATE.out.results
+        pirate_alignment = PIRATE.out.aln
         ch_versions = ch_versions.mix( PIRATE.out.versions )
     }
 
     if (!params.skip_panaroo) {
         PANAROO_RUN(ch_gff)
+        panaroo_results = PANAROO_RUN.out.results
+        panaroo_alignment = PANAROO_RUN.out.aln
         ch_versions = ch_versions.mix( PANAROO_RUN.out.versions )
     }
 
     if (!params.skip_peppan) {
         PEPPAN(ch_gff, ch_reference_gff)
+        peppan_gff = PEPPAN.out.gff_peppan
+        peppan_fna = PEPPAN.out.fna_peppan
         ch_versions = ch_versions.mix( PEPPAN.out.versions )
     }
 
     emit:
     versions = ch_versions
+    roary_results
+    roary_alignment
+    pirate_results
+    pirate_alignment
+    panaroo_results
+    panaroo_alignment
+    peppan_gff
+    peppan_fna
 }
