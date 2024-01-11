@@ -11,8 +11,9 @@ process PEPPAN {
     path reference_gff
 
     output:
-    tuple val(meta), path("*.gff"), path("*.fna")   ,             emit: gff_peppan
-    path "versions.yml"                             ,             emit: versions
+    tuple val(meta), path("*.gff")   ,           emit: gff_peppan
+    tuple val(meta), path("*.fna")   ,           emit: fna_peppan
+    path "versions.yml"              ,           emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -27,13 +28,13 @@ process PEPPAN {
     PEPPAN -p $prefix \
         $gff \
         *.gff
-    
+
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         peppan: $version
     END_VERSIONS
     """
-    
+
     stub:
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
