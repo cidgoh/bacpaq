@@ -215,6 +215,11 @@
             "git_sha": "c8e35eb2055c099720a75538d1b8adb3fb5a464c",
             "installed_by": ["modules"]
           },
+          "mobsuite/recon": {
+            "branch": "master",
+            "git_sha": "8fc1d24c710ebe1d5de0f2447ec9439fd3d9d66a",
+            "installed_by": ["modules"]
+          },
           "multiqc": {
             "branch": "master",
             "git_sha": "ee80d14721e76e2e079103b8dcd5d57129e584ba",
@@ -233,6 +238,9 @@
           "pirate": {
             "branch": "master",
             "git_sha": "3f5420aa22e00bd030a2556dfdffc9e164ec0ec5",
+          "plasmidfinder": {
+            "branch": "master",
+            "git_sha": "8fc1d24c710ebe1d5de0f2447ec9439fd3d9d66a",
             "installed_by": ["modules"]
           },
           "porechop/abi": {
