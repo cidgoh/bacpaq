@@ -11,10 +11,12 @@ process VIRSORTER2_RUN {
     path(db)
 
     output:
-    path "${prefix}/final-viral-boundary.tsv" , emit: boundary                                     
-    path "${prefix}/final-viral-combined.fa"  , emit: fasta
-    path "${prefix}/final-viral-score.tsv"    , emit: score
-    path "versions.yml"                       , emit: versions
+    path "final-viral-boundary.tsv" , emit: boundary                                     
+    path "final-viral-combined.fa"  , emit: fasta
+    path "final-viral-score.tsv"    , emit: score
+    path "log"                      , emit: log
+    path "config.yaml"              , emit: config
+    path "versions.yml"             , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -22,12 +24,12 @@ process VIRSORTER2_RUN {
     script:
     def args     = task.ext.args ?: ''
     def db_path  = db ?: '/db'
-    def prefix   = task.ext.prefix ?: '.'
+    def prefix   = task.ext.prefix ?: meta.id
     """
     virsorter run \
         -d ${db_path} \
         -j ${task.cpus} \
-        -w ${prefix} \
+        -w . \
         -i ${fasta} \
         ${args}
 
