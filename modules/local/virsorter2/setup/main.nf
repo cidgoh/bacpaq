@@ -1,4 +1,4 @@
-process VIRSORTER2_CONFIG {
+process VIRSORTER2_SETUP {
     tag "$meta.id"
     label 'process_medium'
     conda "${moduleDir}/environment.yml"
@@ -20,21 +20,10 @@ process VIRSORTER2_CONFIG {
     def args     = task.ext.args ?: ''
     def prefix   = task.ext.prefix ? task.ext.prefix+meta.id : meta.id
     def url      = 'https://osf.io/v46sc/download'
-    """
-    mkdir -p ./${prefix}
-
-    wget \
-        ${url} \
-        -O ${prefix}.tgz
-
-    tar \
-        -xzf ${prefix}.tgz \
-        -C ./${prefix} \
-        --strip-components=1
-    
+    """    
     virsorter \
-        config \
-        --db-dir=./${prefix} \
+        setup \
+        -d ${prefix} \
         ${args}
 
     cat <<-END_VERSIONS > versions.yml
