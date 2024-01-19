@@ -85,8 +85,6 @@ workflow ANNOTATION {
         }
     }
 
-
-
     if(!params.skip_phage_annotation){
         // Annotate phages using VIRSORTER2
         PHAGE(ch_genome)
