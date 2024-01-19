@@ -29,7 +29,7 @@ for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true
 //
 //include { INPUT_CHECK           } from '../subworkflows/local/input_check'
 //include { GENE_ANNOTATION       } from '../subworkflows/local/gene_annotation'
-
+include { PHAGE                 } from '../subworkflows/local/phage'
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     IMPORT NF-CORE MODULES/SUBWORKFLOWS
@@ -61,22 +61,29 @@ workflow ANNOTATION {
 
     /* Eventually this will replace the above line for taking input
     // SUBWORKFLOW: Read in samplesheet, validate and stage input files
-     
+
     INPUT_CHECK (
         ch_input
     )
     ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
-    
+
 
     if (!skip_gene_annotation) {
         // Annotate genes using GE
         GENE_ANNOTATION(genome)
         ch_versions = ch_versions.mix(GENE_ANNOTATION.out.versions)
-        
+
     }
     */
-     
-    
+
+    if(!params.skip_phage_annotation){
+        // Annotate phages using PHASTER
+        PHAGE(ch_genome)
+        ch_versions = ch_versions.mix(PHAGE.out.versions)
+
+    }
+
+
 }
 
 /*
