@@ -85,6 +85,7 @@ workflow ANNOTATION {
         // Annotate phages using PHASTER
         PHAGE(ch_genome)
         ch_versions = ch_versions.mix(PHAGE.out.versions)
+    }
 
     if (!params.skip_plasmid_analysis) {
         // Run pangenome analysis
