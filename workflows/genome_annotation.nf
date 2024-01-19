@@ -29,8 +29,10 @@ for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true
 //
 //include { INPUT_CHECK           } from '../subworkflows/local/input_check'
 //include { GENE_ANNOTATION       } from '../subworkflows/local/gene_annotation'
+include { PHAGE                 } from '../subworkflows/local/phage'
 include { PANGENOME_ANALYSIS    } from '../subworkflows/local/pangenome_analysis'
 include { PLASMIDS              } from '../subworkflows/local/plasmids'
+
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -78,6 +80,12 @@ workflow ANNOTATION {
 
     }
     */
+
+    if(!params.skip_phage_annotation){
+        // Annotate phages using PHASTER
+        PHAGE(ch_genome)
+        ch_versions = ch_versions.mix(PHAGE.out.versions)
+
     if (!params.skip_plasmid_analysis) {
         // Run pangenome analysis
         PLASMIDS(ch_genome)
