@@ -70,9 +70,16 @@ workflow AMR_ANNOTATION{
         }
 
         if (!params.skip_amrfinderplus){
-            AMRFINDERPLUS_UPDATE()
-            ch_versions = ch_versions.mix(AMRFINDERPLUS_UPDATE.out.versions)
-            AMRFINDERPLUS_RUN(ch_genome, AMRFINDERPLUS_UPDATE.out.db)
+            if (!params.amrfinderplus_db){
+                AMRFINDERPLUS_UPDATE()
+                amrfinderplus_db = AMRFINDERPLUS_UPDATE.out.db
+                ch_versions = ch_versions.mix(AMRFINDERPLUS_UPDATE.out.versions)
+            }
+            else{
+                amrfinderplus_db = Channel.from(params.amrfinderplus_db)
+
+            }
+            AMRFINDERPLUS_RUN(ch_genome, amrfinderplus_db)
             amrfinderplus_report = AMRFINDERPLUS_RUN.out.report
             ch_versions = ch_versions.mix(AMRFINDERPLUS_RUN.out.versions)
 
@@ -99,5 +106,5 @@ workflow AMR_ANNOTATION{
         rgi_report
         amrfinderplus_report
         abritamr_report
-        ch_versions
+        versions = ch_versions
 }
