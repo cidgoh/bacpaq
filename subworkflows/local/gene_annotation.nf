@@ -15,6 +15,10 @@ workflow GENE_ANNOTATION{
         // Initializing empty channels for the output files
         prokka_gff = Channel.empty()
         bakta_gff = Channel.empty()
+        prokka_fna = Channel.empty()
+        bakta_fna = Channel.empty()
+        prokka_faa = Channel.empty()
+        bakta_faa = Channel.empty()
         ch_versions = Channel.empty()
 
         // Checking if the prodigal training file is provided
