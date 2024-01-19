@@ -75,5 +75,5 @@ workflow GENE_ANNOTATION{
         prokka_gff
         prokka_fna
         prokka_faa
-        ch_versions
+        versions = ch_versions
 }
