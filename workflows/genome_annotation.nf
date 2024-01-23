@@ -28,7 +28,10 @@ for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
 //
 //include { INPUT_CHECK           } from '../subworkflows/local/input_check'
-//include { GENE_ANNOTATION       } from '../subworkflows/local/gene_annotation'
+include { GENE_ANNOTATION       } from '../subworkflows/local/gene_annotation'
+include { PHAGE                 } from '../subworkflows/local/phage'
+include { PANGENOME_ANALYSIS    } from '../subworkflows/local/pangenome_analysis'
+include { PLASMIDS              } from '../subworkflows/local/plasmids'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -59,24 +62,40 @@ workflow ANNOTATION {
     ch_genome = [ [ id:genome.getBaseName() ], genome ]
     print(ch_genome)
 
-    /* Eventually this will replace the above line for taking input
+    // Eventually this will replace the above line for taking input
     // SUBWORKFLOW: Read in samplesheet, validate and stage input files
-     
-    INPUT_CHECK (
+
+    /*INPUT_CHECK (
         ch_input
     )
     ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
-    
-
-    if (!skip_gene_annotation) {
-        // Annotate genes using GE
-        GENE_ANNOTATION(genome)
-        ch_versions = ch_versions.mix(GENE_ANNOTATION.out.versions)
-        
-    }
     */
-     
-    
+
+    if (!params.skip_gene_annotation) {
+        // Annotate genomes using Prokka and bakta
+        GENE_ANNOTATION(ch_genome)
+        ch_versions = ch_versions.mix(GENE_ANNOTATION.out.versions)
+
+        if (!params.skip_pangenome_analysis) {
+        // Run pangenome analysis
+        PANGENOME_ANALYSIS()
+        ch_versions = ch_versions.mix(PANGENOME_ANALYSIS.out.versions)
+
+        }
+    }
+
+    if(!params.skip_phage_annotation){
+        // Annotate phages using VIRSORTER2
+        PHAGE(ch_genome)
+        ch_versions = ch_versions.mix(PHAGE.out.versions)
+    }
+
+    if (!params.skip_plasmid_analysis) {
+        // Run plasmid annotation
+        PLASMIDS(ch_genome)
+        ch_versions = ch_versions.mix(PLASMIDS.out.versions)
+
+    }
 }
 
 /*
