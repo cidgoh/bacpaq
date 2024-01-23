@@ -33,7 +33,6 @@ include { PHAGE                 } from '../subworkflows/local/phage'
 include { PANGENOME_ANALYSIS    } from '../subworkflows/local/pangenome_analysis'
 include { PLASMIDS              } from '../subworkflows/local/plasmids'
 
-
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     IMPORT NF-CORE MODULES/SUBWORKFLOWS
@@ -97,8 +96,6 @@ workflow ANNOTATION {
         ch_versions = ch_versions.mix(PLASMIDS.out.versions)
 
     }
-
-
 }
 
 /*
