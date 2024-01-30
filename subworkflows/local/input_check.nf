@@ -9,10 +9,10 @@ workflow INPUT_CHECK {
     samplesheet // file: /path/to/samplesheet.csv
 
     main:
-    SAMPLESHEET_CHECK ( samplesheet, params.mode )
+    SAMPLESHEET_CHECK ( samplesheet, params.mode, params.workflow )
         .csv
         .splitCsv ( header:true, sep:',' )
-        .map { create_fastq_channel(it, params.mode) }
+        .map { create_fastq_channel(it, params.mode, params.workflow) }
         .set { reads }
 
     emit:
@@ -21,7 +21,7 @@ workflow INPUT_CHECK {
 }
 
 // Function to get list of [ meta, [ fastq_1, fastq_2 ] ]
-def create_fastq_channel(LinkedHashMap row, String mode) {
+def create_fastq_channel(LinkedHashMap row, String mode, String workflow) {
     // create meta map
     def meta = [:]
     meta.id         = row.sample
@@ -29,21 +29,27 @@ def create_fastq_channel(LinkedHashMap row, String mode) {
 
     // add path(s) of the fastq file(s) to the meta map
     def fastq_meta = []
-    if (mode.matches('nanopore')) {
-        fastq_meta = [ meta, [ file(row.fastq_dir) ] ]
+    if (workflow.matches('annotation')){
+        fastq_meta = [ meta, [ file(row.genome) ] ]
     }
     else {
-        if (!file(row.fastq_1).exists()) {
-            exit 1, "ERROR: Please check input samplesheet -> Read 1 FastQ file does not exist!\n${row.fastq_1}"
+        if (mode.matches('nanopore')) {
+        fastq_meta = [ meta, [ file(row.fastq_dir) ] ]
         }
-        if (meta.single_end) {
-            fastq_meta = [ meta, [ file(row.fastq_1) ] ]
-        } else {
-            if (!file(row.fastq_2).exists()) {
-                exit 1, "ERROR: Please check input samplesheet -> Read 2 FastQ file does not exist!\n${row.fastq_2}"
+        else {
+            if (!file(row.fastq_1).exists()) {
+                exit 1, "ERROR: Please check input samplesheet -> Read 1 FastQ file does not exist!\n${row.fastq_1}"
             }
-            fastq_meta = [ meta, [ file(row.fastq_1), file(row.fastq_2) ] ]
+            if (meta.single_end) {
+                fastq_meta = [ meta, [ file(row.fastq_1) ] ]
+            } else {
+                if (!file(row.fastq_2).exists()) {
+                    exit 1, "ERROR: Please check input samplesheet -> Read 2 FastQ file does not exist!\n${row.fastq_2}"
+                }
+                fastq_meta = [ meta, [ file(row.fastq_1), file(row.fastq_2) ] ]
+            }
         }
     }
+
     return fastq_meta
 }
