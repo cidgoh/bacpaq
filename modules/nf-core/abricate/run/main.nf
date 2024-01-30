@@ -8,8 +8,7 @@ process ABRICATE_RUN {
         'biocontainers/abricate:1.0.1--ha8f3691_1' }"
 
     input:
-    tuple val(meta), path(assembly)
-    val(db)
+    tuple val(meta), path(assembly)    
 
     output:
     tuple val(meta), path("*.txt"), emit: report
@@ -20,13 +19,11 @@ process ABRICATE_RUN {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}.$db"
-    def database = db ? "--db $db" : ''
+    def prefix = task.ext.prefix ?: "${meta.id}"
 
     """
     abricate \\
         $assembly \\
-        $database \\
         $args \\
         --threads $task.cpus > ${prefix}.txt
 
