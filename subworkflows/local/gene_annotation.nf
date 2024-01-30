@@ -8,7 +8,7 @@ include { PROKKA } from '../../modules/nf-core/prokka/main'
 workflow GENE_ANNOTATION{
     // Defining the input channel
     take:
-        ch_genome
+        genome
 
     // Defining the main process
     main:
@@ -39,7 +39,7 @@ workflow GENE_ANNOTATION{
 
         // Running PROKKA if skip_prokka is not set to true
         if (!params.skip_prokka){
-            PROKKA(ch_genome, proteins, prodigal)
+            PROKKA(genome, proteins, prodigal)
             prokka_gff = PROKKA.out.gff
             prokka_fna = PROKKA.out.fna
             prokka_faa = PROKKA.out.faa
@@ -56,11 +56,11 @@ workflow GENE_ANNOTATION{
                 ch_versions = ch_versions.mix(BAKTA_BAKTADBDOWNLOAD.out.versions)
             }
             else{
-                bakta_db = Channel.from(params.bakta_db)
+                bakta_db = file(params.bakta_db, checkIfExists: true)
 
             }
 
-            BAKTA_BAKTA(ch_genome, bakta_db, proteins, prodigal)
+            BAKTA_BAKTA(genome, bakta_db, proteins, prodigal)
             bakta_gff = BAKTA_BAKTA.out.gff
             bakta_fna = BAKTA_BAKTA.out.fna
             bakta_faa = BAKTA_BAKTA.out.faa
