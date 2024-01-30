@@ -7,21 +7,12 @@ workflow PANGENOME_ANALYSIS {
 
 
     take:
-    // should be ch_gff from prokka output
-    //ch_gff
+    // should be ch_gff from prokka/bakta output
+    ch_gff
 
     main:
 
     ch_versions = Channel.empty()
-
-    ch_gff = [
-        [ id:'pan_genome', single_end:false ],
-        [
-            file("/scratch/mzanwar/nf-seqqc/PROKKA_GCA_010673125.1/PROKKA_GCA_010673125.1.gff"),
-            file("/scratch/mzanwar/nf-seqqc/PROKKA_GCA_010798115.1/PROKKA_GCA_010798115.1.gff")
-
-        ]
-    ]
 
     if (params.reference_gff) {
         ch_reference_gff = params.reference_gff
