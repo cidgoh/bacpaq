@@ -6,6 +6,7 @@ include { AMRFINDERPLUS_UPDATE } from '../../modules/nf-core/amrfinderplus/updat
 include { AMRFINDERPLUS_RUN } from '../../modules/nf-core/amrfinderplus/run/main'
 include { ABRICATE_RUN } from '../../modules/nf-core/abricate/run/main'
 include { ABRICATE_SUMMARY } from '../../modules/nf-core/abricate/summary/main'
+include { RESFINDER } from '../../modules/local/resfinder/main'
 
 // This will be implemented in the future when the database
 // information is ready for hamronization tool to parse
@@ -32,6 +33,7 @@ workflow AMR_ANNOTATION{
         rgi_report = Channel.empty()
         amrfinderplus_report = Channel.empty()
         abritamr_report = Channel.empty()
+        resfinder_report = Channel.empty()
 
 
         // Running abricate
@@ -57,10 +59,11 @@ workflow AMR_ANNOTATION{
             RGI_MAIN(genome)
             rgi_report = RGI_MAIN.out.tsv
             ch_versions = ch_versions.mix(RGI_MAIN.out.versions)
-
+            /*
             if (!params.skip_hamronization ){
                 HAMRONIZATION_RGI(rgi_report, "tsv", RGI_MAIN.out.versions, "test")
             }
+            */
         }
 
         if (!params.skip_amrfinderplus){
@@ -77,10 +80,11 @@ workflow AMR_ANNOTATION{
             amrfinderplus_report = AMRFINDERPLUS_RUN.out.report
             ch_versions = ch_versions.mix(AMRFINDERPLUS_RUN.out.versions)
 
-
+            /*
             if (!params.skip_hamronization ){
                 HAMRONIZATION_AMRFINDERPLUS(amrfinderplus_report, "tsv", "test", "test")
             }
+            */
 
         }
 
@@ -88,6 +92,11 @@ workflow AMR_ANNOTATION{
             ABRITAMR_RUN(genome)
             abritamr_report = ABRITAMR_RUN.out.txt
             ch_versions = ch_versions.mix(ABRITAMR_RUN.out.versions)
+        }
+
+        if (!params.skip_resfinder){
+            RESFINDER(genome)
+            resfinder_report = RESFINDER.out.resfinder_results_table
         }
 
 
@@ -100,5 +109,7 @@ workflow AMR_ANNOTATION{
         rgi_report
         amrfinderplus_report
         abritamr_report
+        resfinder_report
         versions = ch_versions
+
 }
