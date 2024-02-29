@@ -32,6 +32,15 @@ class RowChecker:
         ".fq"
     )
 
+    FASTA_FORMATS = (
+        ".fa",
+        ".fasta",
+        ".fna",
+        ".fa.gz",
+        ".fasta.gz",
+        ".fna.gz"
+    )
+
     def __init__(
         self,
         sample_col="sample",
@@ -39,6 +48,7 @@ class RowChecker:
         second_col="fastq_2",
         single_col="single_end",
         mode="illumina",
+        workflow_type="seqqc",
         **kwargs,
     ):
         """
@@ -59,8 +69,17 @@ class RowChecker:
         Args:
             sample_col (str): The name of the column that contains the sample name
                 (default "sample").
-            first_col (str): The name of the column that contains the path to  
+            first_col (str): The name of the column that contains the path to
                 DIRECTORY that contains FASTQ files (default "fastq_dir").
+            single_col (str): The name of the new column that will be inserted and
+                records whether the sample contains single- or paired-end sequencing
+                reads (default "single_end").
+        For workflow_type == "annotation"
+        Args:
+            sample_col (str): The name of the column that contains the sample name
+                (default "sample").
+            first_col (str): The name of the column that contains the path to
+                FASTA file (default "genome").
             single_col (str): The name of the new column that will be inserted and
                 records whether the sample contains single- or paired-end sequencing
                 reads (default "single_end").
@@ -72,6 +91,8 @@ class RowChecker:
         self._first_col = first_col
         if mode == 'nanopore':
             self._first_col = "fastq_dir"
+        if workflow_type == 'annotation':
+            self._first_col = "genome"
         self._second_col = second_col
         self._single_col = single_col
         self._seen = set()
@@ -79,7 +100,7 @@ class RowChecker:
 
 
 
-    def validate_and_transform(self, row, mode):
+    def validate_and_transform(self, row, mode, workflow_type):
         """
         Perform all validations on the given row and insert the read pairing status.
 
@@ -89,12 +110,12 @@ class RowChecker:
 
         """
         self._validate_sample(row)
-        self._validate_first(row, mode)
+        self._validate_first(row, mode, workflow_type)
 
         if mode == "illumina":
             self._validate_second(row)
             self._validate_pair(row)
-        
+
         self._seen.add((row[self._sample_col], row[self._first_col]))
         self.modified.append(row)
 
@@ -105,14 +126,18 @@ class RowChecker:
         # Sanitize samples slightly.
         row[self._sample_col] = row[self._sample_col].replace(" ", "_")
 
-    def _validate_first(self, row, mode):
+    def _validate_first(self, row, mode, workflow_type):
         """Assert that the first FASTQ entry is non-empty and has the right format."""
         if len(row[self._first_col]) <= 0:
             raise AssertionError("At least the first file path is required.")
-        if mode == "illumina":
-            self._validate_fastq_format(row[self._first_col])
-        elif mode == "nanopore":
-            row[self._single_col] = True
+        if workflow_type == "annotation":
+            self._validate_fasta_format(row[self._first_col])
+        else:
+            if mode == "illumina":
+                self._validate_fastq_format(row[self._first_col])
+            elif mode == "nanopore":
+                row[self._single_col] = True
+
 
     def _validate_second(self, row):
         """Assert that the second FASTQ entry has the right format if it exists."""
@@ -137,7 +162,15 @@ class RowChecker:
                 f"The FASTQ file has an unrecognized extension: {filename}\n"
                 f"It should be one of: {', '.join(self.VALID_FORMATS)}"
             )
-    
+
+    def _validate_fasta_format(self, filename):
+        """Assert that a given filename has one of the expected FASTA extensions."""
+        if not any(filename.endswith(extension) for extension in self.FASTA_FORMATS):
+            raise AssertionError(
+                f"The FASTA file has an unrecognized extension: {filename}\n"
+                f"It should be one of: {', '.join(self.FASTA_FORMATS)}"
+            )
+
     def _validate_directory_format(self, filename):
         if not os.path.exists(filename):
             raise AssertionError(
@@ -147,7 +180,7 @@ class RowChecker:
             raise AssertionError(
                 f"The following path is not a directory: {filename}\n"
             )
-        
+
 
     def validate_unique_samples(self):
         """
@@ -198,7 +231,7 @@ def sniff_format(handle):
     return dialect
 
 
-def check_samplesheet(file_in, file_out, mode):
+def check_samplesheet(file_in, file_out, mode, workflow_type):
     """
     Check that the tabular samplesheet has the structure expected by nf-core pipelines.
 
@@ -226,10 +259,13 @@ def check_samplesheet(file_in, file_out, mode):
         https://raw.githubusercontent.com/nf-core/test-datasets/viralrecon/samplesheet/samplesheet_test_illumina_amplicon.csv
 
     """
-    if mode == "illumina":
-        required_columns = {"sample", "fastq_1", "fastq_2"}
-    elif mode == "nanopore":
-        required_columns = {"sample", "fastq_dir"}
+    if workflow_type == "annotation":
+        required_columns = {"sample", "genome"}
+    else:
+        if mode == "illumina":
+            required_columns = {"sample", "fastq_1", "fastq_2"}
+        elif mode == "nanopore":
+            required_columns = {"sample", "fastq_dir"}
     # See https://docs.python.org/3.9/library/csv.html#id3 to read up on `newline=""`.
     with file_in.open(newline="") as in_handle:
         reader = csv.DictReader(in_handle, dialect=sniff_format(in_handle))
@@ -239,10 +275,10 @@ def check_samplesheet(file_in, file_out, mode):
             logger.critical(f"The sample sheet **must** contain these column headers: {req_cols}.")
             sys.exit(1)
         # Validate each row.
-        checker = RowChecker(mode = mode)
+        checker = RowChecker(mode = mode, workflow_type = workflow_type)
         for i, row in enumerate(reader):
             try:
-                checker.validate_and_transform(row, mode)
+                checker.validate_and_transform(row, mode, workflow_type)
             except AssertionError as error:
                 logger.critical(f"{str(error)} On line {i + 2}.")
                 sys.exit(1)
@@ -284,6 +320,14 @@ def parse_args(argv=None):
         default="illumina"
     )
     parser.add_argument(
+        "--workflow_type",
+        metavar="workflow_type",
+        type=str,
+        choices=("seqqc", "annotation"),
+        help="worfklow type",
+        default="seqqc"
+    )
+    parser.add_argument(
         "-l",
         "--log-level",
         help="The desired log level (default WARNING).",
@@ -301,7 +345,7 @@ def main(argv=None):
         logger.error(f"The given input file {args.file_in} was not found!")
         sys.exit(2)
     args.file_out.parent.mkdir(parents=True, exist_ok=True)
-    check_samplesheet(args.file_in, args.file_out, args.mode)
+    check_samplesheet(args.file_in, args.file_out, args.mode, args.workflow_type)
 
 
 if __name__ == "__main__":

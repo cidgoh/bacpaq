@@ -10,6 +10,7 @@ process SAMPLESHEET_CHECK {
     input:
     path samplesheet
     val mode
+    val workflow_type
 
     output:
     path '*.csv'       , emit: csv
@@ -23,6 +24,7 @@ process SAMPLESHEET_CHECK {
     check_samplesheet.py \\
         $samplesheet \\
         samplesheet.valid.csv \\
+        --workflow_type ${workflow_type} \\
         --mode ${mode}
 
     cat <<-END_VERSIONS > versions.yml
