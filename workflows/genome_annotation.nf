@@ -33,6 +33,7 @@ include { PHAGE                 } from '../subworkflows/local/phage'
 include { PANGENOME_ANALYSIS    } from '../subworkflows/local/pangenome_analysis'
 include { PLASMIDS              } from '../subworkflows/local/plasmids'
 include { AMR_ANNOTATION        } from '../subworkflows/local/amr_annotation'
+include { CRISPRS               } from '../subworkflows/local/crisprs'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -80,21 +81,28 @@ workflow ANNOTATION {
     phage_input = INPUT_CHECK.out.reads
     if(!params.skip_phage_annotation){
         // Annotate phages using VIRSORTER2
-        PHAGE(phage_input)
+        PHAGE(ch_genome)
         ch_versions = ch_versions.mix(PHAGE.out.versions)
     }
 
     plasmid_input = INPUT_CHECK.out.reads
     if (!params.skip_plasmid_analysis) {
         // Run plasmid annotation
-        PLASMIDS(plasmid_input)
+        PLASMIDS(ch_genome)
         ch_versions = ch_versions.mix(PLASMIDS.out.versions)
+    }
+
+    //crispr_input = INPUT_CHECK.out.reads
+    if (!params.skip_crispr_analysis) {
+        // Run CRISPR analysis
+        CRISPRS(ch_genome)
+        ch_versions = ch_versions.mix(CRISPRS.out.versions)
     }
 
     gene_annotation_input = INPUT_CHECK.out.reads
     if (!params.skip_gene_annotation) {
         // Annotate genomes using Prokka and bakta
-        GENE_ANNOTATION(gene_annotation_input)
+        GENE_ANNOTATION(ch_genome)
         ch_versions = ch_versions.mix(GENE_ANNOTATION.out.versions)
 
         if (!params.skip_pangenome_analysis) {
