@@ -4,6 +4,10 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
+// Check if database filepaths exists
+public static Boolean fileExists(filename) {
+    return new File(filename).exists()
+}
 def summary_params = NfcoreSchema.paramsSummaryMap(workflow, params)
 
 // Validate input parameters
@@ -95,14 +99,14 @@ workflow SEQQC {
     main:
     ch_versions = Channel.empty()
 
-    // 
+    //
     // SUBWORKFLOW: Read in samplesheet, validate and stage input files
-    // 
+    //
     INPUT_CHECK (
         ch_input
     )
     ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
-    
+
     if (params.mode=='nanopore') {
         // Concatenate fastq files
         CAT_NANOPORE_FASTQ(INPUT_CHECK.out.reads)
@@ -131,7 +135,7 @@ workflow SEQQC {
                 ch_assembly_reads = RAW_READS_QC.out.short_reads
             }
             else{
-                ch_reads_qc = INPUT_CHECK.out.reads   
+                ch_reads_qc = INPUT_CHECK.out.reads
             }
         }
         if(!params.skip_taxonomy_qc){
@@ -143,7 +147,7 @@ workflow SEQQC {
             }
         else{
                 ch_assembly_reads = ch_reads_qc
-            }      
+            }
     }
     else{
         if (params.mode=='nanopore'){
@@ -159,7 +163,7 @@ workflow SEQQC {
         WGS_ASSEMBLY(
             ch_assembly_reads
         )
-        
+
         if (!params.skip_assembly_qc){
             // SUBWORKFLOW: Do ribosomal MLST on assembled contigs, using BIGSdb Restful API
             if (!params.skip_rmlst){
@@ -174,12 +178,12 @@ workflow SEQQC {
         }
     }
     //ch_versions = ch_versions.mix(TAXONOMY_QC.out.versions.first())
-    
+
     CUSTOM_DUMPSOFTWAREVERSIONS (
         ch_versions.unique().collectFile(name: 'collated_versions.yml')
     )
 
-    
+
     //
     // MODULE: MultiQC
     //
