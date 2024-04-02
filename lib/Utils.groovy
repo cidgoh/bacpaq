@@ -44,4 +44,8 @@ class Utils {
                 "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
         }
     }
+
+    public static Boolean fileExists(filename) {
+        return new File(filename).exists()
+    }
 }
