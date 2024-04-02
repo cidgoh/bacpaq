@@ -18,23 +18,23 @@ for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true
 if (params.input) { ch_input = file(params.input) } else { exit 1, 'Input samplesheet not specified!' }
 
 // Check if input database paths are valid
-if (!params.skip_kraken2 && !fileExists(params.kraken2_db)) {
+if (!params.skip_kraken2 && !Utils.fileExists(params.kraken2_db)) {
     log.error "Path to Kraken2 database is not valid"
     exit 1
 }
-if ((params.classifier == 'centrifuge') && !fileExists(params.centrifuge_db)) {
+if ((params.classifier == 'centrifuge') && !Utils.fileExists(params.centrifuge_db)) {
     log.error "Path to Centrifuge database is not valid"
     exit 1
 }
-if (!params.skip_checkm && !fileExists(params.checkm_db)) {
+if (!params.skip_checkm && !Utils.fileExists(params.checkm_db)) {
     log.error "Path to CheckM database is not valid"
     exit 1
 }
-if (!params.skip_confindr && !fileExists(params.confindr_db)) {
+if (!params.skip_confindr && !Utils.fileExists(params.confindr_db)) {
     log.error "Path to Confindr database is not valid"
     exit 1
 }
-if (!params.skip_busco && !fileExists(params.busco_lineages_path)) {
+if (!params.skip_busco && !Utils.fileExists(params.busco_lineages_path)) {
     log.error "Path to BUSCO lineages database is not valid"
     exit 1
 }
@@ -95,14 +95,14 @@ workflow SEQQC {
     main:
     ch_versions = Channel.empty()
 
-    // 
+    //
     // SUBWORKFLOW: Read in samplesheet, validate and stage input files
-    // 
+    //
     INPUT_CHECK (
         ch_input
     )
     ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
-    
+
     if (params.mode=='nanopore') {
         // Concatenate fastq files
         CAT_NANOPORE_FASTQ(INPUT_CHECK.out.reads)
@@ -131,7 +131,7 @@ workflow SEQQC {
                 ch_assembly_reads = RAW_READS_QC.out.short_reads
             }
             else{
-                ch_reads_qc = INPUT_CHECK.out.reads   
+                ch_reads_qc = INPUT_CHECK.out.reads
             }
         }
         if(!params.skip_taxonomy_qc){
@@ -143,7 +143,7 @@ workflow SEQQC {
             }
         else{
                 ch_assembly_reads = ch_reads_qc
-            }      
+            }
     }
     else{
         if (params.mode=='nanopore'){
@@ -159,7 +159,7 @@ workflow SEQQC {
         WGS_ASSEMBLY(
             ch_assembly_reads
         )
-        
+
         if (!params.skip_assembly_qc){
             // SUBWORKFLOW: Do ribosomal MLST on assembled contigs, using BIGSdb Restful API
             if (!params.skip_rmlst){
@@ -174,12 +174,12 @@ workflow SEQQC {
         }
     }
     //ch_versions = ch_versions.mix(TAXONOMY_QC.out.versions.first())
-    
+
     CUSTOM_DUMPSOFTWAREVERSIONS (
         ch_versions.unique().collectFile(name: 'collated_versions.yml')
     )
 
-    
+
     //
     // MODULE: MultiQC
     //

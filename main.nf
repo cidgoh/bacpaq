@@ -18,10 +18,6 @@ nextflow.enable.dsl = 2
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-// Check if database filepaths exists
-public static Boolean fileExists(filename) {
-    return new File(filename).exists()
-}
 
 WorkflowMain.initialise(workflow, params, log)
 
@@ -57,13 +53,13 @@ include { ANNOTATION } from './workflows/genome_annotation'
 
 workflow {
 
-    main:  
+    main:
     if (params.workflow == 'seqqc') {
         SEQQC ()
     }
     else if (params.workflow == 'annotation') {
         ANNOTATION ()
-    }   
+    }
     else {
         log.error "Workflow not recognised"
         exit 1
