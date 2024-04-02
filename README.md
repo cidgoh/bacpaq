@@ -24,7 +24,7 @@ On release, automated continuous integration tests run the pipeline on a full-si
 
 ### Workflows
 
-1. Seqqc
+#### 1. Seqqc
 
 **raw-reads-qc**
 
@@ -54,7 +54,7 @@ For paired-end short reads (specifically Illumina), several assembler options ar
 
 This sub is designed for quality control of genome assemblies, integrating three main tools: CHECKM, QUAST, and BUSCO. These tools evaluate the quality, completeness, and contamination of genome assemblies. You may skip any of these steps by using options `--skip_checkm`, `--skip_quast` and `--skip_busco`.
 
-2. Annotation
+#### 2. Annotation
 
 **Gene-prediction**
 
