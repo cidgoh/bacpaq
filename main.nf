@@ -18,6 +18,7 @@ nextflow.enable.dsl = 2
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
+
 WorkflowMain.initialise(workflow, params, log)
 
 //include { validateParameters; paramsHelp; paramsSummaryLog; } from 'plugin/nf-validation'

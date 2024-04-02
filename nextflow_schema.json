@@ -5,76 +5,120 @@
   "description": "Quality control workflow for short-reads (Illumina) and long-reads (Oxford Nanopore) sequencing data including WGS, Amplicon and Metagenomics",
   "type": "object",
   "definitions": {
+    "input_output_options": {
+      "title": "Input/output options",
+      "type": "object",
+      "fa_icon": "fas fa-terminal",
+      "description": "Define where the pipeline should find input data and save output data.",
+      "required": ["input", "outdir"],
+      "properties": {
+        "input": {
+          "type": "string",
+          "format": "file-path",
+          "mimetype": "text/csv",
+          "pattern": "^\\S+\\.csv$",
+          "schema": "assets/schema_input.json",
+          "description": "Path to comma-separated file containing information about the samples in the experiment.",
+          "help_text": "You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row. See [usage docs](https://nf-co.re/seqqc/usage#samplesheet-input).",
+          "fa_icon": "fas fa-file-csv"
+        },
+        "outdir": {
+          "type": "string",
+          "format": "directory-path",
+          "description": "The output directory where the results will be saved. You have to use absolute paths to storage on Cloud infrastructure.",
+          "fa_icon": "fas fa-folder-open"
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address for completion summary.",
+          "fa_icon": "fas fa-envelope",
+          "help_text": "Set this parameter to your e-mail address to get a summary e-mail with details of the run sent to you when the workflow exits. If set in your user config file (`~/.nextflow/config`) then you don't need to specify this on the command line for every run.",
+          "pattern": "^([a-zA-Z0-9_\\-\\.]+)@([a-zA-Z0-9_\\-\\.]+)\\.([a-zA-Z]{2,5})$"
+        },
+        "multiqc_title": {
+          "type": "string",
+          "description": "MultiQC report title. Printed as page header, used for filename if not otherwise specified.",
+          "fa_icon": "fas fa-file-signature"
+        }
+      }
+    },
     "sequencing_parameters": {
       "title": "Sequencing parameters",
       "type": "object",
-      "description": "",
+      "description": "Define the parameters regarding the choice of sequencing type",
       "default": "",
       "properties": {
         "mode": {
           "type": "string",
           "default": "illumina",
-          "enum": ["illumina", "nanopore"]
+          "enum": ["illumina", "nanopore"],
+          "description": "Sequencing data type < illumina | nanopore >"
         },
         "nanopore_summary_file": {
-          "type": "string"
+          "type": "string",
+          "description": "File produced during basecalling, which contains high-level information on every read analysed by the basecaller (only required if mode = nanopore))"
         },
         "nanopore_summary_file_id": {
-          "type": "string"
+          "type": "string",
+          "default": "test",
+          "description": "User defined id for the nanopore summary file (only required if mode = nanopore))"
         }
       },
       "required": ["mode"]
     },
-    "assembly_qc": {
-      "title": "Assembly QC",
+    "raw_reads_qc_parameters": {
+      "title": "Raw Reads QC parameters",
       "type": "object",
-      "description": "",
+      "description": "Define the raw-reads QC parameters for Illumina data",
       "default": "",
       "properties": {
-        "checkm_db": {
+        "adapter_fasta": {
           "type": "string",
-          "default": "\"null\""
+          "default": "https://object-arbutus.cloud.computecanada.ca/cidgohshare/database/adaptors/test.fa"
         },
-        "combine_quast": {
+        "skip_subsampling": {
+          "type": "boolean",
+          "default": true
+        },
+        "skip_confindr": {
           "type": "boolean"
         },
-        "busco_lineage": {
+        "save_merged": {
+          "type": "boolean",
+          "default": true
+        },
+        "trim_tool": {
           "type": "string",
-          "default": "auto"
+          "default": "fastp",
+          "enum": ["fastp", "trimgalore", "trimmomatic"]
         },
-        "busco_lineages_path": {
-          "type": "string"
-        },
-        "busco_config": {
+        "save_trimmed_fail": {
           "type": "boolean"
         },
-        "skip_checkm": {
+        "depth_cut_off": {
+          "type": "string",
+          "default": "50,80"
+        },
+        "confindr_db": {
+          "type": "string",
+          "default": "/mnt/cidgoh-object-storage/database/confindr/confindr_db"
+        },
+        "skip_QC": {
           "type": "boolean"
         },
-        "skip_quast": {
+        "skip_raw_qc": {
           "type": "boolean"
         },
-        "skip_busco": {
-          "type": "boolean"
-        },
-        "reference_genome_fasta": {
-          "type": "string"
-        },
-        "reference_genome_gff": {
-          "type": "string"
-        },
-        "skip_assembly_qc": {
-          "type": "boolean"
-        },
-        "skip_rmlst": {
-          "type": "boolean"
+        "subsampling_genomesize": {
+          "type": "integer",
+          "default": 5000000
         }
       }
     },
-    "taxonomy_qc_options": {
-      "title": "Taxonomy QC options",
+    "taxonomy_qc_parameters": {
+      "title": "Taxonomy QC parameters",
       "type": "object",
-      "description": "",
+      "description": "Define the taxonomy-based QC parameters for illumina and nanopore data",
       "default": "",
       "properties": {
         "classifier": {
@@ -101,7 +145,8 @@
           "type": "boolean"
         },
         "kraken2_db": {
-          "type": "string"
+          "type": "string",
+          "default": "/mnt/cidgoh-object-storage/database/minikraken2/minikraken2_v2_8GB_201904_UPDATE"
         },
         "classified_reads": {
           "type": "boolean",
@@ -112,7 +157,8 @@
           "default": true
         },
         "centrifuge_db": {
-          "type": "string"
+          "type": "string",
+          "default": "/mnt/cidgoh-object-storage/database/centrifuge"
         },
         "save_unaligned": {
           "type": "boolean",
@@ -149,20 +195,22 @@
           "type": "boolean"
         },
         "host_genome": {
-          "type": "string"
+          "type": "string",
+          "default": "/mnt/cidgoh-object-storage/database/reference_genomes/human/GRCh38.p14/GCF_000001405.40/GCF_000001405.40_GRCh38.p14_genomic.fna"
         },
         "host_genome_id": {
-          "type": "string"
+          "type": "string",
+          "default": "GRCh38"
         },
         "skip_taxonomy_qc": {
           "type": "boolean"
         }
       }
     },
-    "assembly_options": {
-      "title": "Assembly options",
+    "assembly_parameters": {
+      "title": "Assembly parameters",
       "type": "object",
-      "description": "",
+      "description": "Define the genome assembly parameters",
       "default": "",
       "properties": {
         "min_contig_len": {
@@ -187,7 +235,7 @@
         },
         "medaka_rounds": {
           "type": "integer",
-          "default": 0
+          "default": 1
         },
         "medaka_model": {
           "type": "string",
@@ -195,7 +243,7 @@
         },
         "sr_assembler": {
           "type": "string",
-          "default": "skesa",
+          "default": "spades",
           "enum": ["skesa", "spades", "megahit"]
         },
         "skip_assembly": {
@@ -203,88 +251,222 @@
         },
         "assembly_genomesize": {
           "type": "string",
-          "default": "\"''\""
+          "default": "\\'\\"
         }
       }
     },
-    "raw_reads_qc_options": {
-      "title": "Raw Reads QC options",
+    "assembly_qc_parameters": {
+      "title": "Assembly QC parameters",
       "type": "object",
       "description": "",
       "default": "",
       "properties": {
-        "adapter_fasta": {
+        "checkm_db": {
           "type": "string"
         },
-        "skip_subsampling": {
+        "combine_quast": {
           "type": "boolean"
         },
-        "skip_confindr": {
-          "type": "boolean"
-        },
-        "save_merged": {
-          "type": "boolean",
-          "default": true
-        },
-        "trim_tool": {
+        "busco_lineage": {
           "type": "string",
-          "default": "fastp",
-          "enum": ["fastp", "trimgalore", "trimmomatic"]
+          "default": "bacteria"
         },
-        "save_trimmed_fail": {
+        "busco_lineages_path": {
+          "type": "string",
+          "default": "/mnt/cidgoh-object-storage/database/busco"
+        },
+        "busco_config": {
           "type": "boolean"
         },
-        "depth_cut_off": {
+        "skip_checkm": {
+          "type": "boolean"
+        },
+        "skip_quast": {
+          "type": "boolean"
+        },
+        "skip_busco": {
+          "type": "boolean"
+        },
+        "reference_genome_fasta": {
           "type": "string"
         },
-        "confindr_db": {
+        "reference_genome_gff": {
           "type": "string"
         },
-        "skip_QC": {
+        "skip_assembly_qc": {
           "type": "boolean"
         },
-        "skip_raw_qc": {
+        "skip_rmlst": {
           "type": "boolean"
-        },
-        "subsampling_genomesize": {
-          "type": "integer"
         }
       }
     },
-    "input_output_options": {
-      "title": "Input/output options",
+    "gene_annotation_parameters": {
+      "title": "Gene annotation parameters",
       "type": "object",
-      "fa_icon": "fas fa-terminal",
-      "description": "Define where the pipeline should find input data and save output data.",
-      "required": ["input", "outdir"],
+      "description": "",
+      "default": "",
       "properties": {
-        "input": {
-          "type": "string",
-          "format": "file-path",
-          "mimetype": "text/csv",
-          "pattern": "^\\S+\\.csv$",
-          "schema": "assets/schema_input.json",
-          "description": "Path to comma-separated file containing information about the samples in the experiment.",
-          "help_text": "You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row. See [usage docs](https://nf-co.re/seqqc/usage#samplesheet-input).",
-          "fa_icon": "fas fa-file-csv"
+        "skip_gene_annotation": {
+          "type": "boolean"
         },
-        "outdir": {
-          "type": "string",
-          "format": "directory-path",
-          "description": "The output directory where the results will be saved. You have to use absolute paths to storage on Cloud infrastructure.",
-          "fa_icon": "fas fa-folder-open"
+        "skip_prokka": {
+          "type": "boolean"
         },
-        "email": {
-          "type": "string",
-          "description": "Email address for completion summary.",
-          "fa_icon": "fas fa-envelope",
-          "help_text": "Set this parameter to your e-mail address to get a summary e-mail with details of the run sent to you when the workflow exits. If set in your user config file (`~/.nextflow/config`) then you don't need to specify this on the command line for every run.",
-          "pattern": "^([a-zA-Z0-9_\\-\\.]+)@([a-zA-Z0-9_\\-\\.]+)\\.([a-zA-Z]{2,5})$"
+        "skip_bakta": {
+          "type": "boolean"
         },
-        "multiqc_title": {
+        "bakta_db": {
           "type": "string",
-          "description": "MultiQC report title. Printed as page header, used for filename if not otherwise specified.",
-          "fa_icon": "fas fa-file-signature"
+          "default": "/mnt/cidgoh-object-storage/database/bakta/db/"
+        },
+        "prodigal_training_file": {
+          "type": "string"
+        },
+        "annotation_protein_file": {
+          "type": "string"
+        }
+      }
+    },
+    "pangenome_parameters": {
+      "title": "Pangenome parameters",
+      "type": "object",
+      "description": "",
+      "default": "",
+      "properties": {
+        "skip_pangenome_analysis": {
+          "type": "boolean"
+        },
+        "pangenome_input": {
+          "type": "string",
+          "default": "bakta"
+        },
+        "skip_roary": {
+          "type": "boolean"
+        },
+        "skip_pirate": {
+          "type": "boolean"
+        },
+        "skip_panaroo": {
+          "type": "boolean"
+        },
+        "skip_peppan": {
+          "type": "boolean"
+        },
+        "clean_mode": {
+          "type": "string",
+          "default": "moderate"
+        },
+        "reference_gff": {
+          "type": "string"
+        }
+      }
+    },
+    "plasmids_parameters": {
+      "title": "Plasmids parameters",
+      "type": "object",
+      "description": "",
+      "default": "",
+      "properties": {
+        "skip_plasmid_analysis": {
+          "type": "boolean"
+        },
+        "skip_plasmidfinder": {
+          "type": "boolean"
+        },
+        "skip_mobsuite": {
+          "type": "boolean"
+        }
+      }
+    },
+    "phage_parameters": {
+      "title": "Phage parameters",
+      "type": "object",
+      "description": "",
+      "default": "",
+      "properties": {
+        "skip_phage_annotation": {
+          "type": "boolean"
+        },
+        "virsorter_db": {
+          "type": "string"
+        },
+        "virsorter_virus_grp": {
+          "type": "string",
+          "default": "dsDNAphage,ssDNA"
+        },
+        "virsorter_min_len": {
+          "type": "integer",
+          "default": 5000
+        },
+        "virsorter_min_score": {
+          "type": "number",
+          "default": 0.4
+        }
+      }
+    },
+    "crispr_parameters": {
+      "title": "CRISPR parameters",
+      "type": "object",
+      "description": "",
+      "default": "",
+      "properties": {
+        "skip_cctyper": {
+          "type": "boolean"
+        }
+      }
+    },
+    "amr_parameters": {
+      "title": "AMR parameters",
+      "type": "object",
+      "description": "",
+      "default": "",
+      "properties": {
+        "amr_finderplus_db": {
+          "type": "string",
+          "description": "Path to local copy of AMRFinderPlus database, if not provided, database will be downloaded"
+        },
+        "skip_amr_annotation": {
+          "type": "boolean",
+          "description": "Skip the entire AMR annotation process"
+        },
+        "skip_rgi": {
+          "type": "boolean",
+          "description": "Skip RGI module from AMR annotation"
+        },
+        "skip_abricate": {
+          "type": "boolean",
+          "description": "Skip abricate module from AMR annotation"
+        },
+        "abricate_db": {
+          "type": "string",
+          "default": "card",
+          "description": "Use one of the following databases <NCBI | CARD | ARG-ANNOT | Resfinder | MEGARES | EcOH | PlasmidFinder | Ecoli_VF | VFDB>"
+        },
+        "skip_abritamr": {
+          "type": "boolean",
+          "description": "Skip abritamr module from AMR annotation"
+        },
+        "skip_amrfinderplus": {
+          "type": "boolean",
+          "description": "Skip AMRFinderPlus module from AMR annotation"
+        },
+        "resfinder_db": {
+          "type": "string",
+          "description": "Path to the databases for ResFinder"
+        },
+        "pointfinder_db": {
+          "type": "string",
+          "description": "Path to the databases for PointFinder"
+        },
+        "disinfinder_db": {
+          "type": "string",
+          "description": "Path to the database of acquired disinfectant resistance genes"
+        },
+        "resfinder_species": {
+          "type": "string",
+          "default": "ecoli",
+          "description": "Species in the sample, supported species can be seen at https://github.com/cadms/resfinder"
         }
       }
     },
@@ -461,7 +643,7 @@
         "tracedir": {
           "type": "string",
           "description": "Directory to keep pipeline Nextflow logs and reports.",
-          "default": "${params.outdir}/pipeline_info",
+          "default": "null/pipeline_info",
           "fa_icon": "fas fa-cogs",
           "hidden": true
         },
@@ -478,28 +660,51 @@
           "description": "Show all params when using `--help`",
           "hidden": true,
           "help_text": "By default, parameters set as _hidden_ in the schema are not shown on the command line when a user runs with `--help`. Specifying this option will tell the pipeline to show all parameters."
+        },
+        "schema_ignore_params": {
+          "type": "string",
+          "default": "fasta",
+          "description": "ignore parameters not required"
         }
       }
     }
   },
   "allOf": [
     {
+      "$ref": "#/definitions/input_output_options"
+    },
+    {
       "$ref": "#/definitions/sequencing_parameters"
     },
     {
-      "$ref": "#/definitions/assembly_qc"
+      "$ref": "#/definitions/raw_reads_qc_parameters"
     },
     {
-      "$ref": "#/definitions/taxonomy_qc_options"
+      "$ref": "#/definitions/taxonomy_qc_parameters"
     },
     {
-      "$ref": "#/definitions/assembly_options"
+      "$ref": "#/definitions/assembly_parameters"
     },
     {
-      "$ref": "#/definitions/raw_reads_qc_options"
+      "$ref": "#/definitions/assembly_qc_parameters"
     },
     {
-      "$ref": "#/definitions/input_output_options"
+      "$ref": "#/definitions/gene_annotation_parameters"
+    },
+    {
+      "$ref": "#/definitions/pangenome_parameters"
+    },
+    {
+      "$ref": "#/definitions/plasmids_parameters"
+    },
+    {
+      "$ref": "#/definitions/phage_parameters"
+    },
+    {
+      "$ref": "#/definitions/crispr_parameters"
+    },
+    {
+      "$ref": "#/definitions/amr_parameters"
     },
     {
       "$ref": "#/definitions/institutional_config_options"
@@ -514,7 +719,8 @@
   "properties": {
     "fasta": {
       "type": "string",
-      "default": "test.fa"
+      "default": "test.fa",
+      "hidden": true
     }
   }
 }
