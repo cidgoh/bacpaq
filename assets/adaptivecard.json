@@ -17,7 +17,7 @@
                         "size": "Large",
                         "weight": "Bolder",
                         "color": "<% if (success) { %>Good<% } else { %>Attention<%} %>",
-                        "text": "nf-core/seqqc v${version} - ${runName}",
+                        "text": "nf-core/bacpaq v${version} - ${runName}",
                         "wrap": true
                     },
                     {

@@ -4,15 +4,15 @@
   |\\ | |__  __ /  ` /  \\ |__) |__         }  {
   | \\| |       \\__, \\__/ |  \\ |___     \\`-._,-`-,
                                         `._,._,'
-  nf-core/seqqc v${version}
+  nf-core/bacpaq ${version}
 ----------------------------------------------------
 Run Name: $runName
 
 <% if (success){
-    out << "## nf-core/seqqc execution completed successfully! ##"
+    out << "## nf-core/bacpaq execution completed successfully! ##"
 } else {
     out << """####################################################
-## nf-core/seqqc execution completed unsuccessfully! ##
+## nf-core/bacpaq execution completed unsuccessfully! ##
 ####################################################
 The exit status of the task that caused the workflow execution to fail was: $exitStatus.
 The full error message was:
@@ -35,5 +35,5 @@ Pipeline Configuration:
 <% out << summary.collect{ k,v -> " - $k: $v" }.join("\n") %>
 
 --
-nf-core/seqqc
-https://github.com/nf-core/seqqc
+nf-core/bacpaq
+https://github.com/nf-core/bacpaq
