@@ -38,12 +38,12 @@ workflow RAW_READS_QC {
      // use rasusa to randomly subsample sequencing reads
     if (!params.skip_subsampling) {
 
-        ch_genomesize = Channel.of(params.genomesize)
+        ch_genomesize = Channel.of(params.subsampling_genomesize)
         ch_coverages = Channel.fromList(params.depth_cut_off.split(',').collect { it.trim().toDouble() })
 
         ch_raw_reads_qc
-            .map { tuple(it[0], it[1], params.genomesize) }
-            
+            .map { tuple(it[0], it[1], params.subsampling_genomesize) }
+
             .combine(ch_coverages)
             .set { ch_sub_reads_qc }
             // .view()
@@ -99,7 +99,7 @@ workflow RAW_READS_QC {
         ch_confindr_results = ch_confindr_results.mix(CONFINDR.out.report.collect({it[1]}))
         AGGREGATE_CONFINDR_RESULTS(ch_confindr_results)
     }
-    
+
 
     // MultiQC report for raw reads
     ch_raw_multiqc_files = Channel.empty()
