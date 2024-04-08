@@ -4,10 +4,10 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-def summary_params = NfcoreSchema.paramsSummaryMap(workflow, params)
+//def summary_params = NfcoreSchema.paramsSummaryMap(workflow, params)
 
 // Validate input parameters
-WorkflowSeqqc.initialise(params, log)
+//WorkflowSeqqc.initialise(params, log)
 
 // TODO nf-core: Add all file path parameters for the pipeline to the list below
 // Check input path parameters to see if they exist
@@ -27,13 +27,13 @@ if (params.input) { ch_input = file(params.input) } else { exit 1, 'Input sample
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
 //
-include { INPUT_CHECK           } from '../subworkflows/local/input_check'
-include { GENE_ANNOTATION       } from '../subworkflows/local/gene_annotation'
-include { PHAGE                 } from '../subworkflows/local/phage'
-include { PANGENOME_ANALYSIS    } from '../subworkflows/local/pangenome_analysis'
-include { PLASMIDS              } from '../subworkflows/local/plasmids'
-include { AMR_ANNOTATION        } from '../subworkflows/local/amr_annotation'
-include { CRISPRS               } from '../subworkflows/local/crisprs'
+include { INPUT_CHECK           } from './input_check'
+include { GENE_ANNOTATION       } from './gene_annotation'
+include { PHAGE                 } from './phage'
+include { PANGENOME_ANALYSIS    } from './pangenome_analysis'
+include { PLASMIDS              } from './plasmids'
+include { AMR_ANNOTATION        } from './amr_annotation'
+include { CRISPRS               } from './crisprs'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -44,7 +44,7 @@ include { CRISPRS               } from '../subworkflows/local/crisprs'
 //
 // MODULE: Installed directly from nf-core/modules
 //
-include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoftwareversions/main'
+//include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoftwareversions/main'
 
 
 /*
@@ -139,7 +139,7 @@ workflow ANNOTATION {
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-workflow.onComplete {
+/*workflow.onComplete {
     if (params.email || params.email_on_fail) {
         NfcoreTemplate.email(workflow, params, summary_params, projectDir, log, multiqc_report)
     }
@@ -147,7 +147,7 @@ workflow.onComplete {
     if (params.hook_url) {
         NfcoreTemplate.IM_notification(workflow, params, summary_params, projectDir, log)
     }
-}
+}*/
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

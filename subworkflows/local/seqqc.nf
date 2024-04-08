@@ -5,13 +5,11 @@
 */
 
 // Check if database filepaths exists
-public static Boolean fileExists(filename) {
-    return new File(filename).exists()
-}
-def summary_params = NfcoreSchema.paramsSummaryMap(workflow, params)
+
+//def summary_params = NfcoreSchema.paramsSummaryMap(workflow, params)
 
 // Validate input parameters
-WorkflowSeqqc.initialise(params, log)
+//WorkflowSeqqc.initialise(params, log)
 
 // TODO nf-core: Add all file path parameters for the pipeline to the list below
 // Check input path parameters to see if they exist
@@ -62,14 +60,14 @@ ch_multiqc_custom_methods_description = params.multiqc_methods_description ? fil
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
 //
-include { INPUT_CHECK           } from '../subworkflows/local/input_check'
-include { WGS_ASSEMBLY          } from '../subworkflows/local/wgs_assembly'
-include { ASSEMBLY_QC           } from '../subworkflows/local/assembly_qc'
-include { RSMLST                } from '../subworkflows/local/rmlst'
-include { TAXONOMY_QC           } from '../subworkflows/local/taxonomy_qc'
-include { RAW_READS_QC          } from '../subworkflows/local/raw_reads_qc'
-include { CAT_NANOPORE_FASTQ    } from '../modules/local/cat_nanopore_fastq/main'
-include { NANOPORE_RAW_READS_QC } from '../subworkflows/local/nanopore_raw_reads_qc'
+include { INPUT_CHECK           } from './input_check'
+include { WGS_ASSEMBLY          } from './wgs_assembly'
+include { ASSEMBLY_QC           } from './assembly_qc'
+include { RSMLST                } from './rmlst'
+include { TAXONOMY_QC           } from './taxonomy_qc'
+include { RAW_READS_QC          } from './raw_reads_qc'
+include { CAT_NANOPORE_FASTQ    } from '../../modules/local/cat_nanopore_fastq/main'
+include { NANOPORE_RAW_READS_QC } from './nanopore_raw_reads_qc'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -80,9 +78,9 @@ include { NANOPORE_RAW_READS_QC } from '../subworkflows/local/nanopore_raw_reads
 //
 // MODULE: Installed directly from nf-core/modules
 //
-include { FASTQC                      } from '../modules/nf-core/fastqc/main'
-include { MULTIQC                     } from '../modules/nf-core/multiqc/main'
-include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoftwareversions/main'
+//include { FASTQC                      } from '../../modules/nf-core/fastqc/main'
+include { MULTIQC                     } from '../../modules/nf-core/multiqc/main'
+//include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../../modules/nf-core/custom/dumpsoftwareversions/main'
 
 
 /*
@@ -95,6 +93,7 @@ include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoft
 def multiqc_report = []
 
 workflow SEQQC {
+
 
     main:
     ch_versions = Channel.empty()
@@ -179,15 +178,15 @@ workflow SEQQC {
     }
     //ch_versions = ch_versions.mix(TAXONOMY_QC.out.versions.first())
 
-    CUSTOM_DUMPSOFTWAREVERSIONS (
-        ch_versions.unique().collectFile(name: 'collated_versions.yml')
-    )
+    //CUSTOM_DUMPSOFTWAREVERSIONS (
+    //    ch_versions.unique().collectFile(name: 'collated_versions.yml')
+    //)
 
 
     //
     // MODULE: MultiQC
     //
-    workflow_summary    = WorkflowSeqqc.paramsSummaryMultiqc(workflow, summary_params)
+    /*workflow_summary    = WorkflowSeqqc.paramsSummaryMultiqc(workflow, summary_params)
     ch_workflow_summary = Channel.value(workflow_summary)
 
     methods_description    = WorkflowSeqqc.methodsDescriptionText(workflow, ch_multiqc_custom_methods_description)
@@ -196,7 +195,7 @@ workflow SEQQC {
     ch_multiqc_files = Channel.empty()
     ch_multiqc_files = ch_multiqc_files.mix(ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'))
     ch_multiqc_files = ch_multiqc_files.mix(ch_methods_description.collectFile(name: 'methods_description_mqc.yaml'))
-    ch_multiqc_files = ch_multiqc_files.mix(CUSTOM_DUMPSOFTWAREVERSIONS.out.mqc_yml.collect())
+    //ch_multiqc_files = ch_multiqc_files.mix(CUSTOM_DUMPSOFTWAREVERSIONS.out.mqc_yml.collect())
     //ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect{it[1]}.ifEmpty([]))
 
     MULTIQC (
@@ -205,8 +204,10 @@ workflow SEQQC {
         ch_multiqc_custom_config.toList(),
         ch_multiqc_logo.toList()
     )
-    multiqc_report = MULTIQC.out.report.toList()
+    multiqc_report = MULTIQC.out.report
 
+    emit:
+    multiqc_report*/
 }
 
 /*
@@ -215,7 +216,7 @@ workflow SEQQC {
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-workflow.onComplete {
+/* workflow.onComplete {
     if (params.email || params.email_on_fail) {
         NfcoreTemplate.email(workflow, params, summary_params, projectDir, log, multiqc_report)
     }
@@ -223,7 +224,7 @@ workflow.onComplete {
     if (params.hook_url) {
         NfcoreTemplate.IM_notification(workflow, params, summary_params, projectDir, log)
     }
-}
+} */
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
