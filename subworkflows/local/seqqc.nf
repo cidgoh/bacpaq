@@ -18,6 +18,7 @@
 
 // Check mandatory parameters
 // if (params.input) { ch_input = file(params.input) } else { exit 1, 'Input samplesheet not specified!' }
+ch_input = file(params.input)
 
 // Check if input database paths are valid
 if (!params.skip_kraken2 && !Utils.fileExists(params.kraken2_db)) {
