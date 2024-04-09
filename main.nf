@@ -31,12 +31,6 @@ if (params.help) {
     exit 0
 }
 
-// Print pipeline version to screen
-if (params.version) {
-    log.info "${workflow.manifest.name} v${workflow.manifest.version}"
-    exit 0
-}
-
 // Validate input parameters
 // validateParameters()
 
