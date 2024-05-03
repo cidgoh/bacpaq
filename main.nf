@@ -63,19 +63,19 @@ log.info paramsSummaryLog(workflow)
 //
 workflow NFCORE_BACPAQ {
 
-    //take:
-    //samplesheet // channel: samplesheet read in from --input
+    take:
+    samplesheet // channel: samplesheet read in from --input
 
     main:
 
     //
     // WORKFLOW: Run pipeline
     //
-    /*BACPAQ (
+    BACPAQ (
         samplesheet
-    )*/
+    )
 
-    BACPAQ()
+    // BACPAQ()
     emit:
     multiqc_report = BACPAQ.out.multiqc_report // channel: /path/to/multiqc_report.html
 
@@ -106,10 +106,10 @@ workflow {
     //
     // WORKFLOW: Run main workflow
     //
-    /*NFCORE_BACPAQ (
+    NFCORE_BACPAQ (
         PIPELINE_INITIALISATION.out.samplesheet
-    )*/
-    NFCORE_BACPAQ()
+    )
+    // NFCORE_BACPAQ()
 
     //
     // SUBWORKFLOW: Run completion tasks

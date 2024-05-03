@@ -22,15 +22,18 @@ include { ANNOTATION } from '../subworkflows/local/genome_annotation'
 
 workflow BACPAQ {
 
+    take: samplesheet
 
     main:
     multiqc_report = ''
 
     if (params.workflow == 'seqqc') {
-        SEQQC ()
+        // SEQQC ()
+        samplesheet.view()
     }
     else if (params.workflow == 'annotation') {
-        ANNOTATION ()
+        // ANNOTATION ()
+        samplesheet.view()
     }
     else {
         log.error "Workflow not recognised"
@@ -48,9 +51,7 @@ workflow BACPAQ {
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     COMPLETION EMAIL AND SUMMARY
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/
-
-workflow.onComplete {
+/*workflow.onComplete {
     if (params.email || params.email_on_fail) {
         NfcoreTemplate.email(workflow, params, summary_params, projectDir, log, multiqc_report)
     }
@@ -59,8 +60,6 @@ workflow.onComplete {
         NfcoreTemplate.IM_notification(workflow, params, summary_params, projectDir, log)
     }
 }
-
-/*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     THE END
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
