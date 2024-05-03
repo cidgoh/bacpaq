@@ -27,25 +27,60 @@ workflow BACPAQ {
     main:
     multiqc_report = ''
 
-    if (params.workflow == 'seqqc') {
-        // if (params.platform == 'illumina') {
-        //     ch_input = samplesheet
-        //         .map {
-        //             return [id:meta.id]
-        //         }
-        // }
-        // SEQQC ()
+    
+    ch_illumina = samplesheet
+            .filter { meta, fastq_1, fastq_2, fastq_dir, genome -> 
+                fastq_1 != null
+            }
+            .map {  meta, fastq_1, fastq_2, fastq_dir, genome ->    
+                if (!fastq_2) {
+                    return [ [ id:meta.id, single_end: true, mode:'illumina' ], fastq_1 ]
+                } else {
+                    return [ [ id:meta.id, single_end: false, mode:'illumina' ], fastq_1, fastq_2 ]
+                }
+            }
+    ch_onp = samplesheet
+        .filter { meta, fastq_1, fastq_2, fastq_dir, genome -> 
+            fastq_dir != null
+        }
+        .map {  meta, fastq_1, fastq_2, fastq_dir, genome ->
+                return [ [ id:meta.id, single_end: false, mode:'nanopore' ], fastq_dir ]
+        }
+    ch_genome = samplesheet
+        .filter { meta, fastq_1, fastq_2, fastq_dir, genome -> 
+            genome != null
+        }
+        .map {  meta, fastq_1, fastq_2, fastq_dir, genome ->
+                return [ [ id:meta.id ], genome ]
+        }
+    ch_reads = ch_illumina
+        .concat(ch_onp)
+    
+    if ( !params.skip_seqqc ) {
+        SEQQC(ch_reads)
+        ch_genome = SEQQC.out.genome
+    } 
 
-        samplesheet.view()
+    if ( !params.skip_annotation ) {
+        if ( ch_genome ) {
+            ANNOTATION(ch_genome)  
+        } else {
+            log.error "${workflow.manifest.name}: No genomes available for annotation, exiting."
+        }
     }
-    else if (params.workflow == 'annotation') {
-        // ANNOTATION ()
-        samplesheet.view()
-    }
-    else {
-        log.error "Workflow not recognised"
-        exit 1
-    }
+    // if (params.workflow == 'seqqc') {    
+    // }
+    // else if (params.workflow == 'annotation') {
+        
+    //     samplesheet.view()
+    // }
+    // else {
+    //     log.error "Workflow not recognised"
+    //     exit 1
+    // }
+    
+    // SEQQC ()
+    // ANNOTATION ()
 
 
     emit:
