@@ -32,27 +32,25 @@ run_modules:
 module_order:
   - fastqc:
       name: "FastQC (raw)"
-      path_filters_exclude: "trim_fastqc/*.zip"
-  - fastqc:
-      name: "FastQC (trim)"
-      path_filters_exclude: "raw_fastqc/*.zip"
+      path_filters: "raw_fastqc/*.zip"
   - fastp:
       name: "FastP (Read preprocessing)"
-  - busco:
-      name: "Busco"
+  - fastqc:
+      name: "FastQC (trim)"
+      path_filters: "trim_fastqc/*.zip"
   - quast:
       name: "Quast"
-  - prokka:
-      name: "Prokka"
-  - samtools:
-      name: "Samtools Flagstat"
-      info: "Summarizes the information about reads mapping to a reference genome while de-hosting. The X axis represents the proportion of each category per sample. "
+  - busco:
+      name: "Busco"
   - kraken:
       name: "Kraken 2"
       path_filters:
         - "*.kraken2.report.txt"
-      path_filters_exclude: 
-        - "trim_fastqc/*.zip"
+  - samtools:
+      name: "Samtools Flagstat"
+      info: "Summarizes the information about reads mapping to a reference genome while de-hosting. The X axis represents the proportion of each category per sample. "
+  - prokka:
+      name: "Prokka"
 
 # clean names
 
