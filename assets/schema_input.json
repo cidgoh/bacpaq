@@ -38,7 +38,7 @@
                 "type": "string",
                 "format": "file-path",
                 "exists": true,
-                "pattern": "^\\S+\\.f(ast)a(\\.gz)?$",
+                "pattern": "^\\S+\\.f(ast)?a(\\.gz)?$",
                 "errorMessage": "Genome file cannot contain spaces, and must have extension '.fa.gz' or '.fasta.gz'"
             }
         },
