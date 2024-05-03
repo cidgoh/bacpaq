@@ -81,29 +81,29 @@ workflow PIPELINE_INITIALISATION {
     
     Channel
         .fromSamplesheet("input")
-        .map {
-            meta, fastq_1, fastq_2, fastq_dir, genome ->
+        // .map {
+        //     meta, fastq_1, fastq_2, fastq_dir, genome ->
 
-            // map illumina data
-            if (fastq_1) {
-                if (!fastq_2) {
-                    return [ [ meta.id, single_end:true ], fastq_1 ]
-                } else {
-                    return [ [ meta.id, single_end:false ], fastq_1, fastq_2 ]
-                }
-            }
+        //     // map illumina data
+        //     if (fastq_1) {
+        //         if (!fastq_2) {
+        //             return [ [ id:meta.id, single_end: true ], fastq_1 ]
+        //         } else {
+        //             return [ [ id:meta.id, single_end: false ], fastq_1, fastq_2 ]
+        //         }
+        //     }
 
-            // map nanopore data
-            if (fastq_dir) {
-                return [ [ meta.id, single_end:true ], fastq_dir ]
-            }
+        //     // map nanopore data
+        //     if (fastq_dir) {
+        //         return [ [ id:meta.id, single_end: true ], fastq_dir ]
+        //     }
 
-            // map nanopore data
-            if (genome) {
-                return [ [ meta.id, single_end:true ], genome ]
-            }
+        //     // map nanopore data
+        //     if (genome) {
+        //         return [ [ id:meta.id, single_end: true ], genome ]
+        //     }
                 
-        }
+        // }
         // .groupTuple()
         // .map {
         //     validateInputSamplesheet(it)

@@ -28,7 +28,14 @@ workflow BACPAQ {
     multiqc_report = ''
 
     if (params.workflow == 'seqqc') {
+        // if (params.platform == 'illumina') {
+        //     ch_input = samplesheet
+        //         .map {
+        //             return [id:meta.id]
+        //         }
+        // }
         // SEQQC ()
+
         samplesheet.view()
     }
     else if (params.workflow == 'annotation') {
