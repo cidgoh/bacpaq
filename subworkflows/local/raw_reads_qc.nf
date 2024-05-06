@@ -43,7 +43,6 @@ workflow RAW_READS_QC {
 
         ch_raw_reads_qc
             .map { tuple(it[0], it[1], params.subsampling_genomesize) }
-
             .combine(ch_coverages)
             .set { ch_sub_reads_qc }
             // .view()
@@ -62,7 +61,6 @@ workflow RAW_READS_QC {
 
     // trim reads using fastp, trimommatic or trimgalore
     if (params.trim_tool=="fastp") {
-
         adaptor=file params.adapter_fasta
         FASTP (
             ch_raw_reads_qc, adaptor, params.save_trimmed_fail, params.save_merged
