@@ -139,32 +139,30 @@ workflow SEQQC {
         ch_assembly_reads = ch_reads
     }
 
-    if(!params.skip_taxonomy_qc){
-
+    if(!params.skip_taxonomy_qc) {
         TAXONOMY_QC (
             ch_tax_reads,
             params.host_genome
             )
-            ch_assembly_reads = TAXONOMY_QC.out.ch_tax_qc_reads
-        }
-    else{
-            ch_assembly_reads = ch_reads
-        }
+        ch_assembly_reads = TAXONOMY_QC.out
+    } else {
+        ch_assembly_reads = ch_reads
+    }
 
-    if (!params.skip_qc && !params.skip_taxonomy_qc){
+    if (!params.skip_qc && !params.skip_taxonomy_qc) {
         ch_assembly_reads
             .branch {
             illumina : it[0].mode == 'illumina'
             nanopore : it[0].mode == 'nanopore'
             }
-        .set {assembly_reads}
+        .set {ch_assembly_reads}
     }
 
-    if (!params.skip_assembly){
+    if (!params.skip_assembly) {
         // SUBWORKFLOW: Run WGS ASSEMBLY on reads
         WGS_ASSEMBLY(
-            assembly_reads.illumina,
-            assembly_reads.nanopore
+            ch_assembly_reads.illumina,
+            ch_assembly_reads.nanopore
         )
         ch_contigs = WGS_ASSEMBLY.out.ch_contigs
 
