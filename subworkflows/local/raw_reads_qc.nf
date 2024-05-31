@@ -5,7 +5,7 @@ include { FASTQC as RAW_FASTQC     } from '../../modules/nf-core/fastqc'
 include { FASTQC as TRIM_FASTQC    } from '../../modules/nf-core/fastqc'
 include { MULTIQC as TRIM_MULTIQC  } from '../../modules/nf-core/multiqc'
 include { MULTIQC as RAW_MULTIQC  } from '../../modules/nf-core/multiqc'
-include { RASUSA                   } from '../../modules/local/rasusa'
+include { RASUSA                   } from '../../modules/nf-core/rasusa'
 include { CONFINDR                 } from '../../modules/local/confindr'
 include { AGGREGATE_CONFINDR_RESULTS                } from '../../modules/local/aggregate_confindr_results'
 include { CAT_FASTQ                } from '../../modules/nf-core/cat/fastq/main'
@@ -39,15 +39,14 @@ workflow RAW_READS_QC {
     if (!params.skip_subsampling) {
 
         ch_genomesize = Channel.of(params.subsampling_genomesize)
-        ch_coverages = Channel.fromList(params.depth_cut_off.split(',').collect { it.trim().toDouble() })
+        // ch_coverages = Channel.fromList(params.depth_cut_off.split(',').collect { it.trim().toDouble() })
 
         ch_raw_reads_qc
             .map { tuple(it[0], it[1], params.subsampling_genomesize) }
-            .combine(ch_coverages)
             .set { ch_sub_reads_qc }
             // .view()
 
-        RASUSA(ch_sub_reads_qc)
+        RASUSA(ch_sub_reads_qc, params.depth_cut_off)
 
         ch_raw_reads_qc = RASUSA.out.reads
     }
