@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema",
-  "$id": "https://raw.githubusercontent.com/nf-core/seqqc/master/nextflow_schema.json",
-  "title": "nf-core/seqqc pipeline parameters",
+  "$id": "https://raw.githubusercontent.com/nf-core/bacpaq/master/nextflow_schema.json",
+  "title": "nf-core/bacpaq pipeline parameters",
   "description": "Quality control workflow for short-reads (Illumina) and long-reads (Oxford Nanopore) sequencing data including WGS, Amplicon and Metagenomics",
   "type": "object",
   "definitions": {

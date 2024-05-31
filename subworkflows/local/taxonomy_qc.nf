@@ -6,8 +6,7 @@
 include { KRAKEN2_KRAKEN2               } from '../../modules/nf-core/kraken2/kraken2/main'
 include { KRAKENTOOLS_KREPORT2KRONA     } from '../../modules/nf-core/krakentools/kreport2krona/main'
 include { BRACKEN_BRACKEN               } from '../../modules/nf-core/bracken/bracken/main'
-include { MINIMAP2_ALIGN as MINIMAP2_ILLUMINA               } from '../../modules/nf-core/minimap2/align/main'
-include { MINIMAP2_ALIGN as MINIMAP2_NANOPORE               } from '../../modules/nf-core/minimap2/align/main'
+include { MINIMAP2_ALIGN              } from '../../modules/nf-core/minimap2/align/main'
 include { MINIMAP2_INDEX                } from '../../modules/nf-core/minimap2/index/main'
 include { BWA_MEM                       } from '../../modules/nf-core/bwa/mem/main'
 include { BWA_INDEX                     } from '../../modules/nf-core/bwa/index/main'
@@ -28,6 +27,8 @@ workflow TAXONOMY_QC {
 
     main:
     ch_versions = Channel.empty()
+    ch_dehosted_reads = Channel.empty()
+
     if (params.classifier=="centrifuge"){
         ch_centrifuge_db=Channel.from(params.centrifuge_db)
         CENTRIFUGE_CENTRIFUGE(
@@ -104,26 +105,14 @@ workflow TAXONOMY_QC {
             bam_format  = params.bam_format //true
             cigar_paf_format = params.cigar_paf_format //false
             cigar_bam = params.cigar_bam //false
-            if(params.mode == 'nanopore'){
-                MINIMAP2_NANOPORE ( 
+            MINIMAP2_ALIGN( 
                 reads, 
                 ref_genome, 
                 bam_format, 
                 cigar_paf_format, 
                 cigar_bam 
                 )
-            ch_mapped_bam=MINIMAP2_NANOPORE.out.bam
-            }
-            else{
-                MINIMAP2_ILLUMINA ( 
-                reads, 
-                ref_genome, 
-                bam_format, 
-                cigar_paf_format, 
-                cigar_bam 
-                )
-            ch_mapped_bam=MINIMAP2_ILLUMINA.out.bam
-            } 
+            ch_mapped_bam=MINIMAP2_ALIGN.out.bam
         }
 
         SAMTOOLS_INDEX(
@@ -139,21 +128,20 @@ workflow TAXONOMY_QC {
             ch_mapped_bam.combine(bam_index, by: 0),
             [],
             [])
-        interleaved=params.interleaved
+
         SAMTOOLS_FASTQ(
-             SAMTOOLS_VIEW.out.bam, interleaved)
-        if (!params.mode == "nanopore"){
-            if (interleaved == false){
-                ch_dehosted_reads = SAMTOOLS_FASTQ.out.fastq
-            }
-            else{
-                ch_dehosted_reads = SAMTOOLS_FASTQ.out.interleaved
-            }
+             SAMTOOLS_VIEW.out.bam, params.interleaved)
+
+        // illumina reads
+        if (params.interleaved){
+                ch_dehosted_reads = ch_dehosted_reads.mix(SAMTOOLS_FASTQ.out.interleaved.filter { it[0].mode == 'illumina' })
+        } else {
+                ch_dehosted_reads = ch_dehosted_reads.mix(SAMTOOLS_FASTQ.out.fastq.filter { it[0].mode == 'illumina' })
         }
-        else{
-            ch_dehosted_reads = SAMTOOLS_FASTQ.out.other
-        }
-       ch_tax_qc_reads = ch_dehosted_reads  
+        // nanopore reads
+        ch_dehosted_reads = ch_dehosted_reads.mix(SAMTOOLS_FASTQ.out.other.filter { it[0].mode == 'nanopore' })
+        // output dehosted reads
+        ch_tax_qc_reads = ch_dehosted_reads
     }
     
     emit:

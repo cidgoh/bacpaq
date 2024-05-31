@@ -8,15 +8,15 @@ intro_text: "bacpaq is a bioinformatics best-practice pipeline for bacterial gen
 
 report_comment: >
    bacpaq is a bioinformatics best-practice pipeline for bacterial genomic analysis for short-reads (Illumina) and long-reads (Oxford Nanopore) sequencing data. Currently nf-seqqc supports WGS-based analyses, however, we plan to integrate Microbiome (Amplicon and Shotgun Metagenomics) analyses in future.
- 
+
 disable_version_detection: true
 
 report_section_order:
-  "nf-core-seqqc-methods-description":
+  "nf-core-bacpaq-methods-description":
     order: -1000
   software_versions:
     order: -1001
-  "nf-core-seqqc-summary":
+  "nf-core-bacpaq-summary":
     order: -1002
 
  # Run only these modules

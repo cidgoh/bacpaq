@@ -5,37 +5,46 @@ include { RENAME_CTG as RENAME_CTG_SHOVILL; RENAME_CTG as RENAME_CTG_DRAGONFLYE 
 include { DRAGONFLYE } from '../../modules/nf-core/dragonflye'
 
 workflow WGS_ASSEMBLY {
-    take: 
-    reads
+    take:
+    illumina_reads
+    nanopore_reads
 
     main:
-    if (params.mode=="nanopore"){
-        reads | DRAGONFLYE
-        RENAME_CTG_DRAGONFLYE(DRAGONFLYE.out.contigs, reads.map{ "fa" })
 
-        contigs = RENAME_CTG_DRAGONFLYE.out
-        corrections = []
-        assembly_log = DRAGONFLYE.out.log
-        raw_contigs = DRAGONFLYE.out.raw_contigs
-        gfa = DRAGONFLYE.out.gfa
-        dragonflye_info = DRAGONFLYE.out.txt
-        versions = DRAGONFLYE.out.versions
-    }
-    else{
-        reads.filter{ it[0].single_end == false } | SHOVILL
-        
+        contigs = Channel.empty()
+        corrections = Channel.empty()
+        assembly_log = Channel.empty()
+        raw_contigs = Channel.empty()
+        gfa = Channel.empty()
+        dragonflye_info = Channel.empty()
+        versions = Channel.empty()
+    //if (params.mode=="nanopore"){
+        nanopore_reads | DRAGONFLYE
+        RENAME_CTG_DRAGONFLYE(DRAGONFLYE.out.contigs, nanopore_reads.map{ "fa" })
+
+        contigs = contigs.mix(RENAME_CTG_DRAGONFLYE.out)
+        //corrections = corrections.mix(DRAGONFLYE.out.corrections)
+        assembly_log = assembly_log.mix(DRAGONFLYE.out.log)
+        raw_contigs = raw_contigs.mix(DRAGONFLYE.out.raw_contigs)
+        gfa = gfa.mix(DRAGONFLYE.out.gfa)
+        dragonflye_info = dragonflye_info.mix(DRAGONFLYE.out.txt)
+        versions = versions.mix(DRAGONFLYE.out.versions)
+
+//    }
+//    else{
+        illumina_reads.filter{ it[0].single_end == false } | SHOVILL
+
         // rename contig files
-        RENAME_CTG_SHOVILL(SHOVILL.out.contigs, reads.map{ "fa" })
-
-        contigs = RENAME_CTG_SHOVILL.out
-        corrections = SHOVILL.out.corrections
-        assembly_log = SHOVILL.out.log
-        raw_contigs = SHOVILL.out.raw_contigs
-        gfa = SHOVILL.out.gfa
-        dragonflye_info = []
+        RENAME_CTG_SHOVILL(SHOVILL.out.contigs, illumina_reads.map{ "fa" })
+        contigs = RENAME_CTG_SHOVILL.out.mix(RENAME_CTG_SHOVILL.out)
+        corrections = corrections.mix(SHOVILL.out.corrections)
+        assembly_log = assembly_log.mix(SHOVILL.out.log)
+        raw_contigs = raw_contigs.mix(SHOVILL.out.raw_contigs)
+        gfa = gfa.mix(SHOVILL.out.gfa)
         versions = SHOVILL.out.versions
-    }
-    
+
+//    }
+
     emit:
     ch_contigs = contigs
     ch_corrections = corrections

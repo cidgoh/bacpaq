@@ -7,23 +7,27 @@ on:
 jobs:
   run-tower:
     name: Run AWS tests
-    if: github.repository == 'nf-core/seqqc'
+    if: github.repository == 'nf-core/bacpaq'
     runs-on: ubuntu-latest
     steps:
       # Launch workflow using Tower CLI tool action
       - name: Launch workflow via tower
-        uses: nf-core/tower-action@v3
+        uses: seqeralabs/action-tower-launch@v2
         with:
           workspace_id: ${{ secrets.TOWER_WORKSPACE_ID }}
           access_token: ${{ secrets.TOWER_ACCESS_TOKEN }}
           compute_env: ${{ secrets.TOWER_COMPUTE_ENV }}
-          workdir: s3://${{ secrets.AWS_S3_BUCKET }}/work/seqqc/work-${{ github.sha }}
+          revision: ${{ github.sha }}
+          workdir: s3://${{ secrets.AWS_S3_BUCKET }}/work/bacpaq/work-${{ github.sha }}
           parameters: |
             {
-              "outdir": "s3://${{ secrets.AWS_S3_BUCKET }}/seqqc/results-test-${{ github.sha }}"
+              "outdir": "s3://${{ secrets.AWS_S3_BUCKET }}/bacpaq/results-test-${{ github.sha }}"
             }
-          profiles: test,aws_tower
-      - uses: actions/upload-artifact@v3
+          profiles: test
+
+      - uses: actions/upload-artifact@v4
         with:
           name: Tower debug log file
-          path: tower_action_*.log
+          path: |
+            tower_action_*.log
+            tower_action_*.json

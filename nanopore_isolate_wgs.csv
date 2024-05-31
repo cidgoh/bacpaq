@@ -1,4 +1,4 @@
-sample,fastq_dir
-ERR7565110,/mnt/cidgoh-object-storage/hackathon/seqqc/isolate_wgs/nanopore/sra_split/ERR7565110/
-ERR7565112,/mnt/cidgoh-object-storage/hackathon/seqqc/isolate_wgs/nanopore/sra_split/ERR7565112/
-ERR7565113,/mnt/cidgoh-object-storage/hackathon/seqqc/isolate_wgs/nanopore/sra_split/ERR7565113/
+sample,fastq_1,fastq_2,fastq_dir,genome
+ERR7565110,,,/mnt/cidgoh-object-storage/hackathon/seqqc/isolate_wgs/nanopore/sra_split/ERR7565110/,
+ERR7565112,,,/mnt/cidgoh-object-storage/hackathon/seqqc/isolate_wgs/nanopore/sra_split/ERR7565112/,
+ERR7565113,,,/mnt/cidgoh-object-storage/hackathon/seqqc/isolate_wgs/nanopore/sra_split/ERR7565113/,
