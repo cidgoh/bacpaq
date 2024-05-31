@@ -21,13 +21,13 @@ process PEPPAN {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def gff = params.reference_gff ? "-P params.reference_gff" : ''
+    def ref_gff = reference_gff ? "-P $reference_gff" : ''
     def version = "1.0.5" // ------> update manually
 
     """
     PEPPAN -p $prefix \
-        $gff \
-        *.gff
+        $ref_gff \
+        $gff
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
