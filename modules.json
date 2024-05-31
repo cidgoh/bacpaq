@@ -1,6 +1,6 @@
 {
-  "name": "nf-core/seqqc",
-  "homePage": "https://github.com/nf-core/seqqc",
+  "name": "nf-core/bacpaq",
+  "homePage": "https://github.com/cidgoh/bacpaq",
   "repos": {
     "https://github.com/nf-core/modules.git": {
       "modules": {
@@ -382,12 +382,29 @@
             "branch": "master",
             "git_sha": "cc1f997fab6d8fde5dc0e6e2a310814df5b53ce7",
             "installed_by": ["modules"]
-          }
-        }
-      },
+          },
       "subworkflows": {
-        "nf-core": {}
+        "nf-core": {
+            "utils_nextflow_pipeline": {
+                "branch": "master",
+                "git_sha": "5caf7640a9ef1d18d765d55339be751bb0969dfa",
+                "installed_by": ["subworkflows"]
+            },
+            "utils_nfcore_pipeline": {
+                "branch": "master",
+                "git_sha": "5caf7640a9ef1d18d765d55339be751bb0969dfa",
+                "installed_by": ["subworkflows"]
+            },
+            "utils_nfvalidation_plugin": {
+                "branch": "master",
+                "git_sha": "5caf7640a9ef1d18d765d55339be751bb0969dfa",
+                "installed_by": ["subworkflows"]
+            }
+        }
       }
     }
   }
+}
+}
+}
 }

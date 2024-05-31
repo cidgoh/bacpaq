@@ -4,10 +4,10 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-def summary_params = NfcoreSchema.paramsSummaryMap(workflow, params)
+//def summary_params = NfcoreSchema.paramsSummaryMap(workflow, params)
 
 // Validate input parameters
-WorkflowSeqqc.initialise(params, log)
+//WorkflowSeqqc.initialise(params, log)
 
 // TODO nf-core: Add all file path parameters for the pipeline to the list below
 // Check input path parameters to see if they exist
@@ -15,8 +15,8 @@ def checkPathParamList = [  params.multiqc_config, params.fasta ]
 for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
 
 // Check mandatory parameters
-if (params.input) { ch_input = file(params.input) } else { exit 1, 'Input samplesheet not specified!' }
-
+// if (params.input) { ch_input = file(params.input) } else { exit 1, 'Input samplesheet not specified!' }
+//ch_input = file(params.input)
 /*
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -27,13 +27,13 @@ if (params.input) { ch_input = file(params.input) } else { exit 1, 'Input sample
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
 //
-include { INPUT_CHECK           } from '../subworkflows/local/input_check'
-include { GENE_ANNOTATION       } from '../subworkflows/local/gene_annotation'
-include { PHAGE                 } from '../subworkflows/local/phage'
-include { PANGENOME_ANALYSIS    } from '../subworkflows/local/pangenome_analysis'
-include { PLASMIDS              } from '../subworkflows/local/plasmids'
-include { AMR_ANNOTATION        } from '../subworkflows/local/amr_annotation'
-include { CRISPRS               } from '../subworkflows/local/crisprs'
+//include { INPUT_CHECK           } from './input_check'
+include { GENE_ANNOTATION       } from './gene_annotation'
+include { PHAGE                 } from './phage'
+include { PANGENOME_ANALYSIS    } from './pangenome_analysis'
+include { PLASMIDS              } from './plasmids'
+include { AMR_ANNOTATION        } from './amr_annotation'
+include { CRISPRS               } from './crisprs'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -44,7 +44,7 @@ include { CRISPRS               } from '../subworkflows/local/crisprs'
 //
 // MODULE: Installed directly from nf-core/modules
 //
-include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoftwareversions/main'
+//include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoftwareversions/main'
 
 
 /*
@@ -57,7 +57,8 @@ include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoft
 
 workflow ANNOTATION {
     // Declare input and output channels
-
+    take:
+        ch_genome
     main:
     ch_versions = Channel.empty()
     //genome = file(params.assembled_genome, checkIfExists: true)
@@ -67,10 +68,10 @@ workflow ANNOTATION {
     // Eventually this will replace the above line for taking input
     // SUBWORKFLOW: Read in samplesheet, validate and stage input files
 
-    INPUT_CHECK (ch_input)
-    ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
+    //INPUT_CHECK (ch_input)
+    //ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
 
-    ch_genome = INPUT_CHECK.out.reads
+    //ch_genome = INPUT_CHECK.out.reads
 
     if (!params.skip_amr_annotation) {
         // Annotate AMR using ABRICATE
@@ -78,14 +79,14 @@ workflow ANNOTATION {
         ch_versions = ch_versions.mix(AMR_ANNOTATION.out.versions)
     }
 
-    phage_input = INPUT_CHECK.out.reads
+    //phage_input = INPUT_CHECK.out.reads
     if(!params.skip_phage_annotation){
         // Annotate phages using VIRSORTER2
         PHAGE(ch_genome)
         ch_versions = ch_versions.mix(PHAGE.out.versions)
     }
 
-    plasmid_input = INPUT_CHECK.out.reads
+    //plasmid_input = INPUT_CHECK.out.reads
     if (!params.skip_plasmid_analysis) {
         // Run plasmid annotation
         PLASMIDS(ch_genome)
@@ -99,7 +100,7 @@ workflow ANNOTATION {
         ch_versions = ch_versions.mix(CRISPRS.out.versions)
     }
 
-    gene_annotation_input = INPUT_CHECK.out.reads
+    //gene_annotation_input = INPUT_CHECK.out.reads
     if (!params.skip_gene_annotation) {
         // Annotate genomes using Prokka and bakta
         GENE_ANNOTATION(ch_genome)
@@ -139,7 +140,7 @@ workflow ANNOTATION {
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-workflow.onComplete {
+/*workflow.onComplete {
     if (params.email || params.email_on_fail) {
         NfcoreTemplate.email(workflow, params, summary_params, projectDir, log, multiqc_report)
     }
@@ -147,7 +148,7 @@ workflow.onComplete {
     if (params.hook_url) {
         NfcoreTemplate.IM_notification(workflow, params, summary_params, projectDir, log)
     }
-}
+}*/
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
