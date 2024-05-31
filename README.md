@@ -93,11 +93,19 @@ The Pangenome_analysis subworkflow carries out a pangenome analysis with gene-an
 
 2. Install any of [`Docker`](https://docs.docker.com/engine/installation/), [`Singularity`](https://www.sylabs.io/guides/3.0/user-guide/) (you can follow [this tutorial](https://singularity-tutorial.github.io/01-installation/)), [`Podman`](https://podman.io/), [`Shifter`](https://nersc.gitlab.io/development/shifter/how-to-use/) or [`Charliecloud`](https://hpc.github.io/charliecloud/) for full pipeline reproducibility _(you can use [`Conda`](https://conda.io/miniconda.html) both to install Nextflow itself and also to manage software within pipelines. Please only use it within pipelines as a last resort; see [docs](https://nf-co.re/usage/configuration#basic-configuration-profiles))_.
 
+<!--
 3. Download the pipeline and test it on a minimal dataset with a single command:
 
    ```bash
-   nextflow run nf-core/seqqc -profile test,YOURPROFILE --outdir <OUTDIR>
+   nextflow run -r [vers] cidgoh/bacpaq -profile test,YOURPROFILE --outdir <OUTDIR>
    ```
+-->
+
+3. Download the pipeline and test it by printing the pipeline help message
+
+```
+nextflow run cidgoh/bacpaq -r [vers] --help
+```
 
    Note that some form of configuration will be needed so that Nextflow knows how to fetch the required software. This is usually done in the form of a config profile (`YOURPROFILE` in the example command above). You can chain multiple config profiles in a comma-separated string.
 
@@ -109,7 +117,7 @@ The Pangenome_analysis subworkflow carries out a pangenome analysis with gene-an
 4. Start running your own analysis!
 
 ```bash
-nextflow run main.nf \
+nextflow run -r [vers] cidgoh/bacpaq \
    -profile <docker/singularity/.../institute> \
    --input samplesheet.csv \
    --outdir <OUTDIR>
