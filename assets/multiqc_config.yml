@@ -1,56 +1,116 @@
 custom_logo: "cidgoh.png"
-custom_logo_url: https://github.com/cidgoh/bacpag/
+custom_logo_url: https://github.com/cidgoh/bacpaq/
 custom_logo_title: "cidgoh/bacpaq"
 
 title: "BACPAQ"
 subtitle: "pipline"
-intro_text: "bacpaq is a bioinformatics best-practice pipeline for bacterial genomic analysis for short-reads (Illumina) and long-reads (Oxford Nanopore) sequencing data. Currently nf-seqqc supports WGS-based analyses, however, we plan to integrate Microbiome (Amplicon and Shotgun Metagenomics) analyses in future."
+intro_text: "bacpaq is a bioinformatics best-practice pipeline for bacterial genomic analysis for short-reads (Illumina) and long-reads (Oxford Nanopore) sequencing data. Currently bacpaq supports WGS-based analyses, however, we plan to integrate Microbiome (Amplicon and Shotgun Metagenomics) analyses in future."
 
 report_comment: >
-   bacpaq is a bioinformatics best-practice pipeline for bacterial genomic analysis for short-reads (Illumina) and long-reads (Oxford Nanopore) sequencing data. Currently nf-seqqc supports WGS-based analyses, however, we plan to integrate Microbiome (Amplicon and Shotgun Metagenomics) analyses in future.
+  bacpaq is a bioinformatics best-practice pipeline for bacterial genomic analysis for short-reads (Illumina) and long-reads (Oxford Nanopore) sequencing data. Currently bacpaq supports WGS-based analyses, however, we plan to integrate Microbiome (Amplicon and Shotgun Metagenomics) analyses in future.
 
 disable_version_detection: true
 
 report_section_order:
-  "nf-core-bacpaq-methods-description":
+  "cidgoh-bacpaq-methods-description":
     order: -1000
   software_versions:
     order: -1001
   "nf-core-bacpaq-summary":
     order: -1002
 
- # Run only these modules
+  # Run only these modules
 run_modules:
   - fastqc
   - fastp
+  - fastqc
   - samtools
   - kraken
   - busco
   - quast
   - prokka
 
-module_order:
-  - fastqc:
-      name: "FastQC (raw)"
-      path_filters: "raw_fastqc/*.zip"
-  - fastp:
-      name: "FastP (Read preprocessing)"
-  - fastqc:
-      name: "FastQC (trim)"
-      path_filters: "trim_fastqc/*.zip"
-  - quast:
-      name: "Quast"
-  - busco:
-      name: "Busco"
-  - kraken:
-      name: "Kraken 2"
+# module_order:
+#   - fastqc:
+#       name: "FastQC (raw)"
+#       path_filters: "raw_fastqc/*.zip"
+#   - fastp:
+#       name: "FastP (Read preprocessing)"
+#   - fastqc:
+#       name: "FastQC (trim)"
+#       path_filters: "trim_fastqc/*.zip"
+#   - quast:
+#       name: "Quast"
+#   - busco:
+#       name: "Busco"
+#   - kraken:
+#       name: "Kraken 2"
+#       path_filters:
+#         - "*.kraken2.report.txt"
+#   - samtools:
+#       name: "Samtools Flagstat"
+#       info: "Summarizes the information about reads mapping to a reference genome while de-hosting. The X axis represents the proportion of each category per sample. "
+#   - prokka:
+#       name: "Prokka"
+
+top_modules:
+  - "fastqc":
+      name: "FastQC: raw reads"
+      path_filters_exclude:
+        - "*trimmed*"
+  - "fastp":
+      name: "FastP"
+      info: "Read preprocessing."
+      path_filters:
+        - "*fastp.json"
+  - "porechop":
+      name: "Porechop"
+      info: "Adapter trimming for Oxford Nanopore reads."
+      path_filters:
+        - "*porechop.log"
+  - "fastqc":
+      name: "FastQC: after preprocessing"
+      info: "After trimming and, if requested, contamination removal."
+      path_filters:
+        - "*trimmed*"
+  - "kraken":
+      name: "Kraken2"
+      anchor: "Kraken2"
+      target: "Kraken2"
+      doi: "10.1101/gr.210641.116"
       path_filters:
         - "*.kraken2.report.txt"
-  - samtools:
-      name: "Samtools Flagstat"
-      info: "Summarizes the information about reads mapping to a reference genome while de-hosting. The X axis represents the proportion of each category per sample. "
-  - prokka:
-      name: "Prokka"
+      topn: 10
+  - "bracken":
+      name: "Bracken"
+      anchor: "Bracken"
+      info: "Estimates the abundance of species in metagenomic samples."
+      path_filters:
+        - "*.bracken.report.tsv"
+  - "quast":
+      name: "QUAST: assembly"
+      info: "Assembly statistics of raw assemblies."
+      path_filters:
+        - "*rawassemblies.tsv"
+  - "bowtie2":
+      name: "Bowtie2: assembly"
+      info: "Mapping statistics of reads mapped against assemblies."
+      path_filters_exclude:
+        - "*_host_removed.bowtie2.log"
+        - "*_phix_removed.bowtie2.log"
+  - "bcftools"
+  - custom_content
+  - "quast":
+      name: "QUAST: bins"
+      info: "Assembly statistics of binned assemblies."
+      path_filters_exclude:
+        - "*rawassemblies.tsv"
+  - "busco":
+      info: "assesses genome assembly and annotation completeness with Benchmarking Universal Single-Copy Orthologs. In case BUSCO's automated lineage selection was used, only generic results for the selected domain are shown and only for genome bins and kept, unbinned contigs for which the BUSCO analysis was successfull, i.e. not for contigs for which no BUSCO genes could be found. Bins for which a specific virus lineage was selected are also not shown."
+      fn: short_summary*
+      contents: "BUSCO version is:"
+      num_lines: 1
+  - "prokka"
 
 # clean names
 
@@ -61,5 +121,3 @@ fn_clean_exts:
 extra_fn_clean_exts:
   - type: regex
     pattern: "_T{1,2}.*"
-
-
