@@ -22,7 +22,7 @@ include { SAMTOOLS_FASTQ                } from '../../modules/nf-core/samtools/f
 
 workflow TAXONOMY_QC {
     take:
-    ch_reads_taxonomy 
+    ch_reads_taxonomy
     reference_genome
 
     main:
@@ -38,15 +38,18 @@ workflow TAXONOMY_QC {
             params.save_aligned,
             params.sam_format
         )
+        ch_versions = ch_versions.mix(CENTRIFUGE_CENTRIFUGE.out.versions)
         ch_tax_reads = CENTRIFUGE_CENTRIFUGE.out.fastq_mapped
         ch_tax_qc_unaligned_reads = CENTRIFUGE_CENTRIFUGE.out.fastq_unmapped
         CENTRIFUGE_KREPORT(
             CENTRIFUGE_CENTRIFUGE.out.report,
             ch_centrifuge_db
         )
+        ch_versions = ch_versions.mix(CENTRIFUGE_KREPORT.out.versions)
         KRONA_KTIMPORTTAXONOMY(
                     CENTRIFUGE_KREPORT.out.kreport
         )
+        ch_versions = ch_versions.mix(KRONA_KTIMPORTTAXONOMY.out.versions)
     }
     else{
         unclassified_reads=params.unclassified_reads
@@ -59,28 +62,33 @@ workflow TAXONOMY_QC {
                 classified_reads,
                 unclassified_reads
             )
+            ch_versions = ch_versions.mix(KRAKEN2_KRAKEN2.out.versions)
             ch_tax_reads = KRAKEN2_KRAKEN2.out.classified_reads_fastq
             ch_tax_qc_unaligned_reads = KRAKEN2_KRAKEN2.out.unclassified_reads_fastq
             if (!params.skip_kreport2krona) {
                 KRAKENTOOLS_KREPORT2KRONA(
                     KRAKEN2_KRAKEN2.out.report
                 )
+                ch_versions = ch_versions.mix(KRAKENTOOLS_KREPORT2KRONA.out.versions)
                 KRONA_KTUPDATETAXONOMY(
 
                 )
+                ch_versions = ch_versions.mix(KRONA_KTUPDATETAXONOMY.out.versions)
                 KRONA_KTIMPORTTEXT(
                     KRAKENTOOLS_KREPORT2KRONA.out.txt
                 )
+                ch_versions = ch_versions.mix(KRONA_KTIMPORTTEXT.out.versions)
             }
             if (!params.skip_bracken) {
                 BRACKEN_BRACKEN(
                     KRAKEN2_KRAKEN2.out.report,
                     params.kraken2_db
                 )
+                ch_versions = ch_versions.mix(BRACKEN_BRACKEN.out.versions)
             }
 
         }
-         
+
     }
     ch_tax_qc_reads = ch_reads_taxonomy
     if (!params.skip_dehosting){
@@ -89,6 +97,7 @@ workflow TAXONOMY_QC {
             BWA_INDEX(
                 [[id: params.ref_genome_id], reference_genome]
             )
+            ch_versions = ch_versions.mix(BWA_INDEX.out.versions)
             ref_genome = BWA_INDEX.out.index
             reads = ch_reads_taxonomy
             sorted=params.bwa_sort_bam
@@ -97,6 +106,7 @@ workflow TAXONOMY_QC {
                 ref_genome,
                 sorted
             )
+            ch_versions = ch_versions.mix(BWA_MEM.out.versions)
             ch_mapped_bam=BWA_MEM.out.bam
         }
         else {
@@ -105,32 +115,37 @@ workflow TAXONOMY_QC {
             bam_format  = params.bam_format //true
             cigar_paf_format = params.cigar_paf_format //false
             cigar_bam = params.cigar_bam //false
-            MINIMAP2_ALIGN( 
-                reads, 
-                ref_genome, 
-                bam_format, 
-                cigar_paf_format, 
-                cigar_bam 
+            MINIMAP2_ALIGN(
+                reads,
+                ref_genome,
+                bam_format,
+                cigar_paf_format,
+                cigar_bam
                 )
+            ch_versions = ch_versions.mix(MINIMAP2_ALIGN.out.versions)
             ch_mapped_bam=MINIMAP2_ALIGN.out.bam
         }
 
         SAMTOOLS_INDEX(
             ch_mapped_bam
             )
+        ch_versions = ch_versions.mix(SAMTOOLS_INDEX.out.versions)
         bam_index = SAMTOOLS_INDEX.out.bai
 
         SAMTOOLS_FLAGSTAT(
             ch_mapped_bam.combine(bam_index, by: 0)
             )
+        ch_versions = ch_versions.mix(SAMTOOLS_FLAGSTAT.out.versions)
 
         SAMTOOLS_VIEW(
             ch_mapped_bam.combine(bam_index, by: 0),
             [],
             [])
+        ch_versions = ch_versions.mix(SAMTOOLS_VIEW.out.versions)
 
         SAMTOOLS_FASTQ(
-             SAMTOOLS_VIEW.out.bam, params.interleaved)
+            SAMTOOLS_VIEW.out.bam, params.interleaved)
+        ch_versions = ch_versions.mix(SAMTOOLS_FASTQ.out.versions)
 
         // illumina reads
         if (params.interleaved){
@@ -143,9 +158,11 @@ workflow TAXONOMY_QC {
         // output dehosted reads
         ch_tax_qc_reads = ch_dehosted_reads
     }
-    
+
     emit:
-    ch_tax_qc_reads                              // channel: [ val(meta), [ reads ] ]
+    reads           = ch_tax_qc_reads                              // channel: [ val(meta), [ reads ] ]
+    kraken_report = KRAKEN2_KRAKEN2.out.report
+    bracken_report = BRACKEN_BRACKEN.out.reports
     //ch_tax_unaligned_reads = ch_tax_qc_unaligned_reads                    // channel: [ val(meta), [ reads ] ]
-    //versions = TAXONOMY_QC.out.versions                                  // channel: [ versions.yml ]
+    versions        = ch_versions                                  // channel: [ versions.yml ]
 }

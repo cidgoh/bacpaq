@@ -4,10 +4,11 @@ include { RMLSTPARSE } from '../../modules/local/RMLSTPARSE'
 //workflow
 
 workflow RSMLST{
-    take: 
+    take:
     assembly
 
     main:
+
     RMLST(assembly)
     RMLSTPARSE(RMLST.out.rmlstJSON)
 

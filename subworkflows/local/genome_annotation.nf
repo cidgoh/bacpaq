@@ -61,17 +61,6 @@ workflow ANNOTATION {
         ch_genome
     main:
     ch_versions = Channel.empty()
-    //genome = file(params.assembled_genome, checkIfExists: true)
-    //ch_genome = [ [ id:genome.getBaseName() ], genome ]
-    //print(ch_genome)
-
-    // Eventually this will replace the above line for taking input
-    // SUBWORKFLOW: Read in samplesheet, validate and stage input files
-
-    //INPUT_CHECK (ch_input)
-    //ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
-
-    //ch_genome = INPUT_CHECK.out.reads
 
     if (!params.skip_amr_annotation) {
         // Annotate AMR using ABRICATE
@@ -125,33 +114,13 @@ workflow ANNOTATION {
                 .map { gff -> [ [id:"prokka_pangenome"], gff ] }
                 .set { ch_pangenome_gff }
         }
-        ch_pangenome_gff.view()
+
         PANGENOME_ANALYSIS(ch_pangenome_gff)
         ch_versions = ch_versions.mix(PANGENOME_ANALYSIS.out.versions)
 
         }
     }
 
+    emit:
+        versions = ch_versions
 }
-
-/*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    COMPLETION EMAIL AND SUMMARY
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/
-
-/*workflow.onComplete {
-    if (params.email || params.email_on_fail) {
-        NfcoreTemplate.email(workflow, params, summary_params, projectDir, log, multiqc_report)
-    }
-    NfcoreTemplate.summary(workflow, params, log)
-    if (params.hook_url) {
-        NfcoreTemplate.IM_notification(workflow, params, summary_params, projectDir, log)
-    }
-}*/
-
-/*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    THE END
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/
