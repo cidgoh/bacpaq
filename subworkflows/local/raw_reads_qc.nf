@@ -31,7 +31,7 @@ ch_multiqc_custom_methods_description = params.multiqc_methods_description ? fil
 workflow RAW_READS_QC {
     take:
     ch_raw_reads
-    ch_adapter
+
 
     main:
     ch_versions = Channel.empty()
