@@ -35,8 +35,6 @@ workflow RAW_READS_QC {
 
     main:
     ch_versions = Channel.empty()
-    ch_short_reads = Channel.empty()
-
 
      // use rasusa to randomly subsample sequencing reads
     if (!params.skip_subsampling) {
@@ -63,15 +61,18 @@ workflow RAW_READS_QC {
     RAW_FASTQC (
         ch_short_reads_fastqc
     )
-
     ch_versions = ch_versions.mix(RAW_FASTQC.out.versions)
+
+    // Raw read trimming
     if (!params.skip_trimming){
-        //ch_adapter = params.adapter_fasta ? file(params.adapter_fasta) : []
+        // ch_adapter = Channel.of( file(params.adapter_fasta, checkIfExists: true) )
         // trim reads using fastp, trimommatic or trimgalore
         if (params.trim_tool=="fastp") {
             FASTP (
-
-                ch_short_reads_trim, params.adapter_fasta != "null" ? params.adapter_fasta : ch_short_reads_trim.map{ [] }, params.save_trimmed_fail, params.save_merged
+                ch_short_reads_trim, 
+                params.adapter_fasta != "null" ? file(params.adapter_fasta, checkIfExists: true) : ch_short_reads_trim.map{ [] }, 
+                params.save_trimmed_fail,
+                params.save_merged
             )
             ch_trimmed_reads = FASTP.out.reads
             ch_versions = ch_versions.mix(FASTP.out.versions)
@@ -87,7 +88,7 @@ workflow RAW_READS_QC {
             ch_versions = ch_versions.mix(TRIMGALORE.out.versions)
         }
         else {
-            ch_trimmed_reads = ch_raw_reads
+            ch_trimmed_reads = ch_short_reads_trim
         }
 
         // FASTQC check for trimmed reads
@@ -97,7 +98,7 @@ workflow RAW_READS_QC {
         ch_versions = ch_versions.mix(TRIM_FASTQC.out.versions)
     }
     else{
-        ch_trimmed_reads = ch_short_reads
+        ch_trimmed_reads = ch_short_reads_trim
     }
 
     if(!params.skip_confindr){
@@ -117,10 +118,6 @@ workflow RAW_READS_QC {
         raw_fastqc = RAW_FASTQC.out.zip
         trim_fastqc = TRIM_FASTQC.out.zip
         fastp_report = FASTP.out.json
-
-
-
-
 }
 
 
