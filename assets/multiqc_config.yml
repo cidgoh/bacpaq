@@ -1,58 +1,33 @@
-custom_logo: "cidgoh.png"
-custom_logo_url: https://github.com/cidgoh/bacpaq/
-custom_logo_title: "cidgoh/bacpaq"
-
-title: "BACPAQ"
-subtitle: "pipline"
-intro_text: "bacpaq is a bioinformatics best-practice pipeline for bacterial genomic analysis for short-reads (Illumina) and long-reads (Oxford Nanopore) sequencing data. Currently bacpaq supports WGS-based analyses, however, we plan to integrate Microbiome (Amplicon and Shotgun Metagenomics) analyses in future."
-
 report_comment: >
   bacpaq is a bioinformatics best-practice pipeline for bacterial genomic analysis for short-reads (Illumina) and long-reads (Oxford Nanopore) sequencing data. Currently bacpaq supports WGS-based analyses, however, we plan to integrate Microbiome (Amplicon and Shotgun Metagenomics) analyses in future.
-
-disable_version_detection: true
 
 report_section_order:
   "cidgoh-bacpaq-methods-description":
     order: -1000
   software_versions:
     order: -1001
-  "nf-core-bacpaq-summary":
+  "cidgoh-bacpaq-summary":
     order: -1002
 
-  # Run only these modules
+export_plots: true
+
+disable_version_detection: true
+data_format: "yaml"
+
 run_modules:
   - fastqc
   - fastp
+  - trimmomatic
+  - porechop
   - fastqc
-  - samtools
   - kraken
-  - busco
+  - bracken
   - quast
   - prokka
+  - bakta
+  - busco
 
-# module_order:
-#   - fastqc:
-#       name: "FastQC (raw)"
-#       path_filters: "raw_fastqc/*.zip"
-#   - fastp:
-#       name: "FastP (Read preprocessing)"
-#   - fastqc:
-#       name: "FastQC (trim)"
-#       path_filters: "trim_fastqc/*.zip"
-#   - quast:
-#       name: "Quast"
-#   - busco:
-#       name: "Busco"
-#   - kraken:
-#       name: "Kraken 2"
-#       path_filters:
-#         - "*.kraken2.report.txt"
-#   - samtools:
-#       name: "Samtools Flagstat"
-#       info: "Summarizes the information about reads mapping to a reference genome while de-hosting. The X axis represents the proportion of each category per sample. "
-#   - prokka:
-#       name: "Prokka"
-
+# Module order
 top_modules:
   - "fastqc":
       name: "FastQC: raw reads"
@@ -63,6 +38,11 @@ top_modules:
       info: "Read preprocessing."
       path_filters:
         - "*fastp.json"
+  - "trimmomatic":
+      name: "Trimmomatic"
+      info: "Adapter trimming for Illumina reads."
+      path_filters:
+        - "*trimmomatic.log"
   - "porechop":
       name: "Porechop"
       info: "Adapter trimming for Oxford Nanopore reads."
@@ -70,6 +50,7 @@ top_modules:
         - "*porechop.log"
   - "fastqc":
       name: "FastQC: after preprocessing"
+      anchor: "FastQC_trimmed"
       info: "After trimming and, if requested, contamination removal."
       path_filters:
         - "*trimmed*"
@@ -80,40 +61,58 @@ top_modules:
       doi: "10.1101/gr.210641.116"
       path_filters:
         - "*.kraken2.report.txt"
-      topn: 10
+      top_n: 10
+  - "kraken":
+      name: "Centrifuge"
+      anchor: "centrifuge"
+      target: "Centrifuge"
+      doi: "10.1101/gr.210641.116"
+      info: "is a very rapid and memory-efficient system for the classification of DNA sequences from microbial samples. The system uses a novel indexing scheme based on the Burrows-Wheeler transform (BWT) and the Ferragina-Manzini (FM) index. Note: Figure title"
+      extra: "ℹ️: plot title will say Kraken2 due to Centrifuge producing the same output format as Kraken. If activated, see the actual Kraken2 results in the section above."
+      path_filters:
+        - "*.centrifuge_kreport.txt"
   - "bracken":
-      name: "Bracken"
-      anchor: "Bracken"
+      name: "bracken"
+      anchor: "bracken"
+      target: "bracken"
       info: "Estimates the abundance of species in metagenomic samples."
+      contents_re: ^(\d{1,3}\.\d{1,2})\t(\d+)\t(\d+)\t((\d+)\t(\d+)\t)?([URDKPCOFGS-]\d{0,2})\t(\d+)(\s+)root
+      num_lines: 1
       path_filters:
         - "*.bracken.report.tsv"
   - "quast":
       name: "QUAST: assembly"
-      info: "Assembly statistics of raw assemblies."
-      path_filters:
-        - "*rawassemblies.tsv"
-  - "bowtie2":
-      name: "Bowtie2: assembly"
-      info: "Mapping statistics of reads mapped against assemblies."
-      path_filters_exclude:
-        - "*_host_removed.bowtie2.log"
-        - "*_phix_removed.bowtie2.log"
-  - "bcftools"
-  - custom_content
-  - "quast":
-      name: "QUAST: bins"
       info: "Assembly statistics of binned assemblies."
       path_filters_exclude:
         - "*rawassemblies.tsv"
+      contents: "Assembly\t"
+      num_lines: 2
+
+  - "prokka":
+      name: "Prokka"
+      info: "Prokka is a software tool for the rapid annotation of prokaryotic genomes."
+      contents: "contigs:"
+      fn: "*.txt"
+
+  - "bakta":
+      name: "Bakta"
+      info: "Bakta is a software tool for the rapid annotation of prokaryotic genomes."
+      contents: "Bakta:"
+      fn: "*.txt"
+
   - "busco":
       info: "assesses genome assembly and annotation completeness with Benchmarking Universal Single-Copy Orthologs. In case BUSCO's automated lineage selection was used, only generic results for the selected domain are shown and only for genome bins and kept, unbinned contigs for which the BUSCO analysis was successfull, i.e. not for contigs for which no BUSCO genes could be found. Bins for which a specific virus lineage was selected are also not shown."
       fn: short_summary*
       contents: "BUSCO version is:"
       num_lines: 1
-  - "prokka"
+
+sp:
+  kraken:
+    fn_re: ".*[kraken2|centrifuge].*report.txt"
+  quast:
+    fn_re: "report.*.tsv"
 
 # clean names
-
 fn_clean_exts:
   - ".gz"
   - ".fastq"
@@ -121,3 +120,109 @@ fn_clean_exts:
 extra_fn_clean_exts:
   - type: regex
     pattern: "_T{1,2}.*"
+
+## Prettification
+custom_logo_url: https://github.com/cidgoh/bacpaq/
+custom_logo_title: "cidgoh/bacpaq"
+
+## Report Title
+title: "BACPAQ"
+
+## Tool specific configuration
+prokka_fn_snames: True
+
+## General Stats customisation
+table_columns_visible:
+  "FastQC: raw reads":
+    avg_sequence_length: True
+  "FastQC: after preprocessing":
+    avg_sequence_length: True
+  "fastp":
+    pct_duplication: False
+    after_filtering_q30_rate: False
+    after_filtering_q30_bases: False
+    filtering_result_passed_filter_reads: 3300
+    after_filtering_gc_content: False
+    pct_surviving: True
+    pct_adapter: True
+  "Kraken2": True
+  "Centrifuge": True
+  "QUAST: assembly":
+    N75: True
+    L50: True
+    L75: True
+    "Largest contig": True
+    "Total length": True
+    N50: True
+  "Prokka": True
+  "Bakta": True
+
+table_columns_placement:
+  "FastQC: raw reads":
+    percent_duplicates: 1000
+    percent_gc: 1100
+    avg_sequence_length: 1200
+    median_sequence_length: 1300
+    total_sequences: 1400
+    percent_fails: 1500
+  "FastQC: after preprocessing":
+    percent_duplicates: 2000
+    percent_gc: 2100
+    avg_sequence_length: 2200
+    median_sequence_length: 2300
+    total_sequences: 2400
+    percent_fails: 2500
+  "fastp":
+    pct_duplication: 3000
+    after_filtering_q30_rate: 3100
+    after_filtering_q30_bases: 3200
+    filtering_result_passed_filter_reads: 3300
+    after_filtering_gc_content: 3400
+    pct_surviving: 3500
+    pct_adapter: 3600
+  "Kraken2":
+    "% root": 8000
+    "% Top 5": 8100
+    "% Unclassified": 8200
+  "Centrifuge":
+    "% root": 9000
+    "% Top 5": 9100
+    "% Unclassified": 9200
+  "QUAST: assembly":
+    "N50": 10000
+    "Total length": 11000
+  Prokka:
+    contigs: 20000
+    bases: 21000
+    CDS: 22000
+    organism: 23000
+    plasmid: 24000
+  Bakta:
+    contigs: 20000
+    bases: 21000
+    CDS: 22000
+    organism: 23000
+    plasmid: 24000
+
+table_columns_name:
+  "FastQC: raw reads":
+    percent_duplicates: "% Dups (raw)"
+    percent_gc: "% GC (raw)"
+    avg_sequence_length: "Avg. length (raw)"
+    median_sequence_length: "Median length (raw)"
+    total_sequences: "M Seqs (raw)"
+    percent_fails: "% Fails (raw)"
+  "FastQC: after preprocessing":
+    percent_duplicates: "% Dups (processed)"
+    percent_gc: "% GC (processed)"
+    avg_sequence_length: "Avg. length (processed)"
+    median_sequence_length: "Median length (processed)"
+    total_sequences: "M Seqs (processed)"
+    percent_fails: "% Fails (processed)"
+
+custom_table_header_config:
+  general_stats_table:
+    "Total length":
+      hidden: True
+    N50:
+      hidden: True

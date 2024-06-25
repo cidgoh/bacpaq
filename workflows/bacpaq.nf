@@ -81,6 +81,7 @@ workflow BACPAQ {
     if ( !params.skip_annotation ) {
         if ( ch_genome ) {
             ANNOTATION(ch_genome)
+            ch_multiqc_files = ch_multiqc_files.mix(ANNOTATION.out.multiqc_files)
             ch_versions = ch_versions.mix(ANNOTATION.out.versions)
         } else {
             log.error "${workflow.manifest.name}: No genomes available for annotation, exiting."
@@ -111,7 +112,7 @@ workflow BACPAQ {
         Channel.empty()
     ch_multiqc_logo          = params.multiqc_logo ?
         Channel.fromPath(params.multiqc_logo, checkIfExists: true) :
-        Channel.fromPath("${workflow.projectDir}/docs/images/nf-core-bacpaq_logo_light.png", checkIfExists: true)
+        Channel.fromPath("${workflow.projectDir}/docs/images/LogoCIDGOH2.png", checkIfExists: true)
 
     summary_params      = paramsSummaryMap(
         workflow, parameters_schema: "nextflow_schema.json")
@@ -132,54 +133,6 @@ workflow BACPAQ {
             sort: true
         )
     )
-
-    /*if (!params.assembly_input) {
-
-        if ( !params.skip_clipping && params.clip_tool == 'adapterremoval' ) {
-            ch_multiqc_files = ch_multiqc_files.mix(ADAPTERREMOVAL_PE.out.settings.collect{it[1]}.ifEmpty([]))
-            ch_multiqc_files = ch_multiqc_files.mix(ADAPTERREMOVAL_SE.out.settings.collect{it[1]}.ifEmpty([]))
-
-        } else if ( !params.skip_clipping && params.clip_tool == 'fastp' )  {
-            ch_multiqc_files = ch_multiqc_files.mix(FASTP.out.json.collect{it[1]}.ifEmpty([]))
-        }
-
-        if (!(params.keep_phix && params.skip_clipping && !(params.host_genome || params.host_fasta))) {
-            ch_multiqc_files = ch_multiqc_files.mix(FASTQC_TRIMMED.out.zip.collect{it[1]}.ifEmpty([]))
-        }
-
-        if ( params.host_fasta || params.host_genome ) {
-            ch_multiqc_files = ch_multiqc_files.mix(BOWTIE2_HOST_REMOVAL_ALIGN.out.log.collect{it[1]}.ifEmpty([]))
-        }
-
-        if(!params.keep_phix) {
-            ch_multiqc_files = ch_multiqc_files.mix(BOWTIE2_PHIX_REMOVAL_ALIGN.out.log.collect{it[1]}.ifEmpty([]))
-        }
-
-    }
-
-    ch_multiqc_files = ch_multiqc_files.mix(CENTRIFUGE_KREPORT.out.kreport.collect{it[1]}.ifEmpty([]))
-    ch_multiqc_files = ch_multiqc_files.mix(KRAKEN2.out.report.collect{it[1]}.ifEmpty([]))
-
-    if (!params.skip_quast){
-        ch_multiqc_files = ch_multiqc_files.mix(QUAST.out.report.collect().ifEmpty([]))
-
-        if ( !params.skip_binning ) {
-            ch_multiqc_files = ch_multiqc_files.mix(QUAST_BINS.out.dir.collect().ifEmpty([]))
-        }
-    }
-
-    if ( !params.skip_binning || params.ancient_dna ) {
-        ch_multiqc_files = ch_multiqc_files.mix(BINNING_PREPARATION.out.bowtie2_assembly_multiqc.collect().ifEmpty([]))
-    }
-
-    if (!params.skip_binning && !params.skip_prokka){
-        ch_multiqc_files = ch_multiqc_files.mix(PROKKA.out.txt.collect{it[1]}.ifEmpty([]))
-    }
-
-    if (!params.skip_binning && !params.skip_binqc && params.binqc_tool == 'busco'){
-        ch_multiqc_files = ch_multiqc_files.mix(BUSCO_QC.out.multiqc.collect().ifEmpty([]))
-    }
-    */
 
     MULTIQC (
         ch_multiqc_files.collect(),

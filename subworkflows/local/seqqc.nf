@@ -132,7 +132,13 @@ workflow SEQQC {
         ch_versions = ch_versions.mix(RAW_READS_QC.out.versions)
         ch_multiqc_files = ch_multiqc_files.mix(RAW_READS_QC.out.raw_fastqc.collect{it[1]}.ifEmpty([]))
         ch_multiqc_files = ch_multiqc_files.mix(RAW_READS_QC.out.trim_fastqc.collect{it[1]}.ifEmpty([]))
-        ch_multiqc_files = ch_multiqc_files.mix(RAW_READS_QC.out.fastp_report.collect{it[1]}.ifEmpty([]))
+        if (params.trim_tool == 'fastp'){
+            ch_multiqc_files = ch_multiqc_files.mix(RAW_READS_QC.out.fastp_report.collect{it[1]}.ifEmpty([]))
+        }
+        if (params.trim_tool == 'trimmomatic'){
+            ch_multiqc_files = ch_multiqc_files.mix(RAW_READS_QC.out.trimmomatic_report.collect{it[1]}.ifEmpty([]))
+        }
+
     }
     else{
         ch_tax_reads = ch_reads
@@ -148,20 +154,16 @@ workflow SEQQC {
         ch_assembly_reads = TAXONOMY_QC.out.reads
         ch_versions = ch_versions.mix(TAXONOMY_QC.out.versions)
         ch_multiqc_files = ch_multiqc_files.mix(TAXONOMY_QC.out.kraken_report.collect{it[1]}.ifEmpty([]))
-        //ch_multiqc_files = ch_multiqc_files.mix(TAXONOMY_QC.out.bracken_report.collect{it[1]}.ifEmpty([]))
+        ch_multiqc_files = ch_multiqc_files.mix(TAXONOMY_QC.out.bracken_report.collect{it[1]}.ifEmpty([]))
     }
-    /*else {
-        ch_assembly_reads = ch_reads
-    }*/
 
-    //if (!params.skip_qc && !params.skip_taxonomy_qc) {
+
     ch_assembly_reads
         .branch {
         illumina : it[0].mode == 'illumina'
         nanopore : it[0].mode == 'nanopore'
         }
     .set {ch_assembly_reads}
-    //}
 
     if (!params.skip_assembly) {
         // SUBWORKFLOW: Run WGS ASSEMBLY on reads
@@ -186,6 +188,10 @@ workflow SEQQC {
                 ch_contigs
             )
             ch_versions = ch_versions.mix(ASSEMBLY_QC.out.versions)
+            ch_multiqc_files = ch_multiqc_files.mix(ASSEMBLY_QC.out.quast_tsv.collect().ifEmpty([]))
+            //ch_multiqc_files = ch_multiqc_files.mix(ASSEMBLY_QC.out.quast_tsv.collect{it[1]}.ifEmpty([]))
+            ch_multiqc_files = ch_multiqc_files.mix(ASSEMBLY_QC.out.busco_short_summaries_txt.collect{it[1]}.ifEmpty([]))
+
         }
     }
 

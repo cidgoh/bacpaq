@@ -61,6 +61,7 @@ workflow ANNOTATION {
         ch_genome
     main:
     ch_versions = Channel.empty()
+    ch_multiqc_files  = Channel.empty()
 
     if (!params.skip_amr_annotation) {
         // Annotate AMR using ABRICATE
@@ -93,6 +94,8 @@ workflow ANNOTATION {
     if (!params.skip_gene_annotation) {
         // Annotate genomes using Prokka and bakta
         GENE_ANNOTATION(ch_genome)
+        ch_multiqc_files = ch_multiqc_files.mix(GENE_ANNOTATION.out.prokka_txt.collect{it[1]}.ifEmpty([]))
+        ch_multiqc_files = ch_multiqc_files.mix(GENE_ANNOTATION.out.bakta_txt.collect{it[1]}.ifEmpty([]))
         ch_versions = ch_versions.mix(GENE_ANNOTATION.out.versions)
 
         if (!params.skip_pangenome_analysis) {
@@ -123,4 +126,5 @@ workflow ANNOTATION {
 
     emit:
         versions = ch_versions
+        multiqc_files = ch_multiqc_files
 }

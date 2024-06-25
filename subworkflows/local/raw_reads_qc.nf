@@ -35,6 +35,12 @@ workflow RAW_READS_QC {
 
     main:
     ch_versions = Channel.empty()
+    trimmomatic_report = Channel.empty()
+    trimmomatic_log = Channel.empty()
+    fastp_report = Channel.empty()
+    raw_fastqc = Channel.empty()
+    trim_fastqc = Channel.empty()
+
 
      // use rasusa to randomly subsample sequencing reads
     if (!params.skip_subsampling) {
@@ -61,6 +67,7 @@ workflow RAW_READS_QC {
     RAW_FASTQC (
         ch_short_reads_fastqc
     )
+    raw_fastqc = RAW_FASTQC.out.zip
     ch_versions = ch_versions.mix(RAW_FASTQC.out.versions)
 
     // Raw read trimming
@@ -69,17 +76,20 @@ workflow RAW_READS_QC {
         // trim reads using fastp, trimommatic or trimgalore
         if (params.trim_tool=="fastp") {
             FASTP (
-                ch_short_reads_trim, 
-                params.adapter_fasta != "null" ? file(params.adapter_fasta, checkIfExists: true) : ch_short_reads_trim.map{ [] }, 
+                ch_short_reads_trim,
+                params.adapter_fasta != "null" ? file(params.adapter_fasta, checkIfExists: true) : ch_short_reads_trim.map{ [] },
                 params.save_trimmed_fail,
                 params.save_merged
             )
             ch_trimmed_reads = FASTP.out.reads
+            fastp_report = FASTP.out.json
             ch_versions = ch_versions.mix(FASTP.out.versions)
         }
         else if (params.trim_tool=="trimommatic") {
             TRIMMOMATIC (ch_short_reads_trim)
             ch_trimmed_reads = TRIMMOMATIC.out.trimmed_reads
+            trimmomatic_report = TRIMMOMATIC.out.summary
+            trimmomatic_log = TRIMMOMATIC.out.log
             ch_versions = ch_versions.mix(TRIMMOMATIC.out.versions)
         }
         else if (params.trim_tool=="trimgalore") {
@@ -95,6 +105,7 @@ workflow RAW_READS_QC {
         TRIM_FASTQC (
             ch_trimmed_reads
         )
+        trim_fastqc = TRIM_FASTQC.out.zip
         ch_versions = ch_versions.mix(TRIM_FASTQC.out.versions)
     }
     else{
@@ -115,9 +126,11 @@ workflow RAW_READS_QC {
     emit:
         short_reads=ch_trimmed_reads
         versions = ch_versions
-        raw_fastqc = RAW_FASTQC.out.zip
-        trim_fastqc = TRIM_FASTQC.out.zip
-        fastp_report = FASTP.out.json
+        raw_fastqc
+        trim_fastqc
+        fastp_report
+        trimmomatic_report
+        trimmomatic_log
 }
 
 

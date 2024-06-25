@@ -28,6 +28,8 @@ workflow TAXONOMY_QC {
     main:
     ch_versions = Channel.empty()
     ch_dehosted_reads = Channel.empty()
+    kraken_report = Channel.empty()
+    bracken_report = Channel.empty()
 
     if (params.classifier=="centrifuge"){
         ch_centrifuge_db=Channel.from(params.centrifuge_db)
@@ -65,6 +67,7 @@ workflow TAXONOMY_QC {
             ch_versions = ch_versions.mix(KRAKEN2_KRAKEN2.out.versions)
             ch_tax_reads = KRAKEN2_KRAKEN2.out.classified_reads_fastq
             ch_tax_qc_unaligned_reads = KRAKEN2_KRAKEN2.out.unclassified_reads_fastq
+            kraken_report = KRAKEN2_KRAKEN2.out.report
             if (!params.skip_kreport2krona) {
                 KRAKENTOOLS_KREPORT2KRONA(
                     KRAKEN2_KRAKEN2.out.report
@@ -84,6 +87,7 @@ workflow TAXONOMY_QC {
                     KRAKEN2_KRAKEN2.out.report,
                     params.kraken2_db
                 )
+                bracken_report = BRACKEN_BRACKEN.out.reports
                 ch_versions = ch_versions.mix(BRACKEN_BRACKEN.out.versions)
             }
 
@@ -161,8 +165,7 @@ workflow TAXONOMY_QC {
 
     emit:
     reads           = ch_tax_qc_reads                              // channel: [ val(meta), [ reads ] ]
-    kraken_report = KRAKEN2_KRAKEN2.out.report
-    bracken_report = BRACKEN_BRACKEN.out.reports
-    //ch_tax_unaligned_reads = ch_tax_qc_unaligned_reads                    // channel: [ val(meta), [ reads ] ]
+    kraken_report
+    bracken_report
     versions        = ch_versions                                  // channel: [ versions.yml ]
 }
