@@ -43,6 +43,8 @@ workflow GENE_ANNOTATION{
             prokka_gff = PROKKA.out.gff
             prokka_fna = PROKKA.out.fna
             prokka_faa = PROKKA.out.faa
+            prokka_tsv = PROKKA.out.tsv
+            prokka_txt = PROKKA.out.txt
             ch_versions   = ch_versions.mix(PROKKA.out.versions)
         }
 
@@ -64,6 +66,8 @@ workflow GENE_ANNOTATION{
             bakta_gff = BAKTA_BAKTA.out.gff
             bakta_fna = BAKTA_BAKTA.out.fna
             bakta_faa = BAKTA_BAKTA.out.faa
+            bakta_tsv = BAKTA_BAKTA.out.tsv
+            bakta_txt = BAKTA_BAKTA.out.txt
             ch_versions = ch_versions.mix(BAKTA_BAKTA.out.versions)
         }
 
@@ -72,8 +76,12 @@ workflow GENE_ANNOTATION{
         bakta_gff
         bakta_fna
         bakta_faa
+        bakta_tsv
+        bakta_txt
         prokka_gff
         prokka_fna
         prokka_faa
+        prokka_tsv
+        prokka_txt
         versions = ch_versions
 }

@@ -5,10 +5,8 @@ include { PEPPAN } from '../../modules/local/PEPPAN/main'
 
 workflow PANGENOME_ANALYSIS {
 
-
     take:
-    // should be ch_gff from prokka/bakta output
-    ch_gff
+        ch_gff
 
     main:
 

@@ -11,6 +11,8 @@
 [![run with docker](https://img.shields.io/badge/run%20with-docker-0db7ed?labelColor=000000&logo=docker)](https://www.docker.com/)
 [![run with singularity](https://img.shields.io/badge/run%20with-singularity-1d355c.svg?labelColor=000000)](https://sylabs.io/docs/)
 
+# BACPAQ
+
 ## Introduction
 
 **`bacpaq`** is a bioinformatics best-practice pipeline for bacterial genomic analysis for short-reads (Illumina) and long-reads (Oxford Nanopore) sequencing data. Currently `bacpaq` supports WGS-based analyses, however, we plan to integrate Microbiome (Amplicon and Shotgun Metagenomics) analyses in future.

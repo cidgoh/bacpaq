@@ -39,17 +39,7 @@ if (!params.skip_busco && !Utils.fileExists(params.busco_lineages_path)) {
     exit 1
 }
 /*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    CONFIG FILES
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/
 
-ch_multiqc_config          = Channel.fromPath("$projectDir/assets/multiqc_config.yml", checkIfExists: true)
-ch_multiqc_custom_config   = params.multiqc_config ? Channel.fromPath( params.multiqc_config, checkIfExists: true ) : Channel.empty()
-ch_multiqc_logo            = params.multiqc_logo   ? Channel.fromPath( params.multiqc_logo, checkIfExists: true ) : Channel.empty()
-ch_multiqc_custom_methods_description = params.multiqc_methods_description ? file(params.multiqc_methods_description, checkIfExists: true) : file("$projectDir/assets/methods_description_template.yml", checkIfExists: true)
-
-/*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     IMPORT LOCAL MODULES/SUBWORKFLOWS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -100,24 +90,27 @@ workflow SEQQC {
     ch_tax_reads = Channel.empty()
     ch_assembly_reads = Channel.empty()
     ch_contigs = Channel.empty()
+    ch_multiqc_files  = Channel.empty()
+    ch_reads = Channel.empty()
 
     //
     // SUBWORKFLOW: Read in samplesheet, validate and stage input files
     //
-    //ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
+
 
     ch_input
         .branch {
             illumina : it[0].mode == 'illumina'
             nanopore : it[0].mode == 'nanopore'
         }
-        .set {ch_reads}
+        .set {ch_raw_reads}
 
 
 
-    CAT_NANOPORE_FASTQ(ch_reads.nanopore)
+    CAT_NANOPORE_FASTQ(ch_raw_reads.nanopore)
     ch_reads_merged = CAT_NANOPORE_FASTQ.out.reads
-
+    //ch_versions = ch_versions.mix(CAT_NANOPORE_FASTQ.out.versions)
+    ch_reads = ch_reads.mix(ch_raw_reads.illumina).mix(ch_reads_merged)
 
     //
     // SUBWORKFLOW: QC sub-workflow
@@ -130,33 +123,47 @@ workflow SEQQC {
             params.nanopore_summary_file
         )
 
-        RAW_READS_QC(ch_reads.illumina)
-        ch_tax_reads = RAW_READS_QC.out.short_reads.mix(NANOPORE_RAW_READS_QC.out.merged_reads)
+        ch_versions = ch_versions.mix(NANOPORE_RAW_READS_QC.out.versions)
+
+        RAW_READS_QC(ch_raw_reads.illumina)
+        ch_tax_reads = ch_tax_reads.mix(RAW_READS_QC.out.short_reads)
+        ch_tax_reads = ch_tax_reads.mix(NANOPORE_RAW_READS_QC.out.merged_reads)
         ch_assembly_reads = ch_tax_reads
+        ch_versions = ch_versions.mix(RAW_READS_QC.out.versions)
+        ch_multiqc_files = ch_multiqc_files.mix(RAW_READS_QC.out.raw_fastqc.collect{it[1]}.ifEmpty([]))
+        ch_multiqc_files = ch_multiqc_files.mix(RAW_READS_QC.out.trim_fastqc.collect{it[1]}.ifEmpty([]))
+        if (params.trim_tool == 'fastp'){
+            ch_multiqc_files = ch_multiqc_files.mix(RAW_READS_QC.out.fastp_report.collect{it[1]}.ifEmpty([]))
+        }
+        if (params.trim_tool == 'trimmomatic'){
+            ch_multiqc_files = ch_multiqc_files.mix(RAW_READS_QC.out.trimmomatic_report.collect{it[1]}.ifEmpty([]))
+        }
+
     }
     else{
         ch_tax_reads = ch_reads
         ch_assembly_reads = ch_reads
     }
 
+
     if(!params.skip_taxonomy_qc) {
         TAXONOMY_QC (
             ch_tax_reads,
             params.host_genome
             )
-        ch_assembly_reads = TAXONOMY_QC.out
-    } else {
-        ch_assembly_reads = ch_reads
+        ch_assembly_reads = TAXONOMY_QC.out.reads
+        ch_versions = ch_versions.mix(TAXONOMY_QC.out.versions)
+        ch_multiqc_files = ch_multiqc_files.mix(TAXONOMY_QC.out.kraken_report.collect{it[1]}.ifEmpty([]))
+        ch_multiqc_files = ch_multiqc_files.mix(TAXONOMY_QC.out.bracken_report.collect{it[1]}.ifEmpty([]))
     }
 
-    if (!params.skip_qc && !params.skip_taxonomy_qc) {
-        ch_assembly_reads
-            .branch {
-            illumina : it[0].mode == 'illumina'
-            nanopore : it[0].mode == 'nanopore'
-            }
-        .set {ch_assembly_reads}
-    }
+
+    ch_assembly_reads
+        .branch {
+        illumina : it[0].mode == 'illumina'
+        nanopore : it[0].mode == 'nanopore'
+        }
+    .set {ch_assembly_reads}
 
     if (!params.skip_assembly) {
         // SUBWORKFLOW: Run WGS ASSEMBLY on reads
@@ -165,6 +172,8 @@ workflow SEQQC {
             ch_assembly_reads.nanopore
         )
         ch_contigs = WGS_ASSEMBLY.out.ch_contigs
+        ch_versions = ch_versions.mix(WGS_ASSEMBLY.out.versions)
+
 
         if (!params.skip_assembly_qc){
             // SUBWORKFLOW: Do ribosomal MLST on assembled contigs, using BIGSdb Restful API
@@ -172,63 +181,26 @@ workflow SEQQC {
                 RSMLST(
                     ch_contigs
                 )
+                //ch_versions = ch_versions.mix(RSMLST.out.versions)
             }
             // SUBWORKFLOW: RUN ASSEMBLY QC on assemblies
             ASSEMBLY_QC(
                 ch_contigs
             )
+            ch_versions = ch_versions.mix(ASSEMBLY_QC.out.versions)
+            ch_multiqc_files = ch_multiqc_files.mix(ASSEMBLY_QC.out.quast_tsv.collect().ifEmpty([]))
+            //ch_multiqc_files = ch_multiqc_files.mix(ASSEMBLY_QC.out.quast_tsv.collect{it[1]}.ifEmpty([]))
+            ch_multiqc_files = ch_multiqc_files.mix(ASSEMBLY_QC.out.busco_short_summaries_txt.collect{it[1]}.ifEmpty([]))
+
         }
     }
-    //ch_versions = ch_versions.mix(TAXONOMY_QC.out.versions.first())
-
-    //CUSTOM_DUMPSOFTWAREVERSIONS (
-    //    ch_versions.unique().collectFile(name: 'collated_versions.yml')
-    //)
-
-
-    //
-    // MODULE: MultiQC
-    //
-    /*workflow_summary    = WorkflowSeqqc.paramsSummaryMultiqc(workflow, summary_params)
-    ch_workflow_summary = Channel.value(workflow_summary)
-
-    methods_description    = WorkflowSeqqc.methodsDescriptionText(workflow, ch_multiqc_custom_methods_description)
-    ch_methods_description = Channel.value(methods_description)
-
-    ch_multiqc_files = Channel.empty()
-    ch_multiqc_files = ch_multiqc_files.mix(ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'))
-    ch_multiqc_files = ch_multiqc_files.mix(ch_methods_description.collectFile(name: 'methods_description_mqc.yaml'))
-    //ch_multiqc_files = ch_multiqc_files.mix(CUSTOM_DUMPSOFTWAREVERSIONS.out.mqc_yml.collect())
-    //ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect{it[1]}.ifEmpty([]))
-
-    MULTIQC (
-        ch_multiqc_files.collect(),
-        ch_multiqc_config.toList(),
-        ch_multiqc_custom_config.toList(),
-        ch_multiqc_logo.toList()
-    )
-    multiqc_report = MULTIQC.out.report
-    */
 
     emit:
-    ch_contigs
+    contigs         = ch_contigs
+    multiqc_files   = ch_multiqc_files
+    versions        = ch_versions
+
 }
-
-/*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    COMPLETION EMAIL AND SUMMARY
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/
-
-/* workflow.onComplete {
-    if (params.email || params.email_on_fail) {
-        NfcoreTemplate.email(workflow, params, summary_params, projectDir, log, multiqc_report)
-    }
-    NfcoreTemplate.summary(workflow, params, log)
-    if (params.hook_url) {
-        NfcoreTemplate.IM_notification(workflow, params, summary_params, projectDir, log)
-    }
-} */
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

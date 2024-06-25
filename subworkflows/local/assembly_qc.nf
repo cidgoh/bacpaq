@@ -8,6 +8,9 @@ workflow ASSEMBLY_QC {
     assembly
 
     main:
+    ch_versions = Channel.empty()
+
+
     if (!params.skip_checkm) {
     // RUN CHECKM
         assembly
@@ -22,13 +25,12 @@ workflow ASSEMBLY_QC {
         checkm_output = CHECKM_LINEAGEWF.out.checkm_output
         marker_file = CHECKM_LINEAGEWF.out.marker_file
         checkm_tsv = CHECKM_LINEAGEWF.out.checkm_tsv
-        checkm_versions = CHECKM_LINEAGEWF.out.versions
+        ch_versions = ch_versions.mix(CHECKM_LINEAGEWF.out.versions)
     }else{
         //empty output
         checkm_output = []
         marker_file = []
         checkm_tsv = []
-        checkm_versions = []
     }
 
     // RUN QUAST
@@ -50,12 +52,11 @@ workflow ASSEMBLY_QC {
                 params.reference_genome_gff != "null" ? assembly.map{ true } : assembly.map{ false }
             )
         }
-        quast_verions = QUAST.out.versions
+        ch_versions = ch_versions.mix(QUAST.out.versions)
         quast_results = QUAST.out.results
         quast_tsv = QUAST.out.tsv
     }else{
         //empty output
-        quast_verions = []
         quast_results = []
         quast_tsv = []
     }
@@ -72,13 +73,12 @@ workflow ASSEMBLY_QC {
         busco_short_summaries_txt = BUSCO.out.short_summaries_txt
         busco_short_summaries_json = BUSCO.out.short_summaries_json
         busco_dir = BUSCO.out.busco_dir
-        busco_versions = BUSCO.out.versions
+        ch_versions = ch_versions.mix(BUSCO.out.versions)
     }else{
         busco_batch_summary = []
         busco_short_summaries_txt = []
         busco_short_summaries_json = []
         busco_dir = []
-        busco_versions = []
     }
 
     emit:
@@ -86,9 +86,9 @@ workflow ASSEMBLY_QC {
     checkm_output = checkm_output
     marker_file = marker_file
     checkm_tsv = checkm_tsv
-    checkm_versions = checkm_versions
+
     // QUAST OUTPUTS
-    quast_verions = quast_verions
+
     quast_results = quast_results
     quast_tsv = quast_tsv
     // BUSCO OUTPUTS
@@ -96,6 +96,7 @@ workflow ASSEMBLY_QC {
     busco_short_summaries_txt = busco_short_summaries_txt
     busco_short_summaries_json = busco_short_summaries_json
     busco_dir = busco_dir
-    busco_versions = busco_versions
+    versions = ch_versions
+
 
 }

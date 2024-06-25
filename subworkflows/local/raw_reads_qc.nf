@@ -30,66 +30,92 @@ ch_multiqc_custom_methods_description = params.multiqc_methods_description ? fil
 
 workflow RAW_READS_QC {
     take:
-    ch_raw_reads_qc
+    ch_raw_reads
+
 
     main:
     ch_versions = Channel.empty()
+    trimmomatic_report = Channel.empty()
+    trimmomatic_log = Channel.empty()
+    fastp_report = Channel.empty()
+    raw_fastqc = Channel.empty()
+    trim_fastqc = Channel.empty()
+
 
      // use rasusa to randomly subsample sequencing reads
     if (!params.skip_subsampling) {
-
         ch_genomesize = Channel.of(params.subsampling_genomesize)
         // ch_coverages = Channel.fromList(params.depth_cut_off.split(',').collect { it.trim().toDouble() })
 
-        ch_raw_reads_qc
+        ch_raw_reads
             .map { tuple(it[0], it[1], params.subsampling_genomesize) }
             .set { ch_sub_reads_qc }
             // .view()
 
         RASUSA(ch_sub_reads_qc, params.depth_cut_off)
-
-        ch_raw_reads_qc = RASUSA.out.reads
+        ch_short_reads_fastqc = RASUSA.out.reads
+        ch_short_reads_trim = RASUSA.out.reads
+        ch_versions = ch_versions.mix(RASUSA.out.versions)
+    }
+    else{
+        ch_short_reads_fastqc = ch_raw_reads
+        ch_short_reads_trim = ch_raw_reads
     }
 
 
     // FASTQC check for raw reads
     RAW_FASTQC (
-        ch_raw_reads_qc
+        ch_short_reads_fastqc
     )
-    ch_versions = ch_versions.mix(RAW_FASTQC.out.versions.first())
+    raw_fastqc = RAW_FASTQC.out.zip
+    ch_versions = ch_versions.mix(RAW_FASTQC.out.versions)
 
-    // trim reads using fastp, trimommatic or trimgalore
-    if (params.trim_tool=="fastp") {
-        adaptor=file params.adapter_fasta
-        FASTP (
-            ch_raw_reads_qc, adaptor, params.save_trimmed_fail, params.save_merged
+    // Raw read trimming
+    if (!params.skip_trimming){
+        // ch_adapter = Channel.of( file(params.adapter_fasta, checkIfExists: true) )
+        // trim reads using fastp, trimommatic or trimgalore
+        if (params.trim_tool=="fastp") {
+            FASTP (
+                ch_short_reads_trim,
+                params.adapter_fasta != "null" ? file(params.adapter_fasta, checkIfExists: true) : ch_short_reads_trim.map{ [] },
+                params.save_trimmed_fail,
+                params.save_merged
+            )
+            ch_trimmed_reads = FASTP.out.reads
+            fastp_report = FASTP.out.json
+            ch_versions = ch_versions.mix(FASTP.out.versions)
+        }
+        else if (params.trim_tool=="trimommatic") {
+            TRIMMOMATIC (ch_short_reads_trim)
+            ch_trimmed_reads = TRIMMOMATIC.out.trimmed_reads
+            trimmomatic_report = TRIMMOMATIC.out.summary
+            trimmomatic_log = TRIMMOMATIC.out.log
+            ch_versions = ch_versions.mix(TRIMMOMATIC.out.versions)
+        }
+        else if (params.trim_tool=="trimgalore") {
+            TRIMGALORE (ch_short_reads_trim)
+            ch_trimmed_reads = TRIMGALORE.out.reads
+            ch_versions = ch_versions.mix(TRIMGALORE.out.versions)
+        }
+        else {
+            ch_trimmed_reads = ch_short_reads_trim
+        }
+
+        // FASTQC check for trimmed reads
+        TRIM_FASTQC (
+            ch_trimmed_reads
         )
-        ch_short_reads = FASTP.out.reads
-        ch_versions = ch_versions.mix(FASTP.out.versions.first())
+        trim_fastqc = TRIM_FASTQC.out.zip
+        ch_versions = ch_versions.mix(TRIM_FASTQC.out.versions)
     }
-    else if (params.trim_tool=="trimommatic") {
-
-        TRIMMOMATIC (ch_raw_reads_qc)
-        ch_short_reads = TRIMMOMATIC.out.trimmed_reads
-        ch_versions = ch_versions.mix(TRIMMOMATIC.out.versions.first())
+    else{
+        ch_trimmed_reads = ch_short_reads_trim
     }
-    else if (params.trim_tool=="trimgalore") {
-
-        TRIMGALORE (ch_raw_reads_qc)
-        ch_short_reads = TRIMGALORE.out.reads
-        ch_versions = ch_versions.mix(TRIMGALORE.out.versions.first())
-    }
-
-    // FASTQC check for trimmed reads
-    TRIM_FASTQC (
-        ch_short_reads
-    )
-    ch_versions = ch_versions.mix(TRIM_FASTQC.out.versions.first())
 
     if(!params.skip_confindr){
         //Use confindr to detect contamination
-        ch_confindr_results = CONFINDR(ch_raw_reads_qc, params.confindr_db)
-        ch_versions = ch_versions.mix(CONFINDR.out.versions.first())
+        ch_confindr_results = CONFINDR(ch_trimmed_reads, params.confindr_db)
+        ch_versions = ch_versions.mix(CONFINDR.out.versions)
 
         //Aggregate confindr results
         ch_confindr_results = Channel.empty()
@@ -97,30 +123,14 @@ workflow RAW_READS_QC {
         AGGREGATE_CONFINDR_RESULTS(ch_confindr_results)
     }
 
-
-    // MultiQC report for raw reads
-    ch_raw_multiqc_files = Channel.empty()
-    ch_raw_multiqc_files = ch_raw_multiqc_files.mix(RAW_FASTQC.out.zip.collect{it[1]}.ifEmpty([]))
-    RAW_MULTIQC (
-        ch_raw_multiqc_files.collect(),
-        ch_multiqc_config.toList(),
-        ch_multiqc_custom_config.toList(),
-        ch_multiqc_logo.toList()
-    )
-
-    // MultiQC report for trimmed reads
-    ch_trim_multiqc_files = Channel.empty()
-    ch_trim_multiqc_files = ch_trim_multiqc_files.mix(TRIM_FASTQC.out.zip.collect{it[1]}.ifEmpty([]))
-    TRIM_MULTIQC (
-        ch_trim_multiqc_files.collect(),
-        ch_multiqc_config.toList(),
-        ch_multiqc_custom_config.toList(),
-        ch_multiqc_logo.toList()
-    )
     emit:
-    short_reads=ch_short_reads
-
-
+        short_reads=ch_trimmed_reads
+        versions = ch_versions
+        raw_fastqc
+        trim_fastqc
+        fastp_report
+        trimmomatic_report
+        trimmomatic_log
 }
 
 
