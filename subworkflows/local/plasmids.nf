@@ -7,6 +7,8 @@ workflow PLASMIDS {
     take:
         genome
     main:
+        ch_plasmidfinder_fa = Channel.empty()
+        ch_mobsuite_fa = Channel.empty()
 
         // inititalize version channel
         ch_versions = Channel.empty()

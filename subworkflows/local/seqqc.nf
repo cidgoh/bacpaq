@@ -97,7 +97,6 @@ workflow SEQQC {
     // SUBWORKFLOW: Read in samplesheet, validate and stage input files
     //
 
-
     ch_input
         .branch {
             illumina : it[0].mode == 'illumina'
@@ -105,11 +104,8 @@ workflow SEQQC {
         }
         .set {ch_raw_reads}
 
-
-
     CAT_NANOPORE_FASTQ(ch_raw_reads.nanopore)
     ch_reads_merged = CAT_NANOPORE_FASTQ.out.reads
-    //ch_versions = ch_versions.mix(CAT_NANOPORE_FASTQ.out.versions)
     ch_reads = ch_reads.mix(ch_raw_reads.illumina).mix(ch_reads_merged)
 
     //
