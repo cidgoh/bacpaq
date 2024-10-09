@@ -16,4 +16,4 @@ jobs:
         run: |
           curl -X POST -H 'Content-type: application/json' --data \
           '{"text":"A pull request has been merged into the *dev* branch: <${{ github.event.pull_request.html_url }}|${{ github.event.pull_request.title }}> by *${{ github.event.pull_request.user.login }}*."}' \
-          $CIDGOH_SLACK_WEBHOOK
+          $SLACK_WEBHOOK_URL
