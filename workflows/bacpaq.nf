@@ -12,7 +12,12 @@ ch_multiqc_custom_config   = params.multiqc_config ? Channel.fromPath( params.mu
 ch_multiqc_logo            = params.multiqc_logo   ? Channel.fromPath( params.multiqc_logo, checkIfExists: true ) : Channel.empty()
 //ch_multiqc_custom_methods_description = params.multiqc_methods_description ? file(params.multiqc_methods_description, checkIfExists: true) : file("$projectDir/assets/methods_description_template.yml", checkIfExists: true)
 */
-
+def convertEmptyToNull = { value ->
+    if (value.toString().trim().isEmpty() || (value instanceof List && value.isEmpty())) {
+        return null
+    }
+    return value
+}
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -43,6 +48,9 @@ workflow BACPAQ {
     ch_multiqc_files = Channel.empty()
 
     ch_illumina = samplesheet
+        .map { meta, fastq_1, fastq_2, fastq_dir, genome ->
+            [meta, convertEmptyToNull(fastq_1), fastq_2, fastq_dir, genome]
+        }
         .filter { meta, fastq_1, fastq_2, fastq_dir, genome ->
             fastq_1 != null
         }
@@ -53,14 +61,26 @@ workflow BACPAQ {
                 return [ [ id:meta.id, single_end: false, mode:'illumina' ], [fastq_1, fastq_2 ]]
             }
         }
+    ch_illumina.ifEmpty {
+        log.warn "No Illumina samples found in the samplesheet, skipping Illumina-specifc processes."
+    }
     ch_onp = samplesheet
+        .map { meta, fastq_1, fastq_2, fastq_dir, genome ->
+            [meta, fastq_1, fastq_2, convertEmptyToNull(fastq_dir), genome]
+        }
         .filter { meta, fastq_1, fastq_2, fastq_dir, genome ->
             fastq_dir != null
         }
         .map {  meta, fastq_1, fastq_2, fastq_dir, genome ->
                 return [ [ id:meta.id, single_end: true, mode:'nanopore' ], [fastq_dir ]]
         }
+    ch_onp.ifEmpty {
+        log.warn "No Nanopore samples found in the samplesheet, skipping Nanopore-specifc processes."
+    }
     ch_genome = samplesheet
+        .map { meta, fastq_1, fastq_2, fastq_dir, genome ->
+            [meta, fastq_1, fastq_2, fastq_dir, convertEmptyToNull(genome)]
+        }
         .filter { meta, fastq_1, fastq_2, fastq_dir, genome ->
             genome != null
         }

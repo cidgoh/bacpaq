@@ -97,7 +97,6 @@ workflow SEQQC {
     // SUBWORKFLOW: Read in samplesheet, validate and stage input files
     //
 
-
     ch_input
         .branch {
             illumina : it[0].mode == 'illumina'
@@ -105,28 +104,9 @@ workflow SEQQC {
         }
         .set {ch_raw_reads}
 
-    ch_nanopore_reads = ch_raw_reads.nanopore
-        .map { meta, reads ->
-            def validReads = reads instanceof List ? reads.findAll { it && it.toString().trim() } : []
-            return validReads ? [meta, validReads.collect { file(it) }] : null
-        }
-        .filter { it != null }
-
-    ch_nanopore_reads
-        .ifEmpty {
-            log.warn "No valid nanopore reads found. Skipping CAT_NANOPORE_FASTQ process."
-        }
-
-    ch_reads_merged = ch_nanopore_reads.flatMap { meta, reads ->
-        CAT_NANOPORE_FASTQ(meta, reads).reads
-    }
-
+    CAT_NANOPORE_FASTQ(ch_raw_reads.nanopore)
+    ch_reads_merged = CAT_NANOPORE_FASTQ.out.reads
     ch_reads = ch_reads.mix(ch_raw_reads.illumina).mix(ch_reads_merged)
-
-    //CAT_NANOPORE_FASTQ(ch_raw_reads.nanopore)
-    //ch_reads_merged = CAT_NANOPORE_FASTQ.out.reads
-    //ch_versions = ch_versions.mix(CAT_NANOPORE_FASTQ.out.versions)
-    //ch_reads = ch_reads.mix(ch_raw_reads.illumina).mix(ch_reads_merged)
 
     //
     // SUBWORKFLOW: QC sub-workflow
