@@ -25,7 +25,7 @@ jobs:
       - name: List nf-core Modules
         id: get-modules
         run: |
-          modules=$(find modules -type d -maxdepth 1 -mindepth 1 -exec basename {} \;)
+          modules=$(find modules/nf-core -type d -maxdepth 1 -mindepth 1 -exec basename {} \;)
           modules_json=$(printf '%s\n' "${modules}" | jq -R . | jq -s .)
           echo "module_list=${modules_json}" >> $GITHUB_OUTPUT
         shell: bash
