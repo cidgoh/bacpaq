@@ -73,7 +73,7 @@ jobs:
         # NOTE We could split these, but there's probably going to be more process tests than workflow tests, so we're just going to combine them all and bump up the shards for now
         # NOTE The name of the test would be name: "${{ matrix.filter }} | ${{ matrix.profile }} | ${{ matrix.shard }}"
         # filter: [process, workflow]
-        profile: [singularity]
+        profile: [singularity, docker, conda]
         shard: [1, 2]
     env:
       # FIXME Bumping them up to make the transition smooth, then we can throttle them back
