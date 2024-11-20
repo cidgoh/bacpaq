@@ -49,5 +49,6 @@ jobs:
           mkdir ./checkm_db
           mkdir ./confindr_db
           mkdir ./busco_db
+          mkdir ./bakta_db
           touch ./adapters.fa
           nextflow run ${GITHUB_WORKSPACE} -profile ${{ matrix.BACPAQ_TEST_CONFIG }},docker --outdir ./results
