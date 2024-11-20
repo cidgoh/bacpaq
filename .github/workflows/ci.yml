@@ -5,11 +5,28 @@ on:
     branches:
       - 'github_actions_mza'
   workflow_dispatch:
+    inputs:
+      runners:
+        description: 'Runners to test on'
+        type: choice
+        options:
+          - 'ubuntu-latest'
+          - 'self-hosted'
+        default: 'self-hosted'
+# Cancel if a newer run is started
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  # renovate: datasource=github-releases depName=askimed/nf-test versioning=semver
+  NFT_VER: '0.9.2'
   NXF_ANSI_LOG: false
-  NFT_VER: '0.9.2' # nf-test version
+  NXF_SINGULARITY_CACHEDIR: ${{ github.workspace }}/.singularity
+  NXF_SINGULARITY_LIBRARYDIR: ${{ github.workspace }}/.singularity
+  # renovate: datasource=github-releases depName=nextflow/nextflow versioning=semver
+  NXF_VER: '24.10.1'
 
 jobs:
   discover-modules:
@@ -24,14 +41,14 @@ jobs:
       - name: List nf-core Modules
         id: get-modules
         run: |
-          modules=$(find modules -type d -maxdepth 1 -mindepth 1 -exec basename {} \;)
+          modules=$(find modules/nf-core -type d -maxdepth 1 -mindepth 1 -exec basename {} \;)
           modules_json=$(printf '%s\n' "${modules}" | jq -R . | jq -s .)
           echo "::set-output name=module_list::${modules_json}"
         shell: bash
 
   nf-test:
     needs: discover-modules
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.inputs.runners || 'self-hosted' }}
     name: '${{ matrix.profile }} | ${{ matrix.shard }}'
     # TODO
     # needs: get-number-of-shards
@@ -43,8 +60,8 @@ jobs:
         # NOTE We could split these, but there's probably going to be more process tests than workflow tests, so we're just going to combine them all and bump up the shards for now
         # NOTE The name of the test would be name: "${{ matrix.filter }} | ${{ matrix.profile }} | ${{ matrix.shard }}"
         # filter: [process, workflow]
-        profile: [conda, docker_self_hosted, singularity]
-        shard: [1, 2, 3, 4, 5]
+        profile: [singularity]
+        shard: [1, 2]
     env:
       # FIXME Bumping them up to make the transition smooth, then we can throttle them back
       TOTAL_SHARDS: 5
