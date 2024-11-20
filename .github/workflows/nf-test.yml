@@ -3,80 +3,42 @@ name: Test nf-core Modules
 on:
   push:
     branches:
-      - 'github_actions_mza'
+      - "github_actions_mza"
   pull_request:
   workflow_dispatch:
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   NXF_ANSI_LOG: false
-  NFT_VER: '0.9.2' # nf-test version
 
 jobs:
   discover-modules:
-    name: Discover nf-core Modules
-    runs-on: ubuntu-latest
-    outputs:
-      module_list: ${{ steps.get-modules.outputs.module_list }}
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: List nf-core Modules
-        id: get-modules
-        run: |
-          modules=$(find modules/nf-core -type d -maxdepth 1 -mindepth 1 -exec basename {} \; | jq -R -s -c 'split("\n")[:-1]')
-          echo "module_list=${modules}" >> $GITHUB_OUTPUT
-        shell: bash
+    # ... (keep this job as is) ...
 
   test-modules:
     needs: discover-modules
     runs-on: ubuntu-latest
+    container:
+      image: nfcore/tools:latest
     strategy:
       fail-fast: false
       matrix:
-        module: ${{ fromJSON(needs.discover-modules.outputs.module_list) }}
+        module: ${{ fromJson(needs.discover-modules.outputs.module_list) }}
     name: Test nf-core Module ${{ matrix.module }}
     steps:
-      - name: Clean Workspace
-        run: rm -rf $GITHUB_WORKSPACE/*
-
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Install Nextflow
-        uses: nf-core/setup-nextflow@v1
-        with:
-          version: '24.10.1'
-
-      - name: Cache Conda env
-        uses: actions/cache@v3
-        with:
-          path: ~/conda_pkgs_dir
-          key: ${{ runner.os }}-conda-${{ env.NFT_VER }}-${{ hashFiles('**/conda_pkgs_dir') }}
-
-      - name: Setup Conda
-        uses: conda-incubator/setup-miniconda@v3
-        with:
-          auto-update-conda: true
-          use-mamba: true
-          channels: conda-forge,bioconda,defaults
-          python-version: 3.11
-
-      - name: Install nf-test
-        run: |
-          conda install -c conda-forge -c bioconda nf-test=${{ env.NFT_VER }}
-          nf-test --version
-
-      - name: Cache nf-test
-        uses: actions/cache@v3
-        with:
-          path: ~/.nf-test
-          key: ${{ runner.os }}-nf-test-${{ env.NFT_VER }}
-
       - name: Run nf-test for ${{ matrix.module }}
         run: |
           echo "Testing module: ${{ matrix.module }}"
-          nf-test --module ${{ matrix.module }}
+          nf-test test --module ${{ matrix.module }}
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: nf-test-results-${{ matrix.module }}
+          path: .nf-test/
