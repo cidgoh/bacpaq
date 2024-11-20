@@ -45,4 +45,8 @@ jobs:
         # For example: adding multiple test runs with different parameters
         # Remember that you can parallelise this by using strategy.matrix
         run: |
+          mkdir ./kraken2_db
+          mkdir ./checkm_db
+          mkdir ./confindr_db
+          mkdir ./busco_db
           nextflow run ${GITHUB_WORKSPACE} -profile ${{ matrix.BACPAQ_TEST_CONFIG }},docker --outdir ./results
