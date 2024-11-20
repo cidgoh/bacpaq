@@ -49,14 +49,48 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Install Nextflow
-      - name: Install Nextflow
-        uses: nf-core/setup-nextflow@v1
-        with:
-          version: "24.10.1"
+  nf-test:
+    needs: discover-modules
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        module: ${{ fromJSON(needs.discover-modules.outputs.module_list) }}
 
-      # Run nf-test for the module
-      - name: Run nf-test for ${{ matrix.module }}
+    name: "${{ matrix.profile }} | ${{ matrix.shard }}"
+    # TODO
+    # needs: get-number-of-shards
+    # if: ${{ fromJSON(needs.get-number-of-shards.outputs.shards) != fromJSON('["1", "0"]') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # NOTE We could split these, but there's probably going to be more process tests than workflow tests, so we're just going to combine them all and bump up the shards for now
+        # NOTE The name of the test would be name: "${{ matrix.filter }} | ${{ matrix.profile }} | ${{ matrix.shard }}"
+        # filter: [process, workflow]
+        profile: [conda, docker_self_hosted, singularity]
+        shard: [1, 2, 3, 4, 5]
+    env:
+      # FIXME Bumping them up to make the transition smooth, then we can throttle them back
+      TOTAL_SHARDS: 5
+      SENTIEON_LICENSE_MESSAGE: ${{ secrets.SENTIEON_LICENSE_MESSAGE }}
+      SENTIEON_ENCRYPTION_KEY: ${{ secrets.SENTIEON_ENCRYPTION_KEY }}
+    steps:
+      # Clean workspace
+      - name: Clean Workspace
         run: |
-          echo "Testing module: ${{ matrix.module }}"
-          nf-test --module ${{ matrix.module }}
+          rm -rf $GITHUB_WORKSPACE/*
+
+      # Checkout Code
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth:
+
+      - name: Run nf-test Action
+        uses: ./.github/actions/nf-test-action
+        with:
+          profile: ${{ matrix.profile }}
+          shard: ${{ matrix.shard }}
+          total_shards: ${{ env.TOTAL_SHARDS }}
+      - name: Clean Workspace # Purge the workspace in case it's running on a self-hosted runner
+        uses: ./.github/actions/self-hosted-cleanup
