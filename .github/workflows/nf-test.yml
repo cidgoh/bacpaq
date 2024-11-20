@@ -3,7 +3,7 @@ name: Test nf-core Modules
 on:
   push:
     branches:
-      - "github_actions_mza"
+      - 'github_actions_mza'
   pull_request:
   workflow_dispatch:
 
@@ -13,7 +13,24 @@ env:
 
 jobs:
   discover-modules:
-    # ... (keep this job as is) ...
+    name: Discover nf-core Modules
+    runs-on: ubuntu-latest
+    outputs:
+      module_list: ${{ steps.get-modules.outputs.module_list }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: List nf-core Modules
+        id: get-modules
+        run: |
+          modules=$(find modules -type d -maxdepth 1 -mindepth 1 -exec basename {} \; | jq -R -s -c 'split("\n")[:-1]')
+          if [ -z "$modules" ]; then
+            echo "No modules found!"
+            exit 1
+          fi
+          echo "module_list=${modules}" >> $GITHUB_OUTPUT
+        shell: bash
 
   test-modules:
     needs: discover-modules
@@ -31,14 +48,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Install Nextflow
+        uses: nf-core/setup-nextflow@v1
+        with:
+          version: '24.10.1'
+
       - name: Run nf-test for ${{ matrix.module }}
         run: |
           echo "Testing module: ${{ matrix.module }}"
           nf-test test --module ${{ matrix.module }}
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: nf-test-results-${{ matrix.module }}
-          path: .nf-test/
