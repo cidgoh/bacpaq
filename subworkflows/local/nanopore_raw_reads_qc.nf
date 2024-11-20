@@ -48,10 +48,12 @@ workflow NANOPORE_RAW_READS_QC {
             ch_versions = ch_versions.mix(NANOCOMP.out.versions)
         }
         if (!params.skip_pycoqc) {
-            PYCOQC(
-                [[id: params.nanopore_summary_file_id], nanopore_summary_file]
-            )
-            ch_versions = ch_versions.mix(PYCOQC.out.versions)
+            if (nanopore_summary_file) {
+                PYCOQC(
+                    [[id: params.nanopore_summary_file_id], nanopore_summary_file]
+                )
+                ch_versions = ch_versions.mix(PYCOQC.out.versions)
+            }
         }
     }
 
