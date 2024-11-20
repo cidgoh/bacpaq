@@ -52,16 +52,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install Nextflow
-        uses: nf-core/setup-nextflow@v1
-        with:
-          version: '24.10.1'
-
-      - name: Install nf-test
-        run: |
-          pip install nf-test
-          nf-test --version
-
       - name: Install nf-test data
         run: |
           # Create a directory for nf-test data
