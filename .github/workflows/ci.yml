@@ -30,7 +30,7 @@ env:
 
 jobs:
   discover-modules:
-    name: Discover nf-core Modules
+    name: Discover nf-core Modules with Tests
     runs-on: ubuntu-latest
     outputs:
       module_list: ${{ steps.get-modules.outputs.module_list }}
@@ -38,12 +38,25 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: List nf-core Modules
+      - name: List nf-core Modules with Tests
         id: get-modules
         run: |
-          modules=$(find modules/nf-core -type d -maxdepth 1 -mindepth 1 -exec basename {} \;)
-          modules_json=$(printf '%s\n' "${modules}" | jq -R . | jq -s .)
-          echo "::set-output name=module_list::${modules_json}"
+          modules=$(find modules/nf-core -type d -maxdepth 1 -mindepth 1 | while read module; do
+            if [ -d "$module/tests" ]; then
+              basename "$module"
+            fi
+          done | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          if [ "$modules" == "[]" ]; then
+            echo "No modules with tests found!"
+            exit 1
+          fi
+          echo "module_list=$modules" >> $GITHUB_OUTPUT
+        shell: bash
+
+      - name: Display discovered modules
+        run: |
+          echo "Discovered modules with tests:"
+          echo '${{ steps.get-modules.outputs.module_list }}' | jq .
         shell: bash
 
   nf-test:
@@ -56,7 +69,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        module: ${{ fromJSON(needs.discover-modules.outputs.module_list) }}
+        module: ${{ fromJson(needs.discover-modules.outputs.module_list) }}
         # NOTE We could split these, but there's probably going to be more process tests than workflow tests, so we're just going to combine them all and bump up the shards for now
         # NOTE The name of the test would be name: "${{ matrix.filter }} | ${{ matrix.profile }} | ${{ matrix.shard }}"
         # filter: [process, workflow]
