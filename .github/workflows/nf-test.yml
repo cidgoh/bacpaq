@@ -3,14 +3,14 @@ name: Test nf-core Modules
 on:
   push:
     branches:
-      - "github_actions_mza"
+      - 'github_actions_mza'
   pull_request:
   workflow_dispatch:
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   NXF_ANSI_LOG: false
-  NFT_VER: "0.9.2" # nf-test version
+  NFT_VER: '0.9.2' # nf-test version
 
 jobs:
   discover-modules:
@@ -37,7 +37,7 @@ jobs:
       fail-fast: false
       matrix:
         module: ${{ fromJSON(needs.discover-modules.outputs.module_list) }}
-    name: Test nf-core Module: ${{ matrix.module }}
+    name: Test nf-core Module ${{ matrix.module }}
     steps:
       - name: Clean Workspace
         run: rm -rf $GITHUB_WORKSPACE/*
@@ -50,7 +50,7 @@ jobs:
       - name: Install Nextflow
         uses: nf-core/setup-nextflow@v1
         with:
-          version: "24.10.1"
+          version: '24.10.1'
 
       - name: Cache nf-test
         uses: actions/cache@v3
@@ -62,4 +62,3 @@ jobs:
         run: |
           echo "Testing module: ${{ matrix.module }}"
           nf-test --module ${{ matrix.module }}
-
