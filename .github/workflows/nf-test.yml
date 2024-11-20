@@ -24,7 +24,7 @@ jobs:
       - name: List nf-core Modules
         id: get-modules
         run: |
-          modules=$(find modules -type d -maxdepth 1 -mindepth 1 -exec basename {} \; | jq -R -s -c 'split("\n")[:-1]')
+          modules=$(find modules/nf-core -type d -maxdepth 1 -mindepth 1 -exec basename {} \; | jq -R -s -c 'split("\n")[:-1]')
           if [ -z "$modules" ]; then
             echo "No modules found!"
             exit 1
