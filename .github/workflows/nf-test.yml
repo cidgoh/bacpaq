@@ -25,7 +25,8 @@ jobs:
         id: get-modules
         run: |
           modules=$(find modules -type d -maxdepth 1 -mindepth 1 -exec basename {} \;)
-          echo "::set-output name=module_list::${modules// /,}"
+          modules_json=$(printf '%s\n' "${modules}" | jq -R . | jq -s .)
+          echo "::set-output name=module_list::${modules_json}"
         shell: bash
 
   test-modules:
@@ -34,7 +35,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        module: [${{ fromJSON(needs.discover-modules.outputs.module_list) }}]
+        module: ${{ fromJSON(needs.discover-modules.outputs.module_list) }}
     name: Test nf-core Module: ${{ matrix.module }}
     steps:
       # Clean workspace
