@@ -13,7 +13,7 @@ env:
 
 jobs:
   discover-modules:
-    name: Discover nf-core Modules
+    name: Discover nf-core Modules with Tests
     runs-on: ubuntu-latest
     outputs:
       module_list: ${{ steps.get-modules.outputs.module_list }}
@@ -21,16 +21,25 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: List nf-core Modules
+      - name: List nf-core Modules with Tests
         id: get-modules
         run: |
-          modules=$(find modules/nf-core -type d -maxdepth 1 -mindepth 1 -exec basename {} \; | jq -R -s -c 'split("\n")[:-1]')
-          if [ -z "$modules" ]; then
-            echo "No modules found!"
+          modules=$(find modules/nf-core -type d -maxdepth 1 -mindepth 1 | while read module; do
+            if [ -d "$module/tests" ]; then
+              basename "$module"
+            fi
+          done | jq -R -s -c 'split("\n")[:-1]')
+          if [ -z "$modules" ] || [ "$modules" == "[]" ]; then
+            echo "No modules with tests found!"
             exit 1
           fi
           echo "module_list=${modules}" >> $GITHUB_OUTPUT
         shell: bash
+
+      - name: Display discovered modules
+        run: |
+          echo "Discovered modules with tests:"
+          echo ${{ steps.get-modules.outputs.module_list }} | jq .
 
   test-modules:
     needs: discover-modules
@@ -58,7 +67,25 @@ jobs:
           pip install nf-test
           nf-test --version
 
+      - name: Install nf-test data
+        run: |
+          # Create a directory for nf-test data
+          mkdir -p /nf-test-data
+
+          # Clone the nf-core/test-datasets repository
+          git clone https://github.com/nf-core/test-datasets.git /nf-test-data/test-datasets
+
+          # Set environment variable for nf-test to use this data
+          echo "NF_TEST_DATA=/nf-test-data/test-datasets" >> $GITHUB_ENV
+
       - name: Run nf-test for ${{ matrix.module }}
         run: |
           echo "Testing module: ${{ matrix.module }}"
           nf-test test --module ${{ matrix.module }}
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: nf-test-results-${{ matrix.module }}
+          path: .nf-test/
