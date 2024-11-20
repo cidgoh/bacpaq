@@ -3,7 +3,7 @@ name: nf-core CI
 on:
   push:
     branches:
-      - dev
+      - github_actions_mza
   pull_request:
   release:
     types: [published]
@@ -12,7 +12,7 @@ env:
   NXF_ANSI_LOG: false
 
 concurrency:
-  group: "${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}"
+  group: '${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}'
   cancel-in-progress: true
 
 jobs:
@@ -24,8 +24,8 @@ jobs:
     strategy:
       matrix:
         NXF_VER:
-          - "23.04.0"
-          - "latest-everything"
+          - '23.04.0'
+          - 'latest-everything'
     steps:
       - name: Check out pipeline code
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
@@ -33,7 +33,7 @@ jobs:
       - name: Install Nextflow
         uses: nf-core/setup-nextflow@v1
         with:
-          version: "${{ matrix.NXF_VER }}"
+          version: '${{ matrix.NXF_VER }}'
 
       - name: Disk space cleanup
         uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be # v1.3.1
