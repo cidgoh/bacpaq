@@ -36,11 +36,6 @@ jobs:
           echo "module_list=${modules}" >> $GITHUB_OUTPUT
         shell: bash
 
-      - name: Display discovered modules
-        run: |
-          echo "Discovered modules with tests:"
-          echo ${{ steps.get-modules.outputs.module_list }} | jq .
-
   test-modules:
     needs: discover-modules
     runs-on: ubuntu-latest
@@ -73,7 +68,7 @@ jobs:
           mkdir -p /nf-test-data
 
           # Clone the nf-core/test-datasets repository
-          git clone https://github.com/nf-core/test-datasets.git /nf-test-data/test-datasets
+          git clone https://github.com/nf-core/test-datasets.git --single-branch --branch modules /nf-test-data/test-datasets
 
           # Set environment variable for nf-test to use this data
           echo "NF_TEST_DATA=/nf-test-data/test-datasets" >> $GITHUB_ENV
