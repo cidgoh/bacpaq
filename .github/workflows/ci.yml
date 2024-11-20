@@ -3,13 +3,13 @@ name: Test nf-core Modules
 on:
   push:
     branches:
-      - "github_actions_mza"
+      - 'github_actions_mza'
   workflow_dispatch:
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   NXF_ANSI_LOG: false
-  NFT_VER: "0.9.2" # nf-test version
+  NFT_VER: '0.9.2' # nf-test version
 
 jobs:
   discover-modules:
@@ -29,41 +29,17 @@ jobs:
           echo "::set-output name=module_list::${modules_json}"
         shell: bash
 
-  test-modules:
-    needs: discover-modules
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        module: ${{ fromJSON(needs.discover-modules.outputs.module_list) }}
-    name: Test nf-core Module: ${{ matrix.module }}
-    steps:
-      # Clean workspace
-      - name: Clean Workspace
-        run: |
-          rm -rf $GITHUB_WORKSPACE/*
-
-      # Checkout Code
-      - name: Checkout Code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
   nf-test:
     needs: discover-modules
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        module: ${{ fromJSON(needs.discover-modules.outputs.module_list) }}
-
-    name: "${{ matrix.profile }} | ${{ matrix.shard }}"
+    name: '${{ matrix.profile }} | ${{ matrix.shard }}'
     # TODO
     # needs: get-number-of-shards
     # if: ${{ fromJSON(needs.get-number-of-shards.outputs.shards) != fromJSON('["1", "0"]') }}
     strategy:
       fail-fast: false
       matrix:
+        module: ${{ fromJSON(needs.discover-modules.outputs.module_list) }}
         # NOTE We could split these, but there's probably going to be more process tests than workflow tests, so we're just going to combine them all and bump up the shards for now
         # NOTE The name of the test would be name: "${{ matrix.filter }} | ${{ matrix.profile }} | ${{ matrix.shard }}"
         # filter: [process, workflow]
