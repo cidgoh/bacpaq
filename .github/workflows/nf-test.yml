@@ -1,42 +1,48 @@
-name: Run nf-test on github_actions_mza
+name: Test nf-core Modules
 
 on:
   push:
     branches:
-      - 'github_actions_mza'
+      - "github_actions_mza"
   workflow_dispatch:
-    inputs:
-      nextflow_version:
-        description: 'Nextflow version to install'
-        type: string
-        default: '24.10.1'
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   NXF_ANSI_LOG: false
-  NFT_VER: '0.9.2' # nf-test version
-  NXF_SINGULARITY_CACHEDIR: ${{ github.workspace }}/.singularity
-  NXF_SINGULARITY_LIBRARYDIR: ${{ github.workspace }}/.singularity
+  NFT_VER: "0.9.2" # nf-test version
 
 jobs:
-  nf-test:
+  discover-modules:
+    name: Discover nf-core Modules
     runs-on: ubuntu-latest
-    name: Run nf-test on ubuntu-latest
-    strategy:
-      matrix:
-        profile: [singularity]
-        shard: [1, 2, 3]
-
-    env:
-      TOTAL_SHARDS: 3
-
+    outputs:
+      module_list: ${{ steps.get-modules.outputs.module_list }}
     steps:
-      # Clean the workspace for a fresh run
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: List nf-core Modules
+        id: get-modules
+        run: |
+          modules=$(find modules -type d -maxdepth 1 -mindepth 1 -exec basename {} \;)
+          echo "::set-output name=module_list::${modules// /,}"
+        shell: bash
+
+  test-modules:
+    needs: discover-modules
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        module: [${{ fromJSON(needs.discover-modules.outputs.module_list) }}]
+    name: Test nf-core Module: ${{ matrix.module }}
+    steps:
+      # Clean workspace
       - name: Clean Workspace
         run: |
           rm -rf $GITHUB_WORKSPACE/*
 
-      # Check out the repository
+      # Checkout Code
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
@@ -44,18 +50,12 @@ jobs:
 
       # Install Nextflow
       - name: Install Nextflow
-        run: |
-          curl -s https://get.nextflow.io | bash
-          sudo mv nextflow /usr/local/bin/
-          nextflow -version
+        uses: nf-core/setup-nextflow@v1
+        with:
+          version: "24.10.1"
 
-      # Set up environmental variables for Nextflow
-      - name: Set Nextflow Environment Variables
+      # Run nf-test for the module
+      - name: Run nf-test for ${{ matrix.module }}
         run: |
-          echo "export NXF_VER=${{ github.event.inputs.nextflow_version }}" >> $GITHUB_ENV
-
-      # Run nf-test for each profile and shard
-      - name: Run nf-test Action
-        run: |
-          echo "Running nf-test for profile: ${{ matrix.profile }}, shard: ${{ matrix.shard }}"
-          nf-test --profile ${{ matrix.profile }} --shard ${{ matrix.shard }} --total-shards ${{ env.TOTAL_SHARDS }}
+          echo "Testing module: ${{ matrix.module }}"
+          nf-test --module ${{ matrix.module }}
