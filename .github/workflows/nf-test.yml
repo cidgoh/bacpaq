@@ -51,6 +51,25 @@ jobs:
         with:
           version: '24.10.1'
 
+      - name: Cache Conda env
+        uses: actions/cache@v3
+        with:
+          path: ~/conda_pkgs_dir
+          key: ${{ runner.os }}-conda-${{ env.NFT_VER }}-${{ hashFiles('**/conda_pkgs_dir') }}
+
+      - name: Setup Conda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          auto-update-conda: true
+          use-mamba: true
+          channels: conda-forge,bioconda,defaults
+          python-version: 3.11
+
+      - name: Install nf-test
+        run: |
+          conda install -c conda-forge -c bioconda nf-test=${{ env.NFT_VER }}
+          nf-test --version
+
       - name: Cache nf-test
         uses: actions/cache@v3
         with:
