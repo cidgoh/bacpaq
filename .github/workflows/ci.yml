@@ -3,7 +3,8 @@ name: nf-core CI
 on:
   push:
     branches:
-      - github_actions_jl
+      - dev
+      - master
   pull_request:
   workflow_dispatch:
 
@@ -42,6 +43,5 @@ jobs:
         # TODO nf-core: You can customise CI pipeline run tests as required
         # For example: adding multiple test runs with different parameters
         # Remember that you can parallelise this by using strategy.matrix
-        if: contains(env.changed_files, 'workflows/bacpaq.nf')
         run: |
           nextflow run ${GITHUB_WORKSPACE} -profile ${{ matrix.BACPAQ_TEST_CONFIG }},docker --outdir ./results
