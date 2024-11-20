@@ -53,6 +53,11 @@ jobs:
         with:
           version: '24.10.1'
 
+      - name: Install nf-test
+        run: |
+          pip install nf-test
+          nf-test --version
+
       - name: Run nf-test for ${{ matrix.module }}
         run: |
           echo "Testing module: ${{ matrix.module }}"
