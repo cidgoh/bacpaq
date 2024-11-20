@@ -1,0 +1,65 @@
+name: Test nf-core Modules
+
+on:
+  push:
+    branches:
+      - "github_actions_mza"
+  pull_request:
+  workflow_dispatch:
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  NXF_ANSI_LOG: false
+  NFT_VER: "0.9.2" # nf-test version
+
+jobs:
+  discover-modules:
+    name: Discover nf-core Modules
+    runs-on: ubuntu-latest
+    outputs:
+      module_list: ${{ steps.get-modules.outputs.module_list }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: List nf-core Modules
+        id: get-modules
+        run: |
+          modules=$(find modules -type d -maxdepth 1 -mindepth 1 -exec basename {} \;)
+          modules_json=$(printf '%s\n' "${modules}" | jq -R . | jq -s .)
+          echo "module_list=${modules_json}" >> $GITHUB_OUTPUT
+        shell: bash
+
+  test-modules:
+    needs: discover-modules
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        module: ${{ fromJSON(needs.discover-modules.outputs.module_list) }}
+    name: Test nf-core Module: ${{ matrix.module }}
+    steps:
+      - name: Clean Workspace
+        run: rm -rf $GITHUB_WORKSPACE/*
+
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Nextflow
+        uses: nf-core/setup-nextflow@v1
+        with:
+          version: "24.10.1"
+
+      - name: Cache nf-test
+        uses: actions/cache@v3
+        with:
+          path: ~/.nf-test
+          key: ${{ runner.os }}-nf-test-${{ env.NFT_VER }}
+
+      - name: Run nf-test for ${{ matrix.module }}
+        run: |
+          echo "Testing module: ${{ matrix.module }}"
+          nf-test --module ${{ matrix.module }}
+
