@@ -47,8 +47,8 @@ jobs:
         run: |
           curl https://object-arbutus.cloud.computecanada.ca/cidgohshare/database/tar/adaptors.tar.gz -o adaptors.tar.gz
           tar -xzvf adaptors.tar.gz
-          curl https://object-arbutus.cloud.computecanada.ca/cidgohshare/database/tar/busco_baceria_odb10.tar.gz -o busco_baceria_odb10.tar.gz
-          tar -xzvf busco_baceria_odb10.tar.gz
+          curl https://object-arbutus.cloud.computecanada.ca/cidgohshare/database/tar/busco_bacteria_odb10.tar.gz -o busco_bacteria_odb10.tar.gz
+          tar -xzvf busco_bacteria_odb10.tar.gz
           curl https://object-arbutus.cloud.computecanada.ca/cidgohshare/database/tar/confindr.tar.gz -o confindr.tar.gz
           tar -xzvf confindr.tar.gz
           curl https://genome-idx.s3.amazonaws.com/kraken/minikraken2_v2_8GB_201904.tgz -o minikraken2_v2_8GB_201904.tgz
