@@ -45,7 +45,7 @@ jobs:
 
       - name: Set up pipeline pre-reqs
         run: |
-          curl https://object-arbutus.cloud.computecanada.ca/cidgohshare/database/tar/adaptors.tar.gz -o adaptors.tar.g
+          curl https://object-arbutus.cloud.computecanada.ca/cidgohshare/database/tar/adaptors.tar.gz -o adaptors.tar.gz
           tar -xzvf adaptors.tar.gz
           curl https://object-arbutus.cloud.computecanada.ca/cidgohshare/database/tar/busco_baceria_odb10.tar.gz -o busco_baceria_odb10.tar.gz
           tar -xzvf busco_baceria_odb10.tar.gz
