@@ -40,34 +40,41 @@ jobs:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
-      # - name: Disk space cleanup
-      #   uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be # v1.3.1
-
       - name: Set up pipeline pre-reqs
         run: |
           curl https://object-arbutus.cloud.computecanada.ca/cidgohshare/database/tar/adaptors.tar.gz -o adaptors.tar.gz
           tar -xzvf adaptors.tar.gz
           curl https://object-arbutus.cloud.computecanada.ca/cidgohshare/database/tar/busco_bacteria_odb10.tar.gz -o busco_bacteria_odb10.tar.gz
           tar -xzvf busco_bacteria_odb10.tar.gz
+          
           curl https://object-arbutus.cloud.computecanada.ca/cidgohshare/database/tar/confindr.tar.gz -o confindr.tar.gz
           tar -xzvf confindr.tar.gz
+          
           curl https://genome-idx.s3.amazonaws.com/kraken/k2_viral_20240605.tar.gz -o k2_viral_20240605.tar.gz
-          tar -xzvf k2_viral_20240605.tar.gz
+          mkdir kraken2_db
+          tar -xzvf k2_viral_20240605.tar.gz -C kraken2_db
+          
           curl https://genome-idx.s3.amazonaws.com/centrifuge/p_compressed%2Bh%2Bv.tar.gz -o centrifuge.tar.gz
-          tar -xzvf centrifuge.tar.gz
+          mkdir centrifuge_db
+          tar -xzvf centrifuge.tar.gz -C centrifuge_db
+
+          mkdir bakta_db
+
           ls
+      
+      - name: Disk space cleanup
+        uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be # v1.3.1
 
       - name: Run pipeline with test data
         # TODO nf-core: You can customise CI pipeline run tests as required
         # For example: adding multiple test runs with different parameters
         # Remember that you can parallelise this by using strategy.matrix
         run: |
-          mkdir ./kraken2_db
-          mkdir ./checkm_db
-          mkdir ./confindr_db
-          mkdir ./busco_db
-          mkdir ./bakta_db
-          touch ./adapters.fa
+          kraken2_db=./kraken2_db
+          confindr_db=./confindr
+          busco_db=./busco_bacteria_odb10
+          bakta_db=./bakta_db
+          adaptors=./adaptors/test.fa
 
           nextflow run ${GITHUB_WORKSPACE} \
             -profile ${{ matrix.BACPAQ_TEST_CONFIG }},docker \
