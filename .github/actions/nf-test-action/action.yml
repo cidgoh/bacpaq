@@ -58,12 +58,6 @@ runs:
         python -m pip install cryptography
         nextflow secrets set SENTIEON_AUTH_DATA $(python3 tests/modules/nf-core/sentieon/license_message.py encrypt --key "$SENTIEON_ENCRYPTION_KEY" --message "$SENTIEON_LICENSE_MESSAGE")
 
-    - name: Clone test-datasets
-      uses: actions/checkout@v4
-      with:
-        repository: nf-core/test-datasets
-        path: test-datasets
-
     - name: Run nf-test
       shell: bash
       env:
@@ -83,17 +77,8 @@ runs:
           ls -la
 
           if [ -f "tests/main.nf.test" ]; then
-            echo "Test file found. Setting up environment..."
+            echo "Test file found. Running nf-test..."
 
-            # Create or modify nf-test.config
-            echo "profiles = ['${{ inputs.profile }}']" > nf-test.config
-            echo "config = ['$GITHUB_WORKSPACE/tests/config/nextflow.config']" >> nf-test.config
-            echo "modules_testdata_base_path = '$GITHUB_WORKSPACE/test-datasets'" >> nf-test.config
-
-            echo "nf-test.config contents:"
-            cat nf-test.config
-
-            echo "Running nf-test..."
             nf-test test \
               --profile=${{ inputs.profile }} \
               --tap=test.tap \
