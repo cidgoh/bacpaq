@@ -39,7 +39,7 @@ jobs:
       - name: List Modules with Tests
         id: get-modules
         run: |
-          modules=$(find modules/{local,nf-core} -maxdepth 1 -mindepth 1 -type d | while read module; do
+          modules=$(find modules -maxdepth 3 -mindepth 3 -type d | while read module; do
             if [ -d "$module/tests" ]; then
               echo "$module"
             fi
@@ -88,6 +88,10 @@ jobs:
       - name: Display Test Summary
         if: always()
         run: |
-          echo "Test Summary for ${{ matrix.module }} (${{ matrix.profile }}):"
-          cat ${{ matrix.module }}/test.tap | grep -E '^(not )?ok'
+          if [ -f "${{ matrix.module }}/test.tap" ]; then
+            echo "Test Summary for ${{ matrix.module }} (${{ matrix.profile }}):"
+            cat ${{ matrix.module }}/test.tap | grep -E '^(not )?ok'
+          else
+            echo "No test.tap file found for ${{ matrix.module }}"
+          fi
         shell: bash
