@@ -2,7 +2,7 @@ process RMLSTPARSE {
     tag "$meta.id"
     label 'process_medium'
 
-    conda "conda-forge::curl=7.87.0"
+    conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'docker://cidgoh/rmlstparse:v0.3' :
         'cidgoh/rmlstparse:v0.3' }"
