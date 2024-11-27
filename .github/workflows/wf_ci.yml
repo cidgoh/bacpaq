@@ -40,18 +40,18 @@ jobs:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
-      - name: Disk space cleanup
-        uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be # v1.3.1
+      # - name: Disk space cleanup
+      #   uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be # v1.3.1
 
       - name: Set up pipeline pre-reqs
         run: |
-          curl https://object-arbutus.cloud.computecanada.ca/cidgohshare/eagle/adaptors.tar.gz
+          curl https://object-arbutus.cloud.computecanada.ca/cidgohshare/database/tar/adaptors.tar.gz -o adaptors.tar.g
           tar -xzvf adaptors.tar.gz
-          curl https://object-arbutus.cloud.computecanada.ca/cidgohshare/eagle/busco_baceria_odb10.tar.gz
+          curl https://object-arbutus.cloud.computecanada.ca/cidgohshare/database/tar/busco_baceria_odb10.tar.gz -o busco_baceria_odb10.tar.gz
           tar -xzvf busco_baceria_odb10.tar.gz
-          curl https://object-arbutus.cloud.computecanada.ca/cidgohshare/eagle/confindr.tar.gz
+          curl https://object-arbutus.cloud.computecanada.ca/cidgohshare/database/tar/confindr.tar.gz -o confindr.tar.gz
           tar -xzvf confindr.tar.gz
-          curl https://genome-idx.s3.amazonaws.com/kraken/minikraken2_v2_8GB_201904.tgz
+          curl https://genome-idx.s3.amazonaws.com/kraken/minikraken2_v2_8GB_201904.tgz -o minikraken2_v2_8GB_201904.tgz
           tar -xzvf minikraken2_v2_8GB_201904.tgz
           curl https://genome-idx.s3.amazonaws.com/centrifuge/p_compressed%2Bh%2Bv.tar.gz -o centrifuge.tar.gz
           tar -xzvf centrifuge.tar.gz
