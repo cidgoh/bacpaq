@@ -77,21 +77,15 @@ runs:
           ls -la
 
           if [ -f "tests/main.nf.test" ]; then
-            echo "Test file found. Modifying test files..."
+            echo "Test file found. Running nf-test..."
 
-            # Modify the test files to use the correct path
-            sed -i 's|$modules_testdata_base_path|https://raw.githubusercontent.com/nf-core/test-datasets/modules/data|g' tests/main.nf.test
-
-            echo "Modified test file contents:"
-            cat tests/main.nf.test
-
-            echo "Running nf-test..."
             nf-test test \
               --profile=${{ inputs.profile }} \
               --tap=test.tap \
               --verbose \
               --ci \
               --filter process,workflow \
+              -c "params.modules_testdata_base_path = 'https://raw.githubusercontent.com/nf-core/test-datasets/modules/data'" \
               tests/main.nf.test
 
             echo "nf-test execution completed. test.tap contents:"
