@@ -51,8 +51,8 @@ jobs:
           tar -xzvf busco_bacteria_odb10.tar.gz
           curl https://object-arbutus.cloud.computecanada.ca/cidgohshare/database/tar/confindr.tar.gz -o confindr.tar.gz
           tar -xzvf confindr.tar.gz
-          curl https://genome-idx.s3.amazonaws.com/kraken/minikraken2_v2_8GB_201904.tgz -o minikraken2_v2_8GB_201904.tgz
-          tar -xzvf minikraken2_v2_8GB_201904.tgz
+          curl https://genome-idx.s3.amazonaws.com/kraken/k2_viral_20240605.tar.gz -o k2_viral_20240605.tar.gz
+          tar -xzvf k2_viral_20240605.tar.gz
           curl https://genome-idx.s3.amazonaws.com/centrifuge/p_compressed%2Bh%2Bv.tar.gz -o centrifuge.tar.gz
           tar -xzvf centrifuge.tar.gz
           ls
@@ -68,4 +68,7 @@ jobs:
           mkdir ./busco_db
           mkdir ./bakta_db
           touch ./adapters.fa
-          nextflow run ${GITHUB_WORKSPACE} -profile ${{ matrix.BACPAQ_TEST_CONFIG }},docker --outdir ./results
+
+          nextflow run ${GITHUB_WORKSPACE} \
+            -profile ${{ matrix.BACPAQ_TEST_CONFIG }},docker \
+            --outdir ./results
