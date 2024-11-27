@@ -1,18 +1,12 @@
 name: "nf-test Action"
-description: "Runs nf-test with common setup steps"
+description: "Runs nf-test for a specific module and profile"
 inputs:
   profile:
-    description: "Profile to use"
+    description: "Profile to use (singularity, docker, or conda)"
     required: true
-  shard:
-    description: "Shard number for this CI job"
+  module:
+    description: "Module to test"
     required: true
-  total_shards:
-    description: "Total number of test shards(NOT the total number of matrix jobs)"
-    required: true
-  tags:
-    description: "Tags to test (`<tags>[,<tags>...]`)"
-    required: false
 
 runs:
   using: "composite"
@@ -39,18 +33,18 @@ runs:
         install-pdiff: true
 
     - name: Setup apptainer
-      if: contains(inputs.profile, 'singularity')
+      if: inputs.profile == 'singularity'
       uses: eWaterCycle/setup-apptainer@main
 
     - name: Set up Singularity
-      if: contains(inputs.profile, 'singularity')
+      if: inputs.profile == 'singularity'
       shell: bash
       run: |
-        mkdir -p $NXF_SINGULARITY_CACHEDIR
-        mkdir -p $NXF_SINGULARITY_LIBRARYDIR
+        mkdir -p ${{ env.NXF_SINGULARITY_CACHEDIR }}
+        mkdir -p ${{ env.NXF_SINGULARITY_LIBRARYDIR }}
 
     - name: Conda setup
-      if: ${{inputs.profile == 'conda'}}
+      if: inputs.profile == 'conda'
       uses: conda-incubator/setup-miniconda@v3
       with:
         auto-update-conda: true
@@ -69,22 +63,19 @@ runs:
       env:
         SENTIEON_LICSRVR_IP: ${{ env.SENTIEON_LICSRVR_IP }}
         SENTIEON_AUTH_MECH: "GitHub Actions - token"
-        TAGS: ${{ inputs.tags && format('--tag {0}', inputs.tags) || '' }}
         NFT_WORKDIR: "~"
       run: |
+        cd modules/nf-core/${{ inputs.module }}
         nf-test test \
           --profile=${{ inputs.profile }} \
           --tap=test.tap \
           --verbose \
           --ci \
-          --shard ${{ inputs.shard }}/${{ inputs.total_shards }} \
-          --filter process,workflow \
-          --follow-dependencies \
-          ${{ env.TAGS }}
+          --filter process,workflow
 
     - uses: pcolby/tap-summary@v1
       with:
-        path: test.tap
+        path: modules/nf-core/${{ inputs.module }}/test.tap
 
     - name: Clean up
       if: always()

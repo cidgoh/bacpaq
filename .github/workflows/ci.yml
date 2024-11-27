@@ -13,19 +13,17 @@ on:
           - 'ubuntu-latest'
           - 'self-hosted'
         default: 'ubuntu-latest'
-# Cancel if a newer run is started
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  # renovate: datasource=github-releases depName=askimed/nf-test versioning=semver
   NFT_VER: '0.9.2'
   NXF_ANSI_LOG: false
   NXF_SINGULARITY_CACHEDIR: ${{ github.workspace }}/.singularity
   NXF_SINGULARITY_LIBRARYDIR: ${{ github.workspace }}/.singularity
-  # renovate: datasource=github-releases depName=nextflow/nextflow versioning=semver
   NXF_VER: '24.10.1'
 
 jobs:
@@ -61,40 +59,35 @@ jobs:
 
   nf-test:
     needs: discover-modules
-    runs-on: 'ubuntu-latest'
-    name: '${{ matrix.profile }} | ${{ matrix.shard }}'
-    # TODO
-    # needs: get-number-of-shards
-    # if: ${{ fromJSON(needs.get-number-of-shards.outputs.shards) != fromJSON('["1", "0"]') }}
+    runs-on: ${{ github.event.inputs.runners || 'ubuntu-latest' }}
     strategy:
       fail-fast: false
       matrix:
         module: ${{ fromJson(needs.discover-modules.outputs.module_list) }}
-        # NOTE We could split these, but there's probably going to be more process tests than workflow tests, so we're just going to combine them all and bump up the shards for now
-        # NOTE The name of the test would be name: "${{ matrix.filter }} | ${{ matrix.profile }} | ${{ matrix.shard }}"
-        # filter: [process, workflow]
         profile: [singularity, docker, conda]
-        shard: [1, 2]
+    name: '${{ matrix.profile }} | ${{ matrix.module }}'
     env:
-      # FIXME Bumping them up to make the transition smooth, then we can throttle them back
-      TOTAL_SHARDS: 5
       SENTIEON_LICENSE_MESSAGE: ${{ secrets.SENTIEON_LICENSE_MESSAGE }}
       SENTIEON_ENCRYPTION_KEY: ${{ secrets.SENTIEON_ENCRYPTION_KEY }}
     steps:
-      # Clean workspace
       - name: Clean Workspace
         run: |
           rm -rf $GITHUB_WORKSPACE/*
 
-      # Checkout Code
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          fetch-depth:
+          fetch-depth: 1
 
       - name: Run nf-test Action
         uses: ./.github/actions/nf-test-action
         with:
           profile: ${{ matrix.profile }}
-          shard: ${{ matrix.shard }}
-          total_shards: ${{ env.TOTAL_SHARDS }}
+          module: ${{ matrix.module }}
+
+      - name: Display Test Summary
+        if: always()
+        run: |
+          echo "Test Summary for ${{ matrix.module }} (${{ matrix.profile }}):"
+          cat modules/nf-core/${{ matrix.module }}/test.tap | grep -E '^(not )?ok'
+        shell: bash
