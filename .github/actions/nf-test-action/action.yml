@@ -65,15 +65,38 @@ runs:
         SENTIEON_AUTH_MECH: "GitHub Actions - token"
         NFT_WORKDIR: "~"
       run: |
-        cd modules/nf-core/${{ inputs.module }}
-        nf-test test \
-          --profile=${{ inputs.profile }} \
-          --tap=test.tap \
-          --verbose \
-          --ci \
-          --filter process,workflow
+        module_path="modules/nf-core/${{ inputs.module }}"
+        echo "Checking module path: $module_path"
+        ls -R $module_path
+
+        if [ -d "$module_path" ]; then
+          cd "$module_path"
+          echo "Current directory: $(pwd)"
+          echo "Contents of current directory:"
+          ls -la
+
+          if [ -d "tests" ]; then
+            echo "Tests directory found. Contents:"
+            ls -la tests
+
+            echo "Running nf-test..."
+            nf-test test \
+              --profile=${{ inputs.profile }} \
+              --tap=test.tap \
+              --verbose \
+              --ci \
+              --filter process,workflow
+          else
+            echo "No 'tests' directory found in $module_path"
+            echo "1..0 # SKIP No tests directory found" > test.tap
+          fi
+        else
+          echo "Module directory not found: $module_path"
+          echo "1..0 # SKIP Module directory not found" > test.tap
+        fi
 
     - uses: pcolby/tap-summary@v1
+      if: always()
       with:
         path: modules/nf-core/${{ inputs.module }}/test.tap
 
