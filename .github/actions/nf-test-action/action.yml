@@ -1,5 +1,5 @@
 name: "nf-test Action"
-description: "Runs nf-test for a specific module and profile"
+description: "Runs nf-test with common setup steps"
 inputs:
   profile:
     description: "Profile to use (singularity, docker, conda, mamba, or podman)"
@@ -7,6 +7,9 @@ inputs:
   module:
     description: "Module to test"
     required: true
+  tags:
+    description: "Tags to test (`<tags>[,<tags>...]`)"
+    required: false
 
 runs:
   using: "composite"
@@ -19,7 +22,7 @@ runs:
     - name: Setup Nextflow
       uses: nf-core/setup-nextflow@v2
       with:
-        version: "${{ env.NXF_VER }}"
+        version: "${{ env.NXF_VERSION }}"
 
     - name: Set up Python
       uses: actions/setup-python@v5
@@ -63,46 +66,28 @@ runs:
       env:
         SENTIEON_LICSRVR_IP: ${{ env.SENTIEON_LICSRVR_IP }}
         SENTIEON_AUTH_MECH: "GitHub Actions - token"
+        TAGS: ${{ inputs.tags && format('--tag {0}', inputs.tags) || '' }}
         NFT_WORKDIR: "~"
-        PROFILE: ${{ inputs.profile }}
       run: |
-        module_path="modules/nf-core/${{ inputs.module }}"
-        echo "Checking module path: $module_path"
+        module_path="$GITHUB_WORKSPACE/modules/nf-core/${{ inputs.module }}"
+        echo "Testing module: $module_path"
         ls -R $module_path
 
-        if [ -d "$module_path" ]; then
-          cd "$module_path"
-          echo "Current directory: $(pwd)"
-          echo "Contents of current directory:"
-          ls -la
-
-          if [ -f "tests/main.nf.test" ]; then
-            echo "Test file found. Running nf-test..."
-
-            nf-test test \
-              --profile=${{ inputs.profile }} \
-              --tap=test.tap \
-              --verbose \
-              --ci \
-              --filter process,workflow \
-              -c "params.modules_testdata_base_path = 'https://raw.githubusercontent.com/nf-core/test-datasets/modules/data'" \
-              tests/main.nf.test
-
-            echo "nf-test execution completed. test.tap contents:"
-            cat test.tap
-          else
-            echo "No 'main.nf.test' file found in $module_path/tests"
-            echo "1..0 # SKIP No test file found" > test.tap
-          fi
-        else
-          echo "Module directory not found: $module_path"
-          echo "1..0 # SKIP Module directory not found" > test.tap
-        fi
+        NFT_WORKDIR=~ \
+        nf-test test \
+          --profile=${{ inputs.profile }} \
+          --tap=$module_path/test.tap \
+          --verbose \
+          --ci \
+          --filter process,workflow \
+          --follow-dependencies \
+          ${{ env.TAGS }} \
+          $module_path/tests/main.nf.test
 
     - uses: pcolby/tap-summary@v1
       if: always()
       with:
-        path: modules/nf-core/${{ inputs.module }}/test.tap
+        path: ${{ github.workspace }}/modules/nf-core/${{ inputs.module }}/test.tap
 
     - name: Clean up
       if: always()
