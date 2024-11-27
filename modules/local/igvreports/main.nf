@@ -7,36 +7,38 @@ process IGV_REPORTS {
         'quay.io/biocontainers/igv-reports:1.14.1--pyh7e72e81_0' }"
 
     input:
-    tuple val(meta), path(sites), path(fasta), path(genome)
+    tuple val(meta), path(sites), path(fasta), val(genome)
 
     output:
     tuple val(meta), path("${prefix}_report.html"), emit: report
-    path "versions.yml"                       , emit: versions
+    path "versions.yml"                           , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
 
     script:
-    def args    = task.ext.args ?: ''
-    def prefix  = task.ext.prefix ?: "${meta.id}"
+    def args = task.ext.args ? task.ext.args.tokenize() : []
+    prefix  = task.ext.prefix ?: "${meta.id}"
 
-    // Check if exactly one of fasta or genome is provided
-    if (fasta.toString() != 'null' && genome.toString() != 'null') {
+    if (!sites.exists()) {
+        error "Sites file not found: ${sites}"
+    }
+    if (fasta.toString() != '' && genome != '') {
         error "Both fasta and genome are provided. Please provide only one."
     }
-    if (fasta.toString() == 'null' && genome.toString() == 'null') {
+    if (fasta.toString() == '' && genome == '') {
         error "Neither fasta nor genome is provided. Please provide one."
     }
 
-    // Determine which reference to use and set the appropriate flag
-    def reference_flag = fasta.toString() != 'null' ? '--fasta' : '--genome'
-    def reference_file = fasta.toString() != 'null' ? fasta : genome
+    reference_flag = ( fasta.toString() != '' ) ? '--fasta' : '--genome'
+    reference_file = ( fasta.toString() != '' ) ? fasta : genome
+
     def VERSION = '1.14.1' // WARN: Version information not provided by tool on CLI. Please update this string when bumping container versions.
     """
-    create_report ${sites} \
-    ${reference_flag} ${reference_file} \
-    ${args} \
-    --output ${prefix}_report.html
+    create_report "${sites}" \
+    "${reference_flag}" "${reference_file}" \
+    ${args.join(' ')} \
+    --output "${prefix}_report.html"
 
     cat <<-END_VERSIONS > versions.yml
         "${task.process}":
