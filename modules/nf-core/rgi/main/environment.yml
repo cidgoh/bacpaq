@@ -1,6 +1,5 @@
 channels:
   - conda-forge
   - bioconda
-  - defaults
 dependencies:
-  - bioconda::rgi=5.2.1
+  - bioconda::rgi=6.0.3
