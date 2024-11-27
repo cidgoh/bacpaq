@@ -28,7 +28,7 @@ env:
 
 jobs:
   discover-modules:
-    name: Discover nf-core Modules with Tests
+    name: Discover Modules with Tests
     runs-on: ubuntu-latest
     outputs:
       module_list: ${{ steps.get-modules.outputs.module_list }}
@@ -36,12 +36,12 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: List nf-core Modules with Tests
+      - name: List Modules with Tests
         id: get-modules
         run: |
-          modules=$(find modules/nf-core -type d -maxdepth 1 -mindepth 1 | while read module; do
+          modules=$(find modules/{local,nf-core} -maxdepth 1 -mindepth 1 -type d | while read module; do
             if [ -d "$module/tests" ]; then
-              basename "$module"
+              echo "$module"
             fi
           done | jq -R -s -c 'split("\n") | map(select(length > 0))')
           if [ "$modules" == "[]" ]; then
@@ -89,5 +89,5 @@ jobs:
         if: always()
         run: |
           echo "Test Summary for ${{ matrix.module }} (${{ matrix.profile }}):"
-          cat modules/nf-core/${{ matrix.module }}/test.tap | grep -E '^(not )?ok'
+          cat ${{ matrix.module }}/test.tap | grep -E '^(not )?ok'
         shell: bash
