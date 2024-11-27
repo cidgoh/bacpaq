@@ -1,3 +1,31 @@
+name: Test nf-core Modules and Sub-workflows
+
+on:
+  push:
+    branches:
+      - 'github_actions_mza'
+  workflow_dispatch:
+    inputs:
+      runners:
+        description: 'Runners to test on'
+        type: choice
+        options:
+          - 'ubuntu-latest'
+          - 'self-hosted'
+        default: 'ubuntu-latest'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  NFT_VER: '0.9.2'
+  NXF_ANSI_LOG: false
+  NXF_SINGULARITY_CACHEDIR: ${{ github.workspace }}/.singularity
+  NXF_SINGULARITY_LIBRARYDIR: ${{ github.workspace }}/.singularity
+  NXF_VER: '24.10.1'
+
 jobs:
   discover-modules:
     name: Discover Modules with Tests
@@ -11,7 +39,7 @@ jobs:
       - name: List Modules with Tests
         id: get-modules
         run: |
-          modules=$(find . -type d -path "*/modules/*" | while read module; do
+          modules=$(find modules -maxdepth 3 -mindepth 3 -type d | while read module; do
             if [ -d "$module/tests" ]; then
               echo "$module"
             fi
@@ -60,22 +88,10 @@ jobs:
       - name: Display Test Summary
         if: always()
         run: |
-          echo "Module path: ${{ matrix.module }}"
-          if [ -d "${{ matrix.module }}" ]; then
-            echo "Module directory exists"
-            if [ -f "${{ matrix.module }}/tests/main.nf.test" ]; then
-              echo "Test file exists: ${{ matrix.module }}/tests/main.nf.test"
-              if [ -f "${{ matrix.module }}/test.tap" ]; then
-                echo "Test Summary for ${{ matrix.module }} (${{ matrix.profile }}):"
-                cat ${{ matrix.module }}/test.tap | grep -E '^(not )?ok'
-              else
-                echo "No test.tap file found for ${{ matrix.module }}"
-              fi
-            else
-              echo "No test file found at ${{ matrix.module }}/tests/main.nf.test"
-            fi
+          if [ -f "${{ matrix.module }}/test.tap" ]; then
+            echo "Test Summary for ${{ matrix.module }} (${{ matrix.profile }}):"
+            cat ${{ matrix.module }}/test.tap | grep -E '^(not )?ok'
           else
-            echo "Module directory does not exist: ${{ matrix.module }}"
-            ls -R $GITHUB_WORKSPACE/modules
+            echo "No test.tap file found for ${{ matrix.module }}"
           fi
         shell: bash
