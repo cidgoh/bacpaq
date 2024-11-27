@@ -27,7 +27,8 @@ jobs:
         NXF_VER:
           - "23.04.0"
         BACPAQ_TEST_CONFIG:
-          - "test"
+          - "test_minimal"
+          - "test_seqqc_illumina"
     steps:
       - name: Check out pipeline code
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
@@ -60,6 +61,8 @@ jobs:
 
           mkdir bakta_db
 
+          mkdir checkm_db
+
           ls
       
       - name: Disk space cleanup
@@ -70,12 +73,6 @@ jobs:
         # For example: adding multiple test runs with different parameters
         # Remember that you can parallelise this by using strategy.matrix
         run: |
-          kraken2_db=./kraken2_db
-          confindr_db=./confindr
-          busco_db=./busco_bacteria_odb10
-          bakta_db=./bakta_db
-          adaptors=./adaptors/test.fa
-
           nextflow run ${GITHUB_WORKSPACE} \
             -profile ${{ matrix.BACPAQ_TEST_CONFIG }},docker \
             --outdir ./results
