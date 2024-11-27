@@ -2,7 +2,7 @@ name: "nf-test Action"
 description: "Runs nf-test for a specific module and profile"
 inputs:
   profile:
-    description: "Profile to use (singularity, docker, or conda)"
+    description: "Profile to use (singularity, docker, conda, mamba, or podman)"
     required: true
   module:
     description: "Module to test"
@@ -44,7 +44,7 @@ runs:
         mkdir -p ${{ env.NXF_SINGULARITY_LIBRARYDIR }}
 
     - name: Conda setup
-      if: inputs.profile == 'conda'
+      if: inputs.profile == 'conda' || inputs.profile == 'mamba'
       uses: conda-incubator/setup-miniconda@v3
       with:
         auto-update-conda: true
@@ -64,6 +64,7 @@ runs:
         SENTIEON_LICSRVR_IP: ${{ env.SENTIEON_LICSRVR_IP }}
         SENTIEON_AUTH_MECH: "GitHub Actions - token"
         NFT_WORKDIR: "~"
+        PROFILE: ${{ inputs.profile }}
       run: |
         module_path="modules/nf-core/${{ inputs.module }}"
         echo "Checking module path: $module_path"
@@ -76,8 +77,16 @@ runs:
           ls -la
 
           if [ -f "tests/main.nf.test" ]; then
-            echo "Test file found. Running nf-test..."
-            nf-test init
+            echo "Test file found. Setting up environment..."
+
+            if [ -f "nf-test.config" ]; then
+              echo "nf-test.config found. Contents:"
+              cat nf-test.config
+            else
+              echo "Warning: nf-test.config not found in $module_path"
+            fi
+
+            echo "Running nf-test..."
             nf-test test \
               --profile=${{ inputs.profile }} \
               --tap=test.tap \
@@ -85,6 +94,9 @@ runs:
               --ci \
               --filter process,workflow \
               tests/main.nf.test
+
+            echo "nf-test execution completed. test.tap contents:"
+            cat test.tap
           else
             echo "No 'main.nf.test' file found in $module_path/tests"
             echo "1..0 # SKIP No test file found" > test.tap
