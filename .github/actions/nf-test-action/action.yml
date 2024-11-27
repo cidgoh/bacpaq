@@ -85,6 +85,7 @@ runs:
               --verbose \
               --ci \
               --filter process,workflow \
+              -c "params.modules_testdata_base_path = 'https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/'" \
               tests/main.nf.test
 
             echo "nf-test execution completed. test.tap contents:"
