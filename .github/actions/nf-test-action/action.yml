@@ -75,20 +75,19 @@ runs:
           echo "Contents of current directory:"
           ls -la
 
-          if [ -d "tests" ]; then
-            echo "Tests directory found. Contents:"
-            ls -la tests
-
-            echo "Running nf-test..."
+          if [ -f "tests/main.nf.test" ]; then
+            echo "Test file found. Running nf-test..."
+            nf-test init
             nf-test test \
               --profile=${{ inputs.profile }} \
               --tap=test.tap \
               --verbose \
               --ci \
-              --filter process,workflow
+              --filter process,workflow \
+              tests/main.nf.test
           else
-            echo "No 'tests' directory found in $module_path"
-            echo "1..0 # SKIP No tests directory found" > test.tap
+            echo "No 'main.nf.test' file found in $module_path/tests"
+            echo "1..0 # SKIP No test file found" > test.tap
           fi
         else
           echo "Module directory not found: $module_path"
