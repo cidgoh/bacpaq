@@ -1,4 +1,5 @@
-include { IGVREPORTS} from '../../modules/nf-core/igvreports/main'
+include { IGVREPORTS } from '../../modules/nf-core/igvreports/main'
+include { IQTREE } from '../../modules/nf-core/iqtree/main'
 
 workflow VARIANT_VISUALIZATION{
 
@@ -30,7 +31,13 @@ workflow VARIANT_VISUALIZATION{
     
     ch_ref_and_index=ch_reference.combine(ch_reference_index, by:0)
 
-    IGVREPORTS(ch_igv_input_2, ch_ref_and_index)
+    //IGVREPORTS(ch_igv_input_2, ch_ref_and_index)
+
+    ch_alignment=Channel.fromPath("/mnt/cidgoh-object-storage/hackathon/variant_calls/clean.core.aln")
+        .map { [[id:"tree"], it,[]] }
+
+    IQTREE(ch_alignment,[],[],[],[],[],[],[],[],[],[],[],[])
+
 
     
 
