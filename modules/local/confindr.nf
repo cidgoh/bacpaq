@@ -1,22 +1,22 @@
 process CONFINDR {
-    tag "$meta.id"
+    tag "${meta.id}"
     label 'process_medium'
 
     conda "bioconda::confindr=0.7.4"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/confindr%3A0.7.4--py_0':
-        'quay.io/biocontainers/biocontainers/confindr' }"
+    container "${workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container
+        ? 'https://depot.galaxyproject.org/singularity/confindr%3A0.7.4--py_0'
+        : 'quay.io/biocontainers/biocontainers/confindr'}"
 
     input:
     tuple val(meta), path(reads)
     path db
 
     output:
-    tuple val(meta), path('confindr_results/*contamination.csv'),   emit: csv optional true
-    tuple val(meta), path('confindr_results/*confindr_log.txt'),    emit: log
+    tuple val(meta), path('confindr_results/*contamination.csv'), emit: csv, optional: true
+    tuple val(meta), path('confindr_results/*confindr_log.txt'), emit: log
     tuple val(meta), path('confindr_results/*confindr_report.csv'), emit: report
-    tuple val(meta), path('confindr_results/*_rmlst.csv'),          emit: rmlst optional true
-    path "versions.yml",                                      emit: versions
+    tuple val(meta), path('confindr_results/*_rmlst.csv'), emit: rmls, optional: true
+    path "versions.yml", emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -24,10 +24,10 @@ process CONFINDR {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def old_new_pairs = reads instanceof Path || reads.size() == 1 ? [[ reads, "${prefix}.${reads.extension}" ]] : reads.withIndex().collect { entry, index -> [ entry, "${prefix}_${index + 1}.fastq.${entry.extension}" ] }
+    def old_new_pairs = reads instanceof Path || reads.size() == 1 ? [[reads, "${prefix}.${reads.extension}"]] : reads.withIndex().collect { entry, index -> [entry, "${prefix}_${index + 1}.fastq.${entry.extension}"] }
     def rename_to = old_new_pairs*.join(' ').join(' ')
-    def renamed_files = old_new_pairs.collect{ old_name, new_name -> new_name }.join(' ')
-    def allfiles =  reads.withIndex().collect()
+    def renamed_files = old_new_pairs.collect { old_name, new_name -> new_name }.join(' ')
+    def allfiles = reads.withIndex().collect()
 
     """
 
@@ -37,7 +37,7 @@ process CONFINDR {
         -i input_dir \\
         -o confindr_results \\
         -d ${db} \\
-        $args
+        ${args}
 
     mv confindr_results/confindr_log.txt confindr_results/${prefix}_confindr_log.txt
     mv confindr_results/confindr_report.csv confindr_results/${prefix}_confindr_report.csv
