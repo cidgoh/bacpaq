@@ -18,7 +18,7 @@ process MEDAKA_VARIANT {
     tuple val(meta), path("*/*sorted.vcf")      , emit: sorted_vcf
     tuple val(meta), path("*/*.bam.bai")        , emit: bam_bai
     tuple val(meta), path("*/*.bam")            , emit: bam
-    path "versions.yml"                                  , emit: versions
+    path "versions.yml"                         , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
