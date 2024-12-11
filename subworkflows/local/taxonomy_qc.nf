@@ -124,7 +124,7 @@ workflow TAXONOMY_QC {
                 reads,
                 ref_genome,
                 params.bam_format,
-                params.bam_index_extension,
+                'bai',
                 params.cigar_paf_format,
                 params.cigar_bam
             )
