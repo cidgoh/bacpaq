@@ -3,7 +3,7 @@ name: Test nf-core Modules and Sub-workflows
 on:
   push:
     branches:
-      - 'github_actions_mza'
+      - 'dev'
   workflow_dispatch:
     inputs:
       runners:
