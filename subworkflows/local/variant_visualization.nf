@@ -1,6 +1,6 @@
 include { IGVREPORTS} from '../../modules/nf-core/igvreports/main'
 
-workflow VARIANT_VISUALIZATION{
+workflow VARIANT_VISUALIZATION {
 
 
     ch_vcf = Channel
