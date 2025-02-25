@@ -11,8 +11,9 @@ process NUCMER_SAM {
     tuple val(meta), path(ref), path(query)
 
     output:
-    tuple val(meta), path("*.sam")      , emit: sam
-    path "versions.yml"                 , emit: versions
+    tuple val(meta), path("*.fixed.sam")   , emit: sam_fixed
+    tuple val(meta), path("*.original.sam"), emit: sam_original
+    path "versions.yml"                    , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -33,10 +34,23 @@ process NUCMER_SAM {
     fi
 
     nucmer \\
-        --sam-long ${prefix}.sam \\
+        --sam-long ${prefix}.original.sam \\
         $args \\
         $fasta_name_ref \\
         $fasta_name_query
+
+    cat ${prefix}.original.sam | \\
+        sed 's/HD\\ /HD/' | \\
+        sed 's/1.0\\ /1.0/' | \\
+        sed 's/\\tSO:coordinate/SO:coordinate/' | \\
+        sed s'/VN1/VN:1/' | \\
+        sed 's/HD/HD\\t/' | \\
+        sed 's/SO:unsorted/\\tSO:unsorted/' | \\
+        sed 's/@PG /@PG\\t/' | \\
+        sed 's/ PN/\\tPN/' | \\
+        sed 's/ VN/\\tVN/' | \\
+        sed 's/ CL/\\tCL/' \\
+        > ${prefix}.fixed.sam
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -47,8 +61,8 @@ process NUCMER_SAM {
     stub:
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    touch ${prefix}.delta
-    touch ${prefix}.coords
+    touch ${prefix}.original.sam
+    touch ${prefix}.fixed.sam
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
