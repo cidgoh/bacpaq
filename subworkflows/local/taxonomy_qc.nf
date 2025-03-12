@@ -145,7 +145,7 @@ workflow TAXONOMY_QC {
 
         SAMTOOLS_VIEW(
             ch_mapped_bam.combine(bam_index, by: 0),
-            [],
+            [[], []],
             []
         )
         ch_versions = ch_versions.mix(SAMTOOLS_VIEW.out.versions)
