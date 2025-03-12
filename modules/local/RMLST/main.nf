@@ -17,6 +17,6 @@ process RMLST {
 
     script:
     """
-    (echo -n '{"base64":true,"details":true,"sequence": "'; base64 $contigs ; echo '"}') | curl -s -H "Content-Type: application/json" -X POST "http://rest.pubmlst.org/db/pubmlst_rmlst_seqdef_kiosk/schemes/1/sequence" -d @- > ${meta.id}.json
+    (echo -n '{"base64":true,"details":true,"sequence": "'; base64 $contigs ; echo '"}') | curl -s -H "Content-Type: application/json" -X POST "https://rest.pubmlst.org/db/pubmlst_rmlst_seqdef_kiosk/schemes/1/sequence" -d @- > ${meta.id}.json
     """
 }
