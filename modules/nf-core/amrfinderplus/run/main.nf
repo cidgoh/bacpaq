@@ -1,22 +1,22 @@
 process AMRFINDERPLUS_RUN {
-    tag "$meta.id"
+    tag "${meta.id}"
     label 'process_medium'
 
     conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/ncbi-amrfinderplus:3.12.8--h283d18e_0':
-        'biocontainers/ncbi-amrfinderplus:3.12.8--h283d18e_0' }"
+    container "${workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container
+        ? 'https://depot.galaxyproject.org/singularity/ncbi-amrfinderplus:4.0.19--hf69ffd2_0'
+        : 'biocontainers/ncbi-amrfinderplus:4.0.19--hf69ffd2_0'}"
 
     input:
     tuple val(meta), path(fasta)
     path db
 
     output:
-    tuple val(meta), path("${prefix}.tsv")          , emit: report
+    tuple val(meta), path("${prefix}.tsv"), emit: report
     tuple val(meta), path("${prefix}-mutations.tsv"), emit: mutation_report, optional: true
-    path "versions.yml"                             , emit: versions
-    env VER                                         , emit: tool_version
-    env DBVER                                       , emit: db_version
+    path "versions.yml", emit: versions
+    env VER, emit: tool_version
+    env DBVER, emit: db_version
 
     when:
     task.ext.when == null || task.ext.when
@@ -35,23 +35,23 @@ process AMRFINDERPLUS_RUN {
         }
     }
     """
-    if [ "$is_compressed_fasta" == "true" ]; then
-        gzip -c -d $fasta > $fasta_name
+    if [ "${is_compressed_fasta}" == "true" ]; then
+        gzip -c -d ${fasta} > ${fasta_name}
     fi
 
-    if [ "$is_compressed_db" == "true" ]; then
+    if [ "${is_compressed_db}" == "true" ]; then
         mkdir amrfinderdb
-        tar xzvf $db -C amrfinderdb
+        tar xzvf ${db} -C amrfinderdb
     else
-        mv $db amrfinderdb
+        mv ${db} amrfinderdb
     fi
 
     amrfinder \\
-        $fasta_param $fasta_name \\
-        $organism_param \\
-        $args \\
+        ${fasta_param} ${fasta_name} \\
+        ${organism_param} \\
+        ${args} \\
         --database amrfinderdb \\
-        --threads $task.cpus > ${prefix}.tsv
+        --threads ${task.cpus} > ${prefix}.tsv
 
     VER=\$(amrfinder --version)
     DBVER=\$(echo \$(amrfinder --database amrfinderdb --database_version 2> stdout) | rev | cut -f 1 -d ' ' | rev)
