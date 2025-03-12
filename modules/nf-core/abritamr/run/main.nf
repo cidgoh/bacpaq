@@ -3,8 +3,8 @@ process ABRITAMR_RUN {
     label 'process_low'
     conda "${moduleDir}/environment.yml"
     container "${workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container
-        ? 'https://depot.galaxyproject.org/singularity/abritamr:1.0.14--pyhdfd78af_0'
-        : 'biocontainers/abritamr:1.0.14--pyhdfd78af_0'}"
+        ? 'https://depot.galaxyproject.org/singularity/abritamr:1.0.19--pyhdfd78af_0'
+        : 'biocontainers/abritamr:1.0.19--pyhdfd78af_0'}"
 
     input:
     tuple val(meta), path(fasta)
@@ -22,7 +22,7 @@ process ABRITAMR_RUN {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    prefix = task.ext.prefix ?: "${meta.id}"
     def is_compressed = fasta.getName().endsWith(".gz") ? true : false
     fasta_name = fasta.getName().replace(".gz", "")
     """
@@ -32,18 +32,18 @@ process ABRITAMR_RUN {
 
     abritamr run \\
         --contigs ${fasta_name} \\
-        --prefix ${prefix} \\
+        --prefix $prefix \\
         ${args} \\
         --jobs ${task.cpus}
 
     # Rename output files to prevent name collisions
-    mv ${prefix}/summary_matches.txt ./${prefix}.summary_matches.txt
-    mv ${prefix}/summary_partials.txt ./${prefix}.summary_partials.txt
-    mv ${prefix}/summary_virulence.txt ./${prefix}.summary_virulence.txt
-    mv ${prefix}/amrfinder.out ./${prefix}.amrfinder.out
-    if [ -f ${prefix}/abritamr.txt ]; then
+    mv $prefix/summary_matches.txt ./${prefix}.summary_matches.txt
+    mv $prefix/summary_partials.txt ./${prefix}.summary_partials.txt
+    mv $prefix/summary_virulence.txt ./${prefix}.summary_virulence.txt
+    mv $prefix/amrfinder.out ./${prefix}.amrfinder.out
+    if [ -f $prefix/abritamr.txt ]; then
         # This file is not always present
-        mv ${prefix}/abritamr.txt ./${prefix}.abritamr.txt
+        mv $prefix/abritamr.txt ./${prefix}.abritamr.txt
     fi
 
     cat <<-END_VERSIONS > versions.yml
