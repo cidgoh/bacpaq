@@ -33,6 +33,8 @@ include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_bacp
 
 include { SEQQC     } from '../subworkflows/local/seqqc'
 include { ANNOTATION } from '../subworkflows/local/genome_annotation'
+include { VARIANT_CALLING } from '../subworkflows/local/variantcalling'
+include { VARIANT_VIS } from '../subworkflows/local/variantvis'
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     RUN MAIN WORKFLOW
@@ -108,6 +110,41 @@ workflow BACPAQ {
         }
     }
 
+    //
+    // VARIANT DETECTION WORKFLOW
+    //
+    if (!params.skip_variant_detection) {
+        // collect all inputs into a single channel
+        ch_variant_input = ch_genome
+            .concat(ch_onp)
+            .concat(ch_illumina)
+            
+        // VARIANT CALLING SUBWORKFLOW
+        VARIANT_CALLING(ch_variant_input)
+
+        // VARIANT VIZ SUBWORKFLOW
+        if (!params.skip_variant_viz) {
+
+            ch_vcf = VARIANT_CALLING.out.vcf_snippy
+                .concat(VARIANT_CALLING.out.vcf_medaka)
+                .concat(VARIANT_CALLING.out.vcf_nucmer)
+            ch_bam = VARIANT_CALLING.out.bam_snippy
+                .concat(VARIANT_CALLING.out.bam_medaka)
+                .concat(VARIANT_CALLING.out.bam_nucmer_sorted)
+            ch_bai = VARIANT_CALLING.out.bai_snippy
+                .concat(VARIANT_CALLING.out.bai_medaka)
+                .concat(VARIANT_CALLING.out.bai_nucmer)
+            ch_aln_fa = VARIANT_CALLING.out.core_aln
+
+            VARIANT_VIS(
+                ch_vcf,
+                ch_bam,
+                ch_bai,
+                ch_aln_fa
+            )
+        }
+        
+    }
 
     //
     // Collate and save software versions
