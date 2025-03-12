@@ -2,14 +2,14 @@ process RASUSA {
     tag "$meta.id"
     label 'process_low'
 
-    conda "bioconda::rasusa=0.3.0"
+    conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/rasusa:0.3.0--h779adbc_1' :
-        'quay.io/biocontainers/rasusa:0.3.0--h779adbc_1' }"
+        'biocontainers/rasusa:0.3.0--h779adbc_1' }"
 
     input:
     tuple val(meta), path(reads), val(genome_size)
-    val depth_cutoff
+    val   depth_cutoff
 
     output:
     tuple val(meta), path('*.fastq.gz'), emit: reads
@@ -28,7 +28,7 @@ process RASUSA {
         --coverage $depth_cutoff \\
         --genome-size $genome_size \\
         --input $reads \\
-        $output 
+        $output
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         rasusa: \$(rasusa --version 2>&1 | sed -e "s/rasusa //g")

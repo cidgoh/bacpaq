@@ -10,6 +10,7 @@ workflow NANOPORE_RAW_READS_QC {
 
     main:
     ch_versions = Channel.empty()
+    ch_sub_reads_qc = Channel.empty()
     ch_qc_reads = ch_merged_reads
 
     if (!params.skip_porechop) {
@@ -26,11 +27,12 @@ workflow NANOPORE_RAW_READS_QC {
                 .map { meta, fastq ->
                     tuple(meta, fastq, params.subsampling_genomesize)
                 }
-                .set{ch_sub_reads_qc}
-        } else {
+                .set { ch_sub_reads_qc }
+        }
+        else {
             ch_merged_reads
                 .map { tuple(it[0], it[1], params.subsampling_genomesize) }
-                .set{ch_sub_reads_qc}
+                .set { ch_sub_reads_qc }
         }
         RASUSA_NANOPORE(ch_sub_reads_qc, params.depth_cut_off)
         ch_qc_reads = RASUSA_NANOPORE.out.reads
@@ -41,8 +43,8 @@ workflow NANOPORE_RAW_READS_QC {
             ch_qc_reads
                 .map { [it[1]] }
                 .collect()
-                .map { reads -> [ [id: params.nanopore_summary_file_id], reads ] }
-                .set { ch_collected_reads}
+                .map { reads -> [[id: params.nanopore_summary_file_id], reads] }
+                .set { ch_collected_reads }
 
             NANOCOMP(ch_collected_reads)
             ch_versions = ch_versions.mix(NANOCOMP.out.versions)
@@ -56,6 +58,6 @@ workflow NANOPORE_RAW_READS_QC {
     }
 
     emit:
-    versions = ch_versions
+    versions     = ch_versions
     merged_reads = ch_qc_reads
 }

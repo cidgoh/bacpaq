@@ -18,7 +18,7 @@
 
 
 // Check if input database paths are valid
-if (!params.skip_kraken2 && !Utils.fileExists(params.kraken2_db)) {
+/*if (!params.skip_kraken2 && !Utils.fileExists(params.kraken2_db)) {
     log.error "Path to Kraken2 database is not valid"
     exit 1
 }
@@ -37,7 +37,7 @@ if (!params.skip_confindr && !Utils.fileExists(params.confindr_db)) {
 if (!params.skip_busco && !Utils.fileExists(params.busco_lineages_path)) {
     log.error "Path to BUSCO lineages database is not valid"
     exit 1
-}
+}*/
 /*
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -67,7 +67,7 @@ include { NANOPORE_RAW_READS_QC } from './nanopore_raw_reads_qc'
 // MODULE: Installed directly from nf-core/modules
 //
 //include { FASTQC                      } from '../../modules/nf-core/fastqc/main'
-include { MULTIQC                     } from '../../modules/nf-core/multiqc/main'
+include { MULTIQC               } from '../../modules/nf-core/multiqc/main'
 //include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../../modules/nf-core/custom/dumpsoftwareversions/main'
 
 
@@ -78,19 +78,19 @@ include { MULTIQC                     } from '../../modules/nf-core/multiqc/main
 */
 
 // Info required for completion email and summary
-def multiqc_report = []
+
 
 workflow SEQQC {
-
     take:
-        ch_input
+    ch_input
 
     main:
+    def multiqc_report = []
     ch_versions = Channel.empty()
     ch_tax_reads = Channel.empty()
     ch_assembly_reads = Channel.empty()
     ch_contigs = Channel.empty()
-    ch_multiqc_files  = Channel.empty()
+    ch_multiqc_files = Channel.empty()
     ch_reads = Channel.empty()
 
     //
@@ -99,10 +99,10 @@ workflow SEQQC {
 
     ch_input
         .branch {
-            illumina : it[0].mode == 'illumina'
-            nanopore : it[0].mode == 'nanopore'
+            illumina: it[0].mode == 'illumina'
+            nanopore: it[0].mode == 'nanopore'
         }
-        .set {ch_raw_reads}
+        .set { ch_raw_reads }
 
     CAT_NANOPORE_FASTQ(ch_raw_reads.nanopore)
     ch_reads_merged = CAT_NANOPORE_FASTQ.out.reads
@@ -111,7 +111,7 @@ workflow SEQQC {
     //
     // SUBWORKFLOW: QC sub-workflow
     //
-    if (!params.skip_QC){
+    if (!params.skip_QC) {
         // SUBWORKFLOW: Run raw reads QC on nanopore & Illumina reads
 
         NANOPORE_RAW_READS_QC(
@@ -122,44 +122,43 @@ workflow SEQQC {
         ch_versions = ch_versions.mix(NANOPORE_RAW_READS_QC.out.versions)
 
         RAW_READS_QC(ch_raw_reads.illumina)
-        ch_tax_reads = ch_tax_reads.mix(RAW_READS_QC.out.short_reads)
+        ch_tax_reads = ch_tax_reads.mix(RAW_READS_QC.out.ch_trimmed_reads)
         ch_tax_reads = ch_tax_reads.mix(NANOPORE_RAW_READS_QC.out.merged_reads)
         ch_assembly_reads = ch_tax_reads
-        ch_versions = ch_versions.mix(RAW_READS_QC.out.versions)
-        ch_multiqc_files = ch_multiqc_files.mix(RAW_READS_QC.out.raw_fastqc.collect{it[1]}.ifEmpty([]))
-        ch_multiqc_files = ch_multiqc_files.mix(RAW_READS_QC.out.trim_fastqc.collect{it[1]}.ifEmpty([]))
-        if (params.trim_tool == 'fastp'){
-            ch_multiqc_files = ch_multiqc_files.mix(RAW_READS_QC.out.fastp_report.collect{it[1]}.ifEmpty([]))
+        ch_versions = ch_versions.mix(RAW_READS_QC.out.ch_versions)
+        ch_multiqc_files = ch_multiqc_files.mix(RAW_READS_QC.out.raw_fastqc.collect { it[1] }.ifEmpty([]))
+        ch_multiqc_files = ch_multiqc_files.mix(RAW_READS_QC.out.trim_fastqc.collect { it[1] }.ifEmpty([]))
+        if (params.trim_tool == 'fastp') {
+            ch_multiqc_files = ch_multiqc_files.mix(RAW_READS_QC.out.fastp_report.collect { it[1] }.ifEmpty([]))
         }
-        if (params.trim_tool == 'trimmomatic'){
-            ch_multiqc_files = ch_multiqc_files.mix(RAW_READS_QC.out.trimmomatic_report.collect{it[1]}.ifEmpty([]))
+        if (params.trim_tool == 'trimmomatic') {
+            ch_multiqc_files = ch_multiqc_files.mix(RAW_READS_QC.out.trimmomatic_report.collect { it[1] }.ifEmpty([]))
         }
-
     }
-    else{
+    else {
         ch_tax_reads = ch_reads
         ch_assembly_reads = ch_reads
     }
 
 
-    if(!params.skip_taxonomy_qc) {
-        TAXONOMY_QC (
+    if (!params.skip_taxonomy_qc) {
+        TAXONOMY_QC(
             ch_tax_reads,
             params.host_genome
-            )
+        )
         ch_assembly_reads = TAXONOMY_QC.out.reads
         ch_versions = ch_versions.mix(TAXONOMY_QC.out.versions)
-        ch_multiqc_files = ch_multiqc_files.mix(TAXONOMY_QC.out.kraken_report.collect{it[1]}.ifEmpty([]))
-        ch_multiqc_files = ch_multiqc_files.mix(TAXONOMY_QC.out.bracken_report.collect{it[1]}.ifEmpty([]))
+        ch_multiqc_files = ch_multiqc_files.mix(TAXONOMY_QC.out.kraken_report.collect { it[1] }.ifEmpty([]))
+        ch_multiqc_files = ch_multiqc_files.mix(TAXONOMY_QC.out.bracken_report.collect { it[1] }.ifEmpty([]))
     }
 
 
     ch_assembly_reads
         .branch {
-        illumina : it[0].mode == 'illumina'
-        nanopore : it[0].mode == 'nanopore'
+            illumina: it[0].mode == 'illumina'
+            nanopore: it[0].mode == 'nanopore'
         }
-    .set {ch_assembly_reads}
+        .set { ch_assembly_reads }
 
     if (!params.skip_assembly) {
         // SUBWORKFLOW: Run WGS ASSEMBLY on reads
@@ -171,13 +170,12 @@ workflow SEQQC {
         ch_versions = ch_versions.mix(WGS_ASSEMBLY.out.versions)
 
 
-        if (!params.skip_assembly_qc){
+        if (!params.skip_assembly_qc) {
             // SUBWORKFLOW: Do ribosomal MLST on assembled contigs, using BIGSdb Restful API
-            if (!params.skip_rmlst){
+            if (!params.skip_rmlst) {
                 RSMLST(
                     ch_contigs
                 )
-                //ch_versions = ch_versions.mix(RSMLST.out.versions)
             }
             // SUBWORKFLOW: RUN ASSEMBLY QC on assemblies
             ASSEMBLY_QC(
@@ -185,21 +183,13 @@ workflow SEQQC {
             )
             ch_versions = ch_versions.mix(ASSEMBLY_QC.out.versions)
             ch_multiqc_files = ch_multiqc_files.mix(ASSEMBLY_QC.out.quast_tsv.collect().ifEmpty([]))
-            //ch_multiqc_files = ch_multiqc_files.mix(ASSEMBLY_QC.out.quast_tsv.collect{it[1]}.ifEmpty([]))
-            ch_multiqc_files = ch_multiqc_files.mix(ASSEMBLY_QC.out.busco_short_summaries_txt.collect{it[1]}.ifEmpty([]))
-
+            ch_multiqc_files = ch_multiqc_files.mix(ASSEMBLY_QC.out.quast_tsv.collect{it[1]}.ifEmpty([]))
+            ch_multiqc_files = ch_multiqc_files.mix(ASSEMBLY_QC.out.busco_short_summaries_txt.collect { it[1] }.ifEmpty([]))
         }
     }
 
     emit:
-    contigs         = ch_contigs
-    multiqc_files   = ch_multiqc_files
-    versions        = ch_versions
-
+    contigs       = ch_contigs
+    multiqc_files = ch_multiqc_files
+    versions      = ch_versions
 }
-
-/*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    THE END
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/

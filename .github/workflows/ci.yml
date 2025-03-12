@@ -1,0 +1,97 @@
+name: Test nf-core Modules and Sub-workflows
+
+on:
+  push:
+    branches:
+      - 'dev'
+  workflow_dispatch:
+    inputs:
+      runners:
+        description: 'Runners to test on'
+        type: choice
+        options:
+          - 'ubuntu-latest'
+          - 'self-hosted'
+        default: 'ubuntu-latest'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  NFT_VER: '0.9.2'
+  NXF_ANSI_LOG: false
+  NXF_SINGULARITY_CACHEDIR: ${{ github.workspace }}/.singularity
+  NXF_SINGULARITY_LIBRARYDIR: ${{ github.workspace }}/.singularity
+  NXF_VER: '24.10.1'
+
+jobs:
+  discover-modules:
+    name: Discover Modules with Tests
+    runs-on: ubuntu-latest
+    outputs:
+      module_list: ${{ steps.get-modules.outputs.module_list }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: List Modules with Tests
+        id: get-modules
+        run: |
+          modules=$(find modules -maxdepth 3 -mindepth 3 -type d | while read module; do
+            if [ -d "$module/tests" ]; then
+              echo "$module"
+            fi
+          done | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          if [ "$modules" == "[]" ]; then
+            echo "No modules with tests found!"
+            exit 1
+          fi
+          echo "module_list=$modules" >> $GITHUB_OUTPUT
+        shell: bash
+
+      - name: Display discovered modules
+        run: |
+          echo "Discovered modules with tests:"
+          echo '${{ steps.get-modules.outputs.module_list }}' | jq .
+        shell: bash
+
+  nf-test:
+    needs: discover-modules
+    runs-on: ${{ github.event.inputs.runners || 'ubuntu-latest' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        module: ${{ fromJson(needs.discover-modules.outputs.module_list) }}
+        profile: [singularity, docker, conda]
+    name: '${{ matrix.profile }} | ${{ matrix.module }}'
+    env:
+      SENTIEON_LICENSE_MESSAGE: ${{ secrets.SENTIEON_LICENSE_MESSAGE }}
+      SENTIEON_ENCRYPTION_KEY: ${{ secrets.SENTIEON_ENCRYPTION_KEY }}
+    steps:
+      - name: Clean Workspace
+        run: |
+          rm -rf $GITHUB_WORKSPACE/*
+
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Run nf-test Action
+        uses: ./.github/actions/nf-test-action
+        with:
+          profile: ${{ matrix.profile }}
+          module: ${{ matrix.module }}
+
+      - name: Display Test Summary
+        if: always()
+        run: |
+          if [ -f "${{ matrix.module }}/test.tap" ]; then
+            echo "Test Summary for ${{ matrix.module }} (${{ matrix.profile }}):"
+            cat ${{ matrix.module }}/test.tap | grep -E '^(not )?ok'
+          else
+            echo "No test.tap file found for ${{ matrix.module }}"
+          fi
+        shell: bash

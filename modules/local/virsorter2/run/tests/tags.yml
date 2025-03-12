@@ -1,0 +1,2 @@
+virsorter2/run:
+  - modules/nf-core/virsorter2/run/**

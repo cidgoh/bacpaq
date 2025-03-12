@@ -1,0 +1,6 @@
+{
+    "cSpell.words": ["bioinformatics", "cpus"],
+    "nextflow.debug": true,
+    "nextflow.formatting.harshilAlignment": true,
+    "nextflow.java.home": "/cvmfs/soft.computecanada.ca/easybuild/software/2020/Core/java/17.0.2/"
+}
