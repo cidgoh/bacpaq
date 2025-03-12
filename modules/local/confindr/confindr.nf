@@ -24,10 +24,10 @@ process CONFINDR {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    //def old_new_pairs = reads instanceof Path || reads.size() == 1 ? [[reads, "${prefix}.${reads.extension}"]] : reads.withIndex().collect { entry, index -> [entry, "${prefix}_${index + 1}.fastq.${entry.extension}"] }
-    // def rename_to = old_new_pairs*.join(' ').join(' ')
-    // def renamed_files = old_new_pairs.collect { old_name, new_name -> new_name }.join(' ')
-    // def allfiles = reads.withIndex().collect()
+    def old_new_pairs = reads instanceof Path || reads.size() == 1 ? [[reads, "${prefix}.${reads.extension}"]] : reads.withIndex().collect { entry, index -> [entry, "${prefix}_${index + 1}.fastq.${entry.extension}"] }
+    def rename_to = old_new_pairs*.join(' ').join(' ')
+    def renamed_files = old_new_pairs.collect { old_name, new_name -> new_name }.join(' ')
+    def allfiles = reads.withIndex().collect()
 
     """
     mkdir -p "input_dir"
