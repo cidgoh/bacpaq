@@ -120,6 +120,7 @@ workflow BACPAQ {
             .concat(ch_illumina)
         
         VARIANT_DETECTION(ch_variant_input)
+        ch_versions = ch_versions.mix(VARIANT_DETECTION.out.versions)
     }
 
     //
