@@ -4,8 +4,8 @@ process CORESNPFILTER {
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'community.wave.seqera.io/library/core-snp-filter:52f58bcc9008d82f' :
-        'community.wave.seqera.io/library/core-snp-filter:52f58bcc9008d82f' }"
+        'https://depot.galaxyproject.org/singularity/core-snp-filter:0.2.0--h4c94732_1' :
+        'biocontainers/core-snp-filter:0.2.0--h3ab6199_2' }"
 
     input:
     tuple val(meta), path(alignment)
