@@ -74,41 +74,6 @@ workflow SEQQC {
     ch_reads = Channel.empty()
 
     //
-    // Validate database paths
-    //
-
-    if (!params.skip_kraken2) {
-        if ( params.kraken2_db == null || !Utils.fileExists(params.kraken2_db)) {
-                log.error "Path to Kraken2 database is not valid"
-                exit 1
-            }
-        }
-    if (params.classifier == 'centrifuge') {
-        if (params.centrifuge_db == null || !Utils.fileExists(params.centrifuge_db)) {
-                log.error "Path to Centrifuge database is not valid"
-                exit 1
-            }
-        }
-    if (!params.skip_checkm && params.checkm_db != null) {
-        if (!Utils.fileExists(params.checkm_db)) {
-            log.error "Path to CheckM database is not valid"
-            exit 1
-            }
-        }
-    if (!params.skip_confindr) {
-        if (params.confindr_db == null || !Utils.fileExists(params.confindr_db)) {
-            log.error "Path to Confindr database is not valid"
-            exit 1
-            }
-        }
-    if (!params.skip_busco) {
-        if ( params.busco_lineages_path == null || !Utils.fileExists(params.busco_lineages_path)) {
-            log.error "Path to BUSCO lineages database is not valid"
-            exit 1
-            }
-        }
-
-    //
     // SUBWORKFLOW: Read in samplesheet, validate and stage input files
     //
 

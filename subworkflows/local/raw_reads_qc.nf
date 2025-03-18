@@ -31,7 +31,7 @@ ch_multiqc_custom_methods_description = params.multiqc_methods_description ? fil
 workflow RAW_READS_QC {
     take:
     ch_raw_reads
-
+    
 
     main:
     ch_versions = Channel.empty()
@@ -41,6 +41,17 @@ workflow RAW_READS_QC {
     raw_fastqc = Channel.empty()
     trim_fastqc = Channel.empty()
 
+
+    //
+    // Validate database paths
+    //
+
+    if (!params.skip_confindr) {
+        if (params.confindr_db == null || !Utils.fileExists(params.confindr_db)) {
+            log.error "Path to Confindr database is not valid"
+            exit 1
+            }
+        }
 
      // use rasusa to randomly subsample sequencing reads
     if (!params.skip_subsampling) {
