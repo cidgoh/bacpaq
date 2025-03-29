@@ -15,8 +15,16 @@ workflow VARIANT_DETECTION {
     ch_input // channel containing path to sequence data in FASTQ or FASTA format
     
     main:
-    
+    // initialize channels    
     ch_versions = Channel.empty()
+    ch_vcf = Channel.empty()
+    ch_bam = Channel.empty()
+    ch_bai = Channel.empty()
+    ch_aln_fa = Channel.empty()
+    ch_igvreports_vcf = Channel.empty()
+    ch_igvreports_bam = Channel.empty()
+    ch_iqtree_nwk = Channel.empty()
+    ch_iqtree_report = Channel.empty()
 
     // VARIANT CALLING SUBWORKFLOW
     VARIANT_CALLING(ch_input)
@@ -51,8 +59,8 @@ workflow VARIANT_DETECTION {
     core_aln        = ch_aln_fa                         // channel: [ val(meta), [ *.aln ] ] from core-snp-filter
     bam             = ch_bam                            // channel: [ val(meta), [ *.bam ] ]
     bai             = ch_bai                            // channel: [ val(meta), [ *.bai ] ]
-    igv_vcf         = VARIANT_VIS.out.igvreports_vcf    // channel: [ val(meta), [ *.html ] ]
-    igv_bam         = VARIANT_VIS.out.igvreports_bam    // channel: [ val(meta), [ *.html ] ]
-    iqtree_nwk      = VARIANT_VIS.out.iqtree_nwk        // channel: [ val(meta), [ *.treefile] ]
-    iqtree_report   = VARIANT_VIS.out.iqtree_report     // channel: [ val(meta), [ *.iqtree] ]
+    igv_vcf         = ch_igvreports_vcf                 // channel: [ val(meta), [ *.html ] ]
+    igv_bam         = ch_igvreports_bam                 // channel: [ val(meta), [ *.html ] ]
+    iqtree_nwk      = ch_iqtree_nwk                     // channel: [ val(meta), [ *.treefile] ]
+    iqtree_report   = ch_iqtree_report                  // channel: [ val(meta), [ *.iqtree] ]
 }
