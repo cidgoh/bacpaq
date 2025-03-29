@@ -30,6 +30,7 @@ workflow VARIANT_VIS {
         ch_versions      = ch_versions.mix(SAMTOOLS_FAIDX.out.versions)
         ch_reference_fai = SAMTOOLS_FAIDX.out.fai
         FAI2BED(ch_reference_fai)
+        ch_versions      = ch_versions.mix(FAI2BED.out.versions)
         ch_reference_bed = FAI2BED.out.bed.map { meta, bed -> 
             [[ id: 'igv' ], bed]
         }
