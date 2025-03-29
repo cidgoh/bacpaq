@@ -5,7 +5,7 @@ process MEDAKA_VARIANT {
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/medaka:2.0.1--py39hf77f13f_0' :
+        'https://depot.galaxyproject.org/singularity/medaka:2.0.1--py310he807b20_0' :
         'biocontainers/medaka:2.0.1--py310he807b20_0' }"
 
     input:

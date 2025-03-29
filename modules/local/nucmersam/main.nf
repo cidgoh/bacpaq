@@ -4,8 +4,8 @@ process NUCMER_SAM {
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/mummer4:4.0.0--pl5321h9948957_0' :
-        'biocontainers/mummer4:4.0.1--pl5321h9948957_0' }"
+        'https://depot.galaxyproject.org/singularity/mummer4:4.0.0rc1--pl5321hdbdd923_7' :
+        'biocontainers/mummer4:4.0.0rc1--pl5321hdbdd923_7 ' }"
 
     input:
     tuple val(meta), path(ref), path(query)
