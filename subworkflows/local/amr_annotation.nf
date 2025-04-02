@@ -92,10 +92,20 @@ workflow AMR_ANNOTATION {
         ch_versions = ch_versions.mix(ABRITAMR_RUN.out.versions)
     }
 
-    if (!params.skip_resfinder) {
-        RESFINDER(genome)
-        resfinder_report = RESFINDER.out.resfinder_results_table
-    }
+        if (!params.skip_resfinder){
+            // Resfinder db validation
+            if ( params.resfinder_db == null || !Utils.fileExists(params.resfinder_db)) {
+                log.error "Path to ResFinder database was not provided or is not valid"
+                exit 1
+                }
+            if ( params.pointfinder_db == null || !Utils.fileExists(params.pointfinder_db)) {
+                log.error "Path to PointFinder database was not provided or is not valid"
+                exit 1
+                }
+
+            RESFINDER(genome)
+            resfinder_report = RESFINDER.out.resfinder_results_table
+        }
 
     emit:
     abricate_report

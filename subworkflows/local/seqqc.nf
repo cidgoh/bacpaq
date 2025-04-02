@@ -17,27 +17,7 @@
 // for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
 
 
-// Check if input database paths are valid
-/*if (!params.skip_kraken2 && !Utils.fileExists(params.kraken2_db)) {
-    log.error "Path to Kraken2 database is not valid"
-    exit 1
-}
-if ((params.classifier == 'centrifuge') && !Utils.fileExists(params.centrifuge_db)) {
-    log.error "Path to Centrifuge database is not valid"
-    exit 1
-}
-if (!params.skip_checkm && !Utils.fileExists(params.checkm_db)) {
-    log.error "Path to CheckM database is not valid"
-    exit 1
-}
-if (!params.skip_confindr && !Utils.fileExists(params.confindr_db)) {
-    log.error "Path to Confindr database is not valid"
-    exit 1
-}
-if (!params.skip_busco && !Utils.fileExists(params.busco_lineages_path)) {
-    log.error "Path to BUSCO lineages database is not valid"
-    exit 1
-}*/
+
 /*
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
