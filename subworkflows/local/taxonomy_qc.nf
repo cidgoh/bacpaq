@@ -31,6 +31,25 @@ workflow TAXONOMY_QC {
     kraken_report = Channel.empty()
     bracken_report = Channel.empty()
 
+    //
+    // Validate database paths
+    //
+
+    if (!params.skip_kraken2 && params.classifier == "kraken2") {
+        if ( params.kraken2_db == null || !Utils.fileExists(params.kraken2_db)) {
+                log.error "Path to Kraken2 database is not valid"
+                exit 1
+            }
+        }
+    if (params.classifier == 'centrifuge') {
+        if (params.centrifuge_db == null || !Utils.fileExists(params.centrifuge_db)) {
+                log.error "Path to Centrifuge database is not valid"
+                exit 1
+            }
+        }
+
+    // Taxonomic classification 
+
     if (params.classifier=="centrifuge"){
         ch_centrifuge_db=Channel.from(params.centrifuge_db)
         CENTRIFUGE_CENTRIFUGE(
@@ -48,9 +67,12 @@ workflow TAXONOMY_QC {
             ch_centrifuge_db
         )
         ch_versions = ch_versions.mix(CENTRIFUGE_KREPORT.out.versions)
+        KRONA_KTUPDATETAXONOMY()
+        ch_versions = ch_versions.mix(KRONA_KTUPDATETAXONOMY.out.versions)        
         KRONA_KTIMPORTTAXONOMY(
-                    CENTRIFUGE_KREPORT.out.kreport
-        )
+            CENTRIFUGE_KREPORT.out.kreport,
+            KRONA_KTUPDATETAXONOMY.out.db
+            )
         ch_versions = ch_versions.mix(KRONA_KTIMPORTTAXONOMY.out.versions)
     }
     else{
