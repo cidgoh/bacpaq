@@ -1,7 +1,7 @@
 // import modules
 include { CHECKM_LINEAGEWF } from '../../modules/nf-core/checkm/lineagewf'
-include { BUSCO } from '../../modules/nf-core/busco'
-include { QUAST } from '../../modules/nf-core/quast'
+include { BUSCO            } from '../../modules/nf-core/busco'
+include { QUAST            } from '../../modules/nf-core/quast'
 
 workflow ASSEMBLY_QC {
     take:
@@ -12,21 +12,22 @@ workflow ASSEMBLY_QC {
 
 
     if (!params.skip_checkm) {
-    // RUN CHECKM
+        // RUN CHECKM
         assembly
-        .map { file(it[1]).getExtension() }
-        .set { assembly_ext }
+            .map { file(it[1]).getExtension() }
+            .set { assembly_ext }
 
         CHECKM_LINEAGEWF(
             assembly,
             assembly_ext,
-            params.checkm_db != "null" ? params.checkm_db : assembly.map{ [] }
+            params.checkm_db != "null" ? params.checkm_db : assembly.map { [] }
         )
         checkm_output = CHECKM_LINEAGEWF.out.checkm_output
         marker_file = CHECKM_LINEAGEWF.out.marker_file
         checkm_tsv = CHECKM_LINEAGEWF.out.checkm_tsv
         ch_versions = ch_versions.mix(CHECKM_LINEAGEWF.out.versions)
-    }else{
+    }
+    else {
         //empty output
         checkm_output = []
         marker_file = []
@@ -35,27 +36,33 @@ workflow ASSEMBLY_QC {
 
     // RUN QUAST
     if (!params.skip_quast) {
-        if ( params.combine_quast ) {
+        if (params.combine_quast) {
+            combined_assemblies = assembly
+                .flatten()
+                .collect()
+                .map { assemblies ->
+                    def meta = [id: 'combined_assemblies']
+                    def all_files = assemblies.collect { it[1] }.flatten()
+                    tuple(meta, all_files)
+                }
             QUAST(
-                assembly.map{it[1]}.collect(),
-                params.reference_genome_fasta != "null" ? params.reference_genome_fasta : [],
-                params.reference_genome_gff != "null" ? params.reference_genome_gff : [],
-                params.reference_genome_fasta != "null" ? assembly.map{ true } : assembly.map{ false },
-                params.reference_genome_gff != "null" ? assembly.map{ true } : assembly.map{ false }
+                combined_assemblies,
+                params.reference_genome_fasta != "null" ? params.reference_genome_fasta : [[], []],
+                params.reference_genome_gff != "null" ? params.reference_genome_gff : [[], []]
             )
-        } else {
+        }
+        else {
             QUAST(
-                assembly.map{it[1]},
-                params.reference_genome_fasta != "null" ? params.reference_genome_fasta : assembly.map{ [] },
-                params.reference_genome_gff != "null" ? params.reference_genome_gff : assembly.map{ [] },
-                params.reference_genome_fasta != "null" ? assembly.map{ true } : assembly.map{ false },
-                params.reference_genome_gff != "null" ? assembly.map{ true } : assembly.map{ false }
+                assembly,
+                params.reference_genome_fasta != "null" ? params.reference_genome_fasta : [[], []],
+                params.reference_genome_gff != "null" ? params.reference_genome_gff : [[], []]
             )
         }
         ch_versions = ch_versions.mix(QUAST.out.versions)
         quast_results = QUAST.out.results
         quast_tsv = QUAST.out.tsv
-    }else{
+    }
+    else {
         //empty output
         quast_results = []
         quast_tsv = []
@@ -66,15 +73,16 @@ workflow ASSEMBLY_QC {
         BUSCO(
             assembly,
             params.busco_lineage,
-            params.busco_lineages_path != "null" ? params.busco_lineages_path : assembly.map{ [] },
-            params.busco_config ? params.busco_config : assembly.map{ [] }
+            params.busco_lineages_path != "null" ? params.busco_lineages_path : assembly.map { [] },
+            params.busco_config ? params.busco_config : assembly.map { [] }
         )
         busco_batch_summary = BUSCO.out.batch_summary
         busco_short_summaries_txt = BUSCO.out.short_summaries_txt
         busco_short_summaries_json = BUSCO.out.short_summaries_json
         busco_dir = BUSCO.out.busco_dir
         ch_versions = ch_versions.mix(BUSCO.out.versions)
-    }else{
+    }
+    else {
         busco_batch_summary = []
         busco_short_summaries_txt = []
         busco_short_summaries_json = []
@@ -82,21 +90,14 @@ workflow ASSEMBLY_QC {
     }
 
     emit:
-    // CHECKM OUTPUTS
-    checkm_output = checkm_output
-    marker_file = marker_file
-    checkm_tsv = checkm_tsv
-
-    // QUAST OUTPUTS
-
-    quast_results = quast_results
-    quast_tsv = quast_tsv
-    // BUSCO OUTPUTS
-    busco_batch_summary = busco_batch_summary
-    busco_short_summaries_txt = busco_short_summaries_txt
+    checkm_output              = checkm_output
+    marker_file                = marker_file
+    checkm_tsv                 = checkm_tsv
+    quast_results              = quast_results
+    quast_tsv                  = quast_tsv
+    busco_batch_summary        = busco_batch_summary
+    busco_short_summaries_txt  = busco_short_summaries_txt
     busco_short_summaries_json = busco_short_summaries_json
-    busco_dir = busco_dir
-    versions = ch_versions
-
-
+    busco_dir                  = busco_dir
+    versions                   = ch_versions
 }

@@ -1,30 +1,42 @@
-def VERSION='2.7.1' // Version information not provided by tool on CLI
-
 process KRONA_KTUPDATETAXONOMY {
     label 'process_single'
 
-    conda "bioconda::krona=2.7.1"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/krona:2.7.1--pl526_5' :
-        'quay.io/biocontainers/krona:2.7.1--pl526_5' }"
+    conda "${moduleDir}/environment.yml"
+    container "${workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container
+        ? 'https://depot.galaxyproject.org/singularity/krona:2.7.1--pl526_5'
+        : 'biocontainers/krona:2.7.1--pl526_5'}"
 
     output:
     path 'taxonomy/taxonomy.tab', emit: db
-    path "versions.yml"         , emit: versions
+    path "versions.yml", emit: versions
 
     when:
     task.ext.when == null || task.ext.when
 
     script:
+    def VERSION = '2.7.1'
+    // Version information not provided by tool on CLI
     def args = task.ext.args ?: ''
     """
     ktUpdateTaxonomy.sh \\
-        $args \\
+        ${args} \\
         taxonomy/
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        krona: $VERSION
+        krona: ${VERSION}
+    END_VERSIONS
+    """
+
+    stub:
+    """
+    mkdir taxonomy
+
+    touch taxonomy/taxonomy.tab
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        krona: ${VERSION}
     END_VERSIONS
     """
 }

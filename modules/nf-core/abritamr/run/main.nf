@@ -1,22 +1,21 @@
 process ABRITAMR_RUN {
-    tag "$meta.id"
+    tag "${meta.id}"
     label 'process_low'
-
     conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/abritamr:1.0.14--pyhdfd78af_0':
-        'biocontainers/abritamr:1.0.14--pyhdfd78af_0' }"
+    container "${workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container
+        ? 'https://depot.galaxyproject.org/singularity/abritamr:1.0.19--pyhdfd78af_0'
+        : 'biocontainers/abritamr:1.0.19--pyhdfd78af_0'}"
 
     input:
     tuple val(meta), path(fasta)
 
     output:
-    tuple val(meta), path("${prefix}.summary_matches.txt")  , emit: matches
-    tuple val(meta), path("${prefix}.summary_partials.txt") , emit: partials
+    tuple val(meta), path("${prefix}.summary_matches.txt"), emit: matches
+    tuple val(meta), path("${prefix}.summary_partials.txt"), emit: partials
     tuple val(meta), path("${prefix}.summary_virulence.txt"), emit: virulence
-    tuple val(meta), path("${prefix}.amrfinder.out")        , emit: out
-    tuple val(meta), path("${prefix}.abritamr.txt")         , emit: txt, optional: true
-    path "versions.yml"                                     , emit: versions
+    tuple val(meta), path("${prefix}.amrfinder.out"), emit: out
+    tuple val(meta), path("${prefix}.abritamr.txt"), emit: txt, optional: true
+    path "versions.yml", emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -27,15 +26,15 @@ process ABRITAMR_RUN {
     def is_compressed = fasta.getName().endsWith(".gz") ? true : false
     fasta_name = fasta.getName().replace(".gz", "")
     """
-    if [ "$is_compressed" == "true" ]; then
-        gzip -c -d $fasta > $fasta_name
+    if [ "${is_compressed}" == "true" ]; then
+        gzip -c -d ${fasta} > ${fasta_name}
     fi
 
     abritamr run \\
-        --contigs $fasta_name \\
+        --contigs ${fasta_name} \\
         --prefix $prefix \\
-        $args \\
-        --jobs $task.cpus
+        ${args} \\
+        --jobs ${task.cpus}
 
     # Rename output files to prevent name collisions
     mv $prefix/summary_matches.txt ./${prefix}.summary_matches.txt

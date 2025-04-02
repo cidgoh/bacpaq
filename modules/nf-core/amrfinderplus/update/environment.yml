@@ -1,6 +1,5 @@
 channels:
   - conda-forge
   - bioconda
-  - defaults
 dependencies:
-  - bioconda::ncbi-amrfinderplus=3.11.18
+  - bioconda::ncbi-amrfinderplus=4.0.19
