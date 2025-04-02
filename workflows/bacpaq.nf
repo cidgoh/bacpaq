@@ -31,8 +31,10 @@ include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pi
 include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_bacpaq_pipeline'
 
-include { SEQQC     } from '../subworkflows/local/seqqc'
-include { ANNOTATION } from '../subworkflows/local/genome_annotation'
+include { SEQQC                  } from '../subworkflows/local/seqqc'
+include { ANNOTATION             } from '../subworkflows/local/genome_annotation'
+include { VARIANT_DETECTION      } from '../subworkflows/local/variant_detection.nf'
+
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     RUN MAIN WORKFLOW
@@ -108,6 +110,18 @@ workflow BACPAQ {
         }
     }
 
+    //
+    // VARIANT DETECTION WORKFLOW
+    //
+    if (!params.skip_variant_detection) {
+        // collect all inputs into a single channel
+        ch_variant_input = ch_genome
+            .concat(ch_onp)
+            .concat(ch_illumina)
+        
+        VARIANT_DETECTION(ch_variant_input)
+        ch_versions = ch_versions.mix(VARIANT_DETECTION.out.versions)
+    }
 
     //
     // Collate and save software versions
