@@ -38,7 +38,7 @@
         },
         "fasta": {
           "type": "string",
-          "default": "test.fa",
+          "default": "",
           "hidden": true,
           "format": "file-path",
           "mimetype": "fasta"
