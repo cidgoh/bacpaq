@@ -27,7 +27,6 @@ workflow AMR_ANNOTATION {
 
     main:
 
-    genome.view { meta, fasta -> "Debug: Genome meta: ${meta}, fasta: ${fasta}" }
     // Initializing empty channels for the output files
     ch_versions = Channel.empty()
     abricate_report = Channel.empty()
@@ -53,9 +52,10 @@ workflow AMR_ANNOTATION {
     rgi_json = Channel.empty()
     rgi_db = Channel.empty()
     if (!params.skip_rgi) {
-        card_db = [[id: 'card_db'], params.card_db]
-        UNTAR(card_db)
-        RGI_CARDANNOTATION(UNTAR.out.untar.map { it[1] })
+        //card_db = [[id: 'card_db'], params.card_db]
+        //UNTAR(card_db)
+        RGI_CARDANNOTATION(params.card_db)
+        //RGI_CARDANNOTATION(UNTAR.out.untar.map { it[1] })
         RGI_MAIN(genome, RGI_CARDANNOTATION.out.db, [])
         rgi_tsv = RGI_MAIN.out.tsv
         rgi_json = RGI_MAIN.out.json
@@ -92,20 +92,20 @@ workflow AMR_ANNOTATION {
         ch_versions = ch_versions.mix(ABRITAMR_RUN.out.versions)
     }
 
-        if (!params.skip_resfinder){
-            // Resfinder db validation
-            if ( params.resfinder_db == null || !Utils.fileExists(params.resfinder_db)) {
-                log.error "Path to ResFinder database was not provided or is not valid"
-                exit 1
-                }
-            if ( params.pointfinder_db == null || !Utils.fileExists(params.pointfinder_db)) {
-                log.error "Path to PointFinder database was not provided or is not valid"
-                exit 1
-                }
-
-            RESFINDER(genome)
-            resfinder_report = RESFINDER.out.resfinder_results_table
+    if (!params.skip_resfinder) {
+        // Resfinder db validation
+        if (params.resfinder_db == null || !Utils.fileExists(params.resfinder_db)) {
+            log.error("Path to ResFinder database was not provided or is not valid")
+            exit(1)
         }
+        if (params.pointfinder_db == null || !Utils.fileExists(params.pointfinder_db)) {
+            log.error("Path to PointFinder database was not provided or is not valid")
+            exit(1)
+        }
+
+        RESFINDER(genome)
+        resfinder_report = RESFINDER.out.resfinder_results_table
+    }
 
     emit:
     abricate_report
