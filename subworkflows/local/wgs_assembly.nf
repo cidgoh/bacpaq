@@ -30,8 +30,11 @@ workflow WGS_ASSEMBLY {
     illumina_reads.filter { it[0].single_end == false } | SHOVILL
     contigs = contigs.mix(DRAGONFLYE.out.contigs)
     contigs = contigs.mix(SHOVILL.out.contigs)
-
-    RENAME_CTG(contigs, contigs.map { it[1].getExtension() })
+    RENAME_CTG(
+        contigs.map { tuple(it[0], it[1]) },
+        contigs.map { it[1].getName().split('\\.')[-1] },
+    )
+    //RENAME_CTG(contigs, contigs.map { it[1].getExtension() })
     renamed_contigs = renamed_contigs.mix(RENAME_CTG.out)
 
     //corrections = corrections.mix(DRAGONFLYE.out.corrections)
