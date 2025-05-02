@@ -37,6 +37,7 @@ process PEPPAN {
 
     stub:
     def prefix = task.ext.prefix ?: "${meta.id}"
+    def version = "1.0.5" // ------> update manually
     """
     touch ${prefix}.html
     touch ${prefix}.zip

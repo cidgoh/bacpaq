@@ -19,7 +19,7 @@ process FAI2BED {
 
     script:
     def args     = task.ext.args ?: ''
-    prefix       = task.ext.prefix ?: "${meta.id}"
+    def prefix   = task.ext.prefix ?: "${meta.id}"
     """
     awk 'BEGIN {FS="\t"}; {print \$1 FS "0" FS \$2}' ${fai} > ${prefix}.bed
 
