@@ -77,7 +77,7 @@ workflow ASSEMBLY_QC {
         }
         ch_versions = ch_versions.mix(QUAST.out.versions)
         quast_results = QUAST.out.results
-        quast_tsv = QUAST.out.tsv
+        quast_tsv = QUAST.out.results
     }
     else {
         //empty output

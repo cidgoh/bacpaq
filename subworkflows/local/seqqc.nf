@@ -162,7 +162,6 @@ workflow SEQQC {
                 ch_contigs
             )
             ch_versions = ch_versions.mix(ASSEMBLY_QC.out.versions)
-            ch_multiqc_files = ch_multiqc_files.mix(ASSEMBLY_QC.out.quast_tsv.collect().ifEmpty([]))
             ch_multiqc_files = ch_multiqc_files.mix(ASSEMBLY_QC.out.quast_tsv.collect{it[1]}.ifEmpty([]))
             ch_multiqc_files = ch_multiqc_files.mix(ASSEMBLY_QC.out.busco_short_summaries_txt.collect { it[1] }.ifEmpty([]))
         }
