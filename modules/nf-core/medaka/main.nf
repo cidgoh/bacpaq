@@ -9,6 +9,7 @@ process MEDAKA {
 
     input:
     tuple val(meta), path(reads), path(assembly)
+    path(model)
 
     output:
     tuple val(meta), path("*.fa.gz"), emit: assembly
@@ -26,7 +27,8 @@ process MEDAKA {
         $args \\
         -i $reads \\
         -d $assembly \\
-        -o ./
+        -o ./ \\
+        -m ${model}
 
     mv consensus.fasta ${prefix}.fa
 
