@@ -12,7 +12,8 @@ on:
         options:
           - 'ubuntu-latest'
           - 'self-hosted'
-        default: 'ubuntu-latest'
+          - 'bacpaq-test'
+        default: 'bacpaq-test'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
