@@ -67,6 +67,20 @@ workflow NFCORE_BACPAQ {
     samplesheet // channel: samplesheet read in from --input
 
     main:
+    if (!params.input) {
+    log.error "No input samplesheet provided. Use '--input <path_to_samplesheet>' to specify the input."
+    exit 1
+    }
+
+    if (!file(params.input).exists()) {
+        log.error "The input samplesheet file '${params.input}' does not exist."
+        exit 1
+    }
+
+    if (!params.outdir) {
+        log.error "No output directory specified. Use '--outdir <path_to_output_directory>' to specify the output."
+        exit 1
+    }
 
     //
     // WORKFLOW: Run pipeline

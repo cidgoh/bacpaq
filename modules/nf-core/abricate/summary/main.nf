@@ -4,7 +4,7 @@ process ABRICATE_SUMMARY {
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/abricate:1.0.1--ha8f3691_1':
+        'https://depot.galaxyproject.org/singularity/abricate%3A1.0.1--ha8f3691_1':
         'biocontainers/abricate:1.0.1--ha8f3691_1' }"
 
     input:

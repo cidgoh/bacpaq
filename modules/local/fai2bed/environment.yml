@@ -1,0 +1,6 @@
+channels:
+  - conda-forge
+  - bioconda
+  - anaconda
+dependencies:
+  - anaconda::gawk=5.3.1

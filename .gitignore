@@ -10,3 +10,4 @@ null/*
 *.out
 *.error
 *.sh
+var_main.nf

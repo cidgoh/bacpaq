@@ -13,6 +13,7 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.CIDGOH_SLACK_WEBHOOK }}
         run: |
+          RELEASE_NOTES=$(echo "${{ github.event.release.body }}" | sed ':a;N;$!ba;s/\n/\\n/g' | sed 's/"/\\"/g')
           curl -X POST -H 'Content-type: application/json' --data \
-          '{"text":"A new release has been published: <${{ github.event.release.html_url }}|${{ github.event.release.tag_name }}> by *${{ github.event.release.author.login }}*.\n\n*Release Notes:* \n${{ github.event.release.body }}"}' \
+          "{\"text\":\"A new release has been published: <${{ github.event.release.html_url }}|${{ github.event.release.tag_name }}> by *${{ github.event.release.author.login }}*.\n\n*Release Notes:* \n${RELEASE_NOTES}\n\n**Full Changelog**: <${{ github.event.release.html_url }}/compare/${{ github.event.release.tag_name }}...previous-tag>\"}" \
           $SLACK_WEBHOOK_URL
