@@ -200,9 +200,19 @@
             "git_sha": "dc94b6ee04a05ddb9f7ae050712ff30a13149164",
             "installed_by": ["modules"]
           },
+          "flye": {
+            "branch": "master",
+            "git_sha": "05954dab2ff481bcb999f24455da29a5828af08d",
+            "installed_by": ["modules"]
+          },
           "gubbins": {
             "branch": "master",
             "git_sha": "666652151335353eef2fcd58880bcef5bc2928e1",
+            "installed_by": ["modules"]
+          },
+          "gunzip": {
+            "branch": "master",
+            "git_sha": "05954dab2ff481bcb999f24455da29a5828af08d",
             "installed_by": ["modules"]
           },
           "hamronization/abricate": {
