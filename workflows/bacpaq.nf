@@ -87,7 +87,7 @@ workflow BACPAQ {
             genome != null
         }
         .map { meta, fastq_1, fastq_2, fastq_dir, genome ->
-            return [[id: meta.id], [genome]]
+            return [[id: meta.id, mode: 'assembly'], [genome]]
         }
     ch_reads = ch_illumina.concat(ch_onp)
 
