@@ -13,7 +13,8 @@ include { SAMTOOLS_SORT  } from '../../modules/nf-core/samtools/sort'
 
 workflow VARIANT_CALLING {
     take:
-    ch_input
+    ch_reads  // channel containing path to sequence data in FASTQ format
+    ch_genome // channel containing path to reference genome in FASTA format
 
     main:
     // initialize channels
@@ -33,37 +34,39 @@ workflow VARIANT_CALLING {
     ch_core_aln = Channel.empty()
 
     // branch input channel according to meta.mode
-    ch_input
+    ch_reads
         .branch { meta, path ->
             illumina: meta.mode == 'illumina'
             nanopore: meta.mode == 'nanopore'
-            genome: true
         }
         .set { ch_input_seq }
     // reference genome
-    Channel
-        .fromPath(params.reference_genome)
+    Channel.fromPath(params.reference_genome)
         .set { ch_reference_genome }
 
     // GENOME: RUN NUCMER
-    ch_input_seq.genome
+    ch_genome
         .combine(ch_reference_genome)
         .map { meta, genome, ref -> [meta, ref, genome] }
         .set { ch_nucmer }
-
     NUCMER(ch_nucmer)
     ch_versions = ch_versions.mix(NUCMER.out.versions)
     NUCMER_SAM(ch_nucmer)
     ch_versions = ch_versions.mix(NUCMER_SAM.out.versions)
     ch_sam_nucmer = NUCMER_SAM.out.sam_fixed
+    reference_genome = ch_reference_genome.map { path ->
+        def meta = path.getName().replaceFirst(/\.[^.]+$/, '')
+        // Extract filename without extension
+        tuple(meta, path)
+    }
     SAMTOOLS_VIEW(
         ch_sam_nucmer.map { meta, sam -> [meta, sam, []] },
-        ch_reference_genome.first(),
+        reference_genome,
         [],
     )
     ch_bam_nucmer = SAMTOOLS_VIEW.out.bam
     ch_versions = ch_versions.mix(SAMTOOLS_VIEW.out.versions)
-    SAMTOOLS_SORT(ch_bam_nucmer, ch_reference_genome.first())
+    SAMTOOLS_SORT(ch_bam_nucmer, reference_genome)
     ch_sbam_nucmer = SAMTOOLS_SORT.out.bam
     ch_versions = ch_versions.mix(SAMTOOLS_SORT.out.versions)
     SAMTOOLS_INDEX(ch_sbam_nucmer)
@@ -106,22 +109,19 @@ workflow VARIANT_CALLING {
 
     // filter recombinant sites
     if (!params.skip_gubbins) {
-
         ch_gubbins = SNIPPY_CORE.out.full_aln.map { it[1] }
         GUBBINS(ch_gubbins)
         ch_vcf_gubbins = GUBBINS.out.vcf
         ch_versions = ch_versions.mix(GUBBINS.out.versions)
-        ch_coresnpfilter = GUBBINS.out.fasta
+        ch_coresnpfilter = GUBBINS.out.fasta.map { fasta -> tuple([id: 'core_aln'], fasta) }
     }
     else {
-
         ch_coresnpfilter = SNIPPY_CORE.out.full_aln
         ch_core_aln = SNIPPY_CORE.out.aln
     }
 
     // filter SNP alignment by core SNP thresholds (e.g., 0.99)
     if (!params.skip_coresnpfilter) {
-
         CORESNPFILTER(ch_coresnpfilter)
         ch_versions = ch_versions.mix(CORESNPFILTER.out.versions)
         ch_core_aln = CORESNPFILTER.out.alignment
