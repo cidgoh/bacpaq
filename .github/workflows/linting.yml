@@ -12,7 +12,7 @@ on:
 
 jobs:
   pre-commit:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
 
@@ -20,7 +20,7 @@ jobs:
         uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5
         with:
           python-version: 3.11
-          cache: "pip"
+          cache: 'pip'
 
       - name: Install pre-commit
         run: pip install pre-commit
@@ -29,7 +29,7 @@ jobs:
         run: pre-commit run --all-files
 
   nf-core:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Check out pipeline code
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
@@ -39,8 +39,8 @@ jobs:
 
       - uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5
         with:
-          python-version: "3.11"
-          architecture: "x64"
+          python-version: '3.11'
+          architecture: 'x64'
 
       - name: Install dependencies
         run: |
@@ -52,7 +52,7 @@ jobs:
           GITHUB_COMMENTS_URL: ${{ github.event.pull_request.comments_url }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_PR_COMMIT: ${{ github.event.pull_request.head.sha }}
-        run: nf-core -l lint_log.txt lint --dir ${GITHUB_WORKSPACE} --markdown lint_results.md
+        run: nf-core pipelines -l lint_log.txt lint --dir ${GITHUB_WORKSPACE} --markdown lint_results.md -c tests/config/nextflow.config
 
       - name: Save PR number
         if: ${{ always() }}
