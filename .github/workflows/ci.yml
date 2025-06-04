@@ -12,8 +12,7 @@ on:
         options:
           - 'ubuntu-latest'
           - 'self-hosted'
-          - 'bacpaq-test'
-        default: 'bacpaq-test'
+        default: 'self-hosted'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -30,7 +29,7 @@ env:
 jobs:
   discover-modules:
     name: Discover Modules with Tests
-    runs-on: bacpaq-test
+    runs-on: self-hosted
     outputs:
       module_list: ${{ steps.get-modules.outputs.module_list }}
     steps:
@@ -60,7 +59,7 @@ jobs:
 
   nf-test:
     needs: discover-modules
-    runs-on: bacpaq-test
+    runs-on: self-hosted
     strategy:
       fail-fast: false
       matrix:

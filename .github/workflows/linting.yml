@@ -12,7 +12,7 @@ on:
 
 jobs:
   pre-commit:
-    runs-on: bacpaq-test
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
 
@@ -29,7 +29,7 @@ jobs:
         run: pre-commit run --all-files
 
   nf-core:
-    runs-on: bacpaq-test
+    runs-on: self-hosted
     steps:
       - name: Check out pipeline code
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
