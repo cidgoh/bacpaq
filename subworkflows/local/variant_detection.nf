@@ -25,10 +25,13 @@ workflow VARIANT_DETECTION {
     ch_igvreports_bam = Channel.empty()
     ch_iqtree_nwk = Channel.empty()
     ch_iqtree_report = Channel.empty()
+    ch_multiqc_files = Channel.empty()
 
     // VARIANT CALLING SUBWORKFLOW
     VARIANT_CALLING(reads, genome)
     ch_versions = ch_versions.mix(VARIANT_CALLING.out.versions)
+    ch_multiqc_files = ch_multiqc_files.mix(VARIANT_CALLING.out.txt_snippy)
+    ch_multiqc_files = ch_multiqc_files.mix(VARIANT_CALLING.out.core_txt)
 
     // VARIANT VIZ SUBWORKFLOW
     if (!params.skip_variant_viz) {
@@ -64,4 +67,5 @@ workflow VARIANT_DETECTION {
     igv_bam       = ch_igvreports_bam // channel: [ val(meta), [ *.html ] ]
     iqtree_nwk    = ch_iqtree_nwk // channel: [ val(meta), [ *.treefile] ]
     iqtree_report = ch_iqtree_report // channel: [ val(meta), [ *.iqtree] ]
+    multiqc_files = ch_multiqc_files // channel: [ val(meta), [ *.html, *.txt ] ]
 }
