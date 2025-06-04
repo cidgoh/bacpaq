@@ -30,8 +30,29 @@ workflow VARIANT_CALLING {
     ch_bai_snippy = Channel.empty()
     ch_bai_medaka = Channel.empty()
     ch_bai_nucmer = Channel.empty()
+    // snippy output channels
+    ch_tab_snippy = Channel.empty()
+    ch_csv_snippy = Channel.empty()
+    ch_html_snippy = Channel.empty()
+    ch_bed_snippy = Channel.empty()
+    ch_gff_snippy = Channel.empty()
+    ch_log_snippy = Channel.empty()
+    ch_aligned_fa_snippy = Channel.empty()
+    ch_consensus_fa_snippy = Channel.empty()
+    ch_consensus_subs_fa_snippy = Channel.empty()
+    ch_raw_vcf_snippy = Channel.empty()
+    ch_filt_vcf_snippy = Channel.empty()
+    ch_vcf_csi_snippy = Channel.empty()
+    ch_vcf_gz_snippy = Channel.empty()
+    ch_vcf_csi_snippy = Channel.empty()
+    ch_vcf_gz_snippy = Channel.empty()
+    ch_txt_snippy = Channel.empty()
+    // snippy core output channels
     ch_full_aln = Channel.empty()
     ch_core_aln = Channel.empty()
+    ch_core_tab = Channel.empty()
+    ch_core_vcf = Channel.empty()
+    ch_core_txt = Channel.empty()
 
     // branch input channel according to meta.mode
     ch_reads
@@ -90,6 +111,22 @@ workflow VARIANT_CALLING {
     ch_vcf_snippy = SNIPPY_RUN.out.vcf
     ch_bam_snippy = SNIPPY_RUN.out.bam
     ch_bai_snippy = SNIPPY_RUN.out.bai
+    ch_tab_snippy = SNIPPY_RUN.out.tab
+    ch_csv_snippy = SNIPPY_RUN.out.csv
+    ch_html_snippy = SNIPPY_RUN.out.html
+    ch_bed_snippy = SNIPPY_RUN.out.bed
+    ch_gff_snippy = SNIPPY_RUN.out.gff
+    ch_log_snippy = SNIPPY_RUN.out.log
+    ch_aligned_fa_snippy = SNIPPY_RUN.out.aligned_fa
+    ch_consensus_fa_snippy = SNIPPY_RUN.out.consensus_fa
+    ch_consensus_subs_fa_snippy = SNIPPY_RUN.out.consensus_subs_fa
+    ch_raw_vcf_snippy = SNIPPY_RUN.out.raw_vcf
+    ch_filt_vcf_snippy = SNIPPY_RUN.out.filt_vcf
+    ch_vcf_csi_snippy = SNIPPY_RUN.out.vcf_csi
+    ch_vcf_gz_snippy = SNIPPY_RUN.out.vcf_gz
+    ch_vcf_csi_snippy = SNIPPY_RUN.out.vcf_csi
+    ch_vcf_gz_snippy = SNIPPY_RUN.out.vcf_gz
+    ch_txt_snippy = SNIPPY_RUN.out.txt
 
     ch_snippy_aligned_fa = SNIPPY_RUN.out.aligned_fa
         .map { it[1] }
@@ -106,6 +143,9 @@ workflow VARIANT_CALLING {
     SNIPPY_CORE(ch_snippy_core, ch_reference_genome)
     ch_versions = ch_versions.mix(SNIPPY_CORE.out.versions)
     ch_full_aln = SNIPPY_CORE.out.full_aln
+    ch_core_tab = SNIPPY_CORE.out.tab
+    ch_core_vcf = SNIPPY_CORE.out.vcf
+    ch_core_txt = SNIPPY_CORE.out.txt
 
     // filter recombinant sites
     if (!params.skip_gubbins) {
@@ -141,6 +181,25 @@ workflow VARIANT_CALLING {
     bai_snippy        = ch_bai_snippy
     bai_medaka        = ch_bai_medaka
     bai_nucmer        = ch_bai_nucmer
+    // snippy outputs
+    tab_snippy        = ch_tab_snippy
+    csv_snippy        = ch_csv_snippy
+    html_snippy       = ch_html_snippy
+    bed_snippy        = ch_bed_snippy
+    gff_snippy        = ch_gff_snippy
+    log_snippy        = ch_log_snippy
+    aligned_fa_snippy = ch_aligned_fa_snippy
+    consensus_fa_snippy = ch_consensus_fa_snippy
+    consensus_subs_fa_snippy = ch_consensus_subs_fa_snippy
+    raw_vcf_snippy    = ch_raw_vcf_snippy
+    filt_vcf_snippy   = ch_filt_vcf_snippy
+    vcf_csi_snippy    = ch_vcf_csi_snippy
+    vcf_gz_snippy     = ch_vcf_gz_snippy
+    txt_snippy        = ch_txt_snippy
+    // snippy core outputs
+    core_tab          = ch_core_tab
+    core_vcf          = ch_core_vcf
+    core_txt          = ch_core_txt
     full_aln          = ch_full_aln
     core_aln          = ch_core_aln
 }
