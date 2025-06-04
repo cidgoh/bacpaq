@@ -15,6 +15,7 @@ disable_version_detection: true
 data_format: "yaml"
 
 run_modules:
+  - custom_content
   - fastqc
   - fastp
   - trimmomatic
@@ -29,6 +30,10 @@ run_modules:
 
 # Module order
 top_modules:
+  - custom_content:
+      name: "Dummy section"
+      anchor: "dummy_section"
+      info: "Dummy section"
   - "fastqc":
       name: "FastQC: raw reads"
       path_filters_exclude:
