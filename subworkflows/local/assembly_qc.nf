@@ -10,6 +10,23 @@ workflow ASSEMBLY_QC {
     main:
     ch_versions = Channel.empty()
 
+    //
+    // Validate database paths
+    //
+
+    if (!params.skip_checkm && params.checkm_db != null) {
+        if (!Utils.fileExists(params.checkm_db)) {
+            log.error "Path to CheckM database is not valid"
+            exit 1
+            }
+        }
+    if (!params.skip_busco) {
+        if ( params.busco_lineages_path == null || !Utils.fileExists(params.busco_lineages_path)) {
+            log.error "Path to BUSCO lineages database is not valid"
+            exit 1
+            }
+        }
+
 
     if (!params.skip_checkm) {
         // RUN CHECKM

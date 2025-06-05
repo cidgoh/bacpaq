@@ -1,736 +1,33 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema",
-  "$id": "https://raw.githubusercontent.com/nf-core/bacpaq/master/nextflow_schema.json",
-  "title": "nf-core/bacpaq pipeline parameters",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/cidgoh/bacpaq//nextflow_schema.json",
+  "title": "cidgoh/bacpaq pipeline parameters",
   "description": "Quality control workflow for short-reads (Illumina) and long-reads (Oxford Nanopore) sequencing data including WGS, Amplicon and Metagenomics",
   "type": "object",
-  "definitions": {
+  "$defs": {
     "input_output_options": {
       "title": "Input/output options",
       "type": "object",
       "fa_icon": "fas fa-terminal",
-      "description": "Define where the pipeline should find input data and save output data",
+      "description": "Define where the pipeline should find input data and save output data.",
       "required": ["input", "outdir"],
       "properties": {
         "input": {
           "type": "string",
           "format": "file-path",
-          "mimetype": "csv",
-          "pattern": "^\\S+\\.csv$",
+          "exists": true,
           "schema": "assets/schema_input.json",
+          "mimetype": "text/csv",
+          "pattern": "^\\S+\\.csv$",
           "description": "Path to comma-separated file containing information about the samples in the experiment.",
-          "help_text": "You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row. See [usage docs](https://nf-co.re/seqqc/usage#samplesheet-input).",
-          "fa_icon": "fas fa-file-csv",
-          "default": "samplesheet.csv"
+          "help_text": "You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row.",
+          "fa_icon": "fas fa-file-csv"
         },
         "outdir": {
           "type": "string",
           "format": "directory-path",
           "description": "The output directory where the results will be saved. You have to use absolute paths to storage on Cloud infrastructure.",
           "fa_icon": "fas fa-folder-open"
-        },
-        "email": {
-          "type": "string",
-          "description": "Email address for completion summary.",
-          "fa_icon": "fas fa-envelope",
-          "help_text": "Set this parameter to your e-mail address to get a summary e-mail with details of the run sent to you when the workflow exits. If set in your user config file (`~/.nextflow/config`) then you don't need to specify this on the command line for every run.",
-          "pattern": "^([a-zA-Z0-9_\\-\\.]+)@([a-zA-Z0-9_\\-\\.]+)\\.([a-zA-Z]{2,5})$"
-        },
-        "fasta": {
-          "type": "string",
-          "default": "test.fa",
-          "hidden": true,
-          "format": "file-path",
-          "mimetype": "fasta"
-        }
-      }
-    },
-    "workflow_parameters": {
-      "title": "Workflow parameters",
-      "type": "object",
-      "description": "Define high level Workflow parameters",
-      "default": "",
-      "properties": {
-        "skip_annotation": {
-          "type": "boolean",
-          "description": "Skip the entire annotation process"
-        },
-        "skip_seqqc": {
-          "type": "boolean",
-          "description": "Skip seqqc workflow"
-        }
-      }
-    },
-    "nanopore_parameters": {
-      "title": "Nanopore parameters",
-      "type": "object",
-      "description": "Define the sequencing and QC parameters for Nanopore data",
-      "default": "",
-      "properties": {
-        "nanopore_summary_file": {
-          "type": "string",
-          "description": "File produced during basecalling, which contains high-level information on every read analysed by the basecaller (only required if mode = nanopore))",
-          "fa_icon": "fas fa-file-excel"
-        },
-        "nanopore_summary_file_id": {
-          "type": "string",
-          "default": "test",
-          "description": "User defined id for the nanopore summary file (only required if mode = nanopore))",
-          "fa_icon": "fas fa-address-card"
-        },
-        "skip_porechop": {
-          "type": "boolean",
-          "description": "Skip porechop in Nanopore QC"
-        },
-        "skip_pycoqc": {
-          "type": "boolean",
-          "description": "Skip pycoqc in Nanopore QC"
-        },
-        "skip_nanocomp": {
-          "type": "boolean",
-          "description": "Skip nanocomp in Nanopore QC"
-        }
-      }
-    },
-    "illumina_parameters": {
-      "title": "Illumina parameters",
-      "type": "object",
-      "description": "Define the QC parameters for llumina data",
-      "default": "",
-      "properties": {
-        "skip_QC": {
-          "type": "boolean",
-          "description": "Skip the Quality control"
-        },
-        "skip_confindr": {
-          "type": "boolean",
-          "description": "Skip Confindr in Illumina QC"
-        },
-        "confindr_db": {
-          "type": "string",
-          "description": "Path to confindr database",
-          "format": "path"
-        },
-        "skip_trimming": {
-          "type": "boolean",
-          "description": "Skip adapter trimming in Illumina QC"
-        },
-        "trim_tool": {
-          "type": "string",
-          "default": "fastp",
-          "enum": ["fastp", "trimgalore", "trimmomatic"],
-          "description": "Specify the trimming tool"
-        },
-        "adapter_fasta": {
-          "type": "string",
-          "description": "Fasta file specifying Illumina adapters to be trimmed using FastP",
-          "fa_icon": "fas fa-file-alt",
-          "format": "path"
-        },
-        "save_merged": {
-          "type": "boolean",
-          "default": true,
-          "description": "Specify to save merged reads in Fastp"
-        },
-        "save_trimmed_fail": {
-          "type": "boolean",
-          "description": "Specify to save failed reads in Fastp"
-        }
-      },
-      "fa_icon": "fas fa-microscope"
-    },
-    "subsampling_options": {
-      "title": "Subsampling Options",
-      "type": "object",
-      "description": "Define the parameters for subsampling (Illumina data)",
-      "default": "",
-      "properties": {
-        "skip_subsampling": {
-          "type": "boolean",
-          "default": true,
-          "description": "Specify to skip subsampling reads"
-        },
-        "depth_cut_off": {
-          "type": "string",
-          "default": "50",
-          "description": "Depth of coverage cutoff"
-        },
-        "subsampling_genomesize": {
-          "type": "integer",
-          "default": 5000000,
-          "description": "Genome size of the species"
-        }
-      }
-    },
-    "taxonomy_qc_parameters": {
-      "title": "Taxonomy QC parameters",
-      "type": "object",
-      "description": "Define the parameters for taxonomy-based QC",
-      "default": "",
-      "properties": {
-        "skip_taxonomy_qc": {
-          "type": "boolean",
-          "description": "Skip the taxonomy based QC"
-        },
-        "classifier": {
-          "type": "string",
-          "default": "kraken2",
-          "enum": ["kraken2", "centrifuge"],
-          "description": "Specify the classifier"
-        },
-        "skip_kraken2": {
-          "type": "boolean",
-          "description": "Skip Kraken2 classification"
-        },
-        "kraken2_db": {
-          "type": "string",
-          "description": "Path to Kraken2 database",
-          "format": "path"
-        },
-        "classified_reads": {
-          "type": "boolean",
-          "default": true,
-          "description": "Specify to save classified reads in Kraken2"
-        },
-        "unclassified_reads": {
-          "type": "boolean",
-          "default": true,
-          "description": "Specify to save unclassified reads in Kraken2"
-        },
-        "skip_kreport2krona": {
-          "type": "boolean",
-          "description": "Skip converting kraken2 report to Krona format"
-        },
-        "skip_combinekreports": {
-          "type": "boolean",
-          "description": "Skip combining kraken2 reports from all samples"
-        },
-        "centrifuge_db": {
-          "type": "string",
-          "format": "path",
-          "description": "Specify path to centrifuge database"
-        },
-        "save_aligned": {
-          "type": "boolean",
-          "default": true,
-          "description": "Specify to save aligned reads in centrifuge"
-        },
-        "save_unaligned": {
-          "type": "boolean",
-          "default": true,
-          "description": "Specify to save un-aligned reads in centrifuge"
-        },
-        "sam_format": {
-          "type": "boolean",
-          "default": true,
-          "description": "Specify to save sam format for centrifuge"
-        },
-        "skip_bracken": {
-          "type": "boolean",
-          "description": "Skip Bracken classification"
-        },
-        "skip_combinebrackenoutputs": {
-          "type": "boolean",
-          "description": "Skip combining bracken reports from all samples"
-        },
-        "skip_dehosting": {
-          "type": "boolean",
-          "description": "Skip de-hosting process"
-        },
-        "dehosting_aligner": {
-          "type": "string",
-          "default": "minimap2",
-          "enum": ["minimap2", "bwa"],
-          "description": "Specify the aligner used for dehosting"
-        },
-        "bam_format": {
-          "type": "boolean",
-          "default": true,
-          "description": "Specify to save bam format Minimap2"
-        },
-        "cigar_paf_format": {
-          "type": "boolean",
-          "description": "Specify to save cigar in paf format for Minimap2"
-        },
-        "cigar_bam": {
-          "type": "boolean",
-          "description": "Specify to save cigar in bam format for Minimap2"
-        },
-        "bwa_sort_bam": {
-          "type": "string",
-          "default": "sort",
-          "description": "Specify to sort bam file for bwa"
-        },
-        "interleaved": {
-          "type": "boolean",
-          "description": "Specify to save dehosted sequences in interleaved format"
-        },
-        "host_genome": {
-          "type": "string",
-          "description": "Specify the host genome file",
-          "format": "path",
-          "pattern": "^\\S+\\.fasta$"
-        },
-        "host_genome_id": {
-          "type": "string",
-          "default": "GRCh38",
-          "description": "Specify to sort bam file for bwa"
-        }
-      }
-    },
-    "multiqc_options": {
-      "title": "MultiQC options",
-      "type": "object",
-      "description": "Define the parameters for MultiQC reporting",
-      "default": "",
-      "properties": {
-        "multiqc_title": {
-          "type": "string",
-          "description": "MultiQC report title. Printed as page header, used for filename if not otherwise specified.",
-          "fa_icon": "fas fa-file-signature",
-          "default": "BACPAQ"
-        },
-        "max_multiqc_email_size": {
-          "type": "string",
-          "description": "File size limit when attaching MultiQC reports to summary emails.",
-          "pattern": "^\\d+(\\.\\d+)?\\.?\\s*(K|M|G|T)?B$",
-          "default": "25.MB",
-          "fa_icon": "fas fa-file-upload",
-          "hidden": true
-        },
-        "multiqc_logo": {
-          "type": "string",
-          "description": "Custom logo file to supply to MultiQC. File name must also be set in the MultiQC config file",
-          "fa_icon": "fas fa-image",
-          "hidden": true
-        },
-        "multiqc_config": {
-          "type": "string",
-          "description": "Custom config file to supply to MultiQC.",
-          "fa_icon": "fas fa-cog",
-          "hidden": true
-        },
-        "multiqc_methods_description": {
-          "type": "string",
-          "description": "Custom MultiQC yaml file containing HTML including a methods description.",
-          "fa_icon": "fas fa-cog"
-        }
-      },
-      "fa_icon": "fas fa-tv",
-      "help_text": ""
-    },
-    "assembly_parameters": {
-      "title": "Assembly parameters",
-      "type": "object",
-      "description": "Define the parameters for genome assembly",
-      "default": "",
-      "properties": {
-        "skip_assembly": {
-          "type": "boolean",
-          "description": "Skip genome assembly"
-        },
-        "sr_assembler": {
-          "type": "string",
-          "default": "spades",
-          "enum": ["skesa", "spades", "megahit"],
-          "description": "Specify short read assembler"
-        },
-        "assembly_genomesize": {
-          "type": "string",
-          "default": "\\'\\",
-          "description": "Specify expected genome size"
-        },
-        "min_contig_len": {
-          "type": "integer",
-          "default": 500,
-          "description": "Specify minimum contig length for assembly"
-        },
-        "min_contig_coverage": {
-          "type": "integer",
-          "default": 2,
-          "description": "Specify minimum contig coverage for assembly"
-        },
-        "min_input_read_len": {
-          "type": "integer",
-          "default": 1000,
-          "description": "Specify minimum input read length for DragonFlye"
-        },
-        "min_input_quality": {
-          "type": "integer",
-          "default": 0,
-          "description": "Minimum average sequence quality for DragonFlye"
-        },
-        "racon_rounds": {
-          "type": "integer",
-          "default": 1,
-          "description": "Number of polishing rounds to conduct with Racon"
-        },
-        "medaka_rounds": {
-          "type": "integer",
-          "default": 1,
-          "description": "Number of polishing rounds to conduct with Medaka (requires a model to be specified)"
-        },
-        "medaka_model": {
-          "type": "string",
-          "default": "r941_min_fast_g507",
-          "description": "Path to model to be used for Medaka"
-        }
-      }
-    },
-    "assembly_qc_parameters": {
-      "title": "Assembly QC parameters",
-      "type": "object",
-      "description": "Define the parameters for assembly QC",
-      "default": "",
-      "properties": {
-        "skip_assembly_qc": {
-          "type": "boolean",
-          "description": "Skip assembly QC"
-        },
-        "skip_quast": {
-          "type": "boolean",
-          "description": "Skip Quast"
-        },
-        "combine_quast": {
-          "type": "boolean",
-          "description": "Specify to combine Quast output from different samples"
-        },
-        "reference_genome_fasta": {
-          "type": "string",
-          "description": "Specify reference genome FASTA file for QUAST"
-        },
-        "reference_genome_gff": {
-          "type": "string",
-          "description": "Specify reference genome GFF file for QUAST"
-        },
-        "skip_checkM": {
-          "type": "boolean",
-          "description": "Skip CheckM"
-        },
-        "checkm_db": {
-          "type": "string",
-          "description": "Specify CheckM database"
-        },
-        "skip_busco": {
-          "type": "boolean",
-          "description": "Skip BUSCO"
-        },
-        "busco_lineage": {
-          "type": "string",
-          "default": "bacteria",
-          "description": "Specify Busco lineage"
-        },
-        "busco_lineages_path": {
-          "type": "string",
-          "default": "/mnt/cidgoh-object-storage/database/busco",
-          "description": "Specify Busco lineage path"
-        },
-        "busco_config": {
-          "type": "boolean",
-          "description": "Specify Busco configuration"
-        },
-        "skip_rmlst": {
-          "type": "boolean",
-          "description": "Skip RMLST analysis"
-        }
-      }
-    },
-    "gene_annotation_parameters": {
-      "title": "Gene annotation parameters",
-      "type": "object",
-      "description": "Define the parameters for gene annotation",
-      "default": "",
-      "properties": {
-        "skip_gene_annotation": {
-          "type": "boolean",
-          "description": "Skip the gene annotation process"
-        },
-        "skip_prokka": {
-          "type": "boolean",
-          "description": "Skip Prokka"
-        },
-        "skip_bakta": {
-          "type": "boolean",
-          "description": "Skip Bakta"
-        },
-        "bakta_db": {
-          "type": "string",
-          "description": "Specify database path for Bakta"
-        },
-        "prodigal_training_file": {
-          "type": "string",
-          "description": "Specify prodigal training file"
-        },
-        "annotation_protein_file": {
-          "type": "string",
-          "description": "Specify annotation protein file"
-        }
-      }
-    },
-    "pangenome_parameters": {
-      "title": "Pangenome parameters",
-      "type": "object",
-      "description": "Define the parameters for pangenome analysis",
-      "default": "",
-      "properties": {
-        "skip_pangenome_analysis": {
-          "type": "boolean",
-          "description": "Skip pangenome analysis"
-        },
-        "pangenome_input": {
-          "type": "string",
-          "default": "bakta",
-          "description": "Specify pangenome input",
-          "enum": ["bakta", "prokka"]
-        },
-        "skip_roary": {
-          "type": "boolean",
-          "description": "Skip Roary"
-        },
-        "skip_pirate": {
-          "type": "boolean",
-          "description": "Skip PIRATE"
-        },
-        "skip_peppan": {
-          "type": "boolean",
-          "description": "Skip PEPPAN"
-        },
-        "reference_gff": {
-          "type": "string",
-          "description": "Specify reference GFF file for PEPPAN"
-        },
-        "skip_panaroo": {
-          "type": "boolean",
-          "description": "Skip PANAROO"
-        },
-        "clean_mode": {
-          "type": "string",
-          "default": "moderate",
-          "description": "Specify stringency mode for PANAROO",
-          "enum": ["strict", "moderate", "sensitive"]
-        }
-      }
-    },
-    "plasmids_parameters": {
-      "title": "Plasmids parameters",
-      "type": "object",
-      "description": "Define the parameters for plasmid annotations",
-      "default": "",
-      "properties": {
-        "skip_plasmid_analysis": {
-          "type": "boolean",
-          "description": "Skip plasmid annotation"
-        },
-        "skip_plasmidfinder": {
-          "type": "boolean",
-          "description": "Skip plasmidfinder"
-        },
-        "skip_mobsuite": {
-          "type": "boolean",
-          "description": "Skip MOB-suite"
-        }
-      }
-    },
-    "phage_parameters": {
-      "title": "PHAGE parameters",
-      "type": "object",
-      "description": "Define the parameters for PHAGE annotations",
-      "default": "",
-      "properties": {
-        "skip_phage_annotation": {
-          "type": "boolean",
-          "description": "Skip the PHAGE annotation process"
-        },
-        "skip_virsorter2": {
-          "type": "boolean",
-          "description": "Skip Virsorter in PHAGE annotation",
-          "hidden": true
-        },
-        "virsorter_db": {
-          "type": "string",
-          "description": "Specify virsorte2 database path"
-        },
-        "virsorter_virus_grp": {
-          "type": "string",
-          "default": "dsDNAphage,ssDNA",
-          "description": "Specify vthe virus group for virsorter2"
-        },
-        "virsorter_min_len": {
-          "type": "integer",
-          "default": 5000,
-          "description": "Specify minimum length for virsorter2"
-        },
-        "virsorter_min_score": {
-          "type": "number",
-          "default": 0.4,
-          "description": "Specify minimum score for virsorter2"
-        }
-      }
-    },
-    "crispr_parameters": {
-      "title": "CRISPR parameters",
-      "type": "object",
-      "description": "Define the parameters for CRISPR annotations",
-      "default": "",
-      "properties": {
-        "skip_crispr_analysis": {
-          "type": "boolean",
-          "description": "Skip CRISPR analysis in annotation"
-        },
-        "skip_cctyper": {
-          "type": "boolean",
-          "description": "Skip cctyper annotation",
-          "hidden": true
-        }
-      }
-    },
-    "amr_parameters": {
-      "title": "AMR parameters",
-      "type": "object",
-      "description": "Define the parameters for AMR annotations",
-      "default": "",
-      "properties": {
-        "amr_finderplus_db": {
-          "type": "string",
-          "description": "Path to local copy of AMRFinderPlus database, if not provided, database will be downloaded"
-        },
-        "skip_amr_annotation": {
-          "type": "boolean",
-          "description": "Skip the entire AMR annotation process"
-        },
-        "skip_rgi": {
-          "type": "boolean",
-          "description": "Skip RGI module from AMR annotation"
-        },
-        "skip_abricate": {
-          "type": "boolean",
-          "description": "Skip abricate module from AMR annotation"
-        },
-        "abricate_db": {
-          "type": "string",
-          "default": "card",
-          "description": "Use one of the following databases <NCBI | CARD | ARG-ANNOT | Resfinder | MEGARES | EcOH | PlasmidFinder | Ecoli_VF | VFDB>"
-        },
-        "skip_abritamr": {
-          "type": "boolean",
-          "description": "Skip abritamr module from AMR annotation"
-        },
-        "skip_amrfinderplus": {
-          "type": "boolean",
-          "description": "Skip AMRFinderPlus module from AMR annotation"
-        },
-        "resfinder_db": {
-          "type": "string",
-          "description": "Path to the databases for ResFinder"
-        },
-        "pointfinder_db": {
-          "type": "string",
-          "description": "Path to the databases for PointFinder"
-        },
-        "disinfinder_db": {
-          "type": "string",
-          "description": "Path to the database of acquired disinfectant resistance genes"
-        },
-        "resfinder_species": {
-          "type": "string",
-          "default": "ecoli",
-          "description": "Species in the sample, supported species can be seen at https://github.com/cadms/resfinder"
-        },
-        "skip_abricate_summary": {
-          "type": "boolean",
-          "description": "Skip summarizing abricate results across samples"
-        },
-        "amrfinderplus_db": {
-          "type": "string",
-          "format": "path",
-          "description": "Path to amrfinderplus database. If the path is not provided, the  database will be downloaded during the run"
-        },
-        "skip_resfinder": {
-          "type": "boolean",
-          "description": "Skip Resfinder in AMR annotation"
-        }
-      }
-    },
-    "institutional_config_options": {
-      "title": "Institutional config options",
-      "type": "object",
-      "fa_icon": "fas fa-university",
-      "description": "Parameters used to describe centralised config profiles. These should not be edited.",
-      "help_text": "The centralised nf-core configuration profiles use a handful of pipeline parameters to describe themselves. This information is then printed to the Nextflow log when you run a pipeline. You should not need to change these values when you run a pipeline.",
-      "properties": {
-        "custom_config_version": {
-          "type": "string",
-          "description": "Git commit id for Institutional configs.",
-          "default": "master",
-          "hidden": true,
-          "fa_icon": "fas fa-users-cog"
-        },
-        "custom_config_base": {
-          "type": "string",
-          "description": "Base directory for Institutional configs.",
-          "default": "https://raw.githubusercontent.com/nf-core/configs/master",
-          "hidden": true,
-          "help_text": "If you're running offline, Nextflow will not be able to fetch the institutional config files from the internet. If you don't need them, then this is not a problem. If you do need them, you should download the files from the repo and tell Nextflow where to find them with this parameter.",
-          "fa_icon": "fas fa-users-cog"
-        },
-        "config_profile_name": {
-          "type": "string",
-          "description": "Institutional config name.",
-          "hidden": true,
-          "fa_icon": "fas fa-users-cog"
-        },
-        "config_profile_description": {
-          "type": "string",
-          "description": "Institutional config description.",
-          "hidden": true,
-          "fa_icon": "fas fa-users-cog"
-        },
-        "config_profile_contact": {
-          "type": "string",
-          "description": "Institutional config contact information.",
-          "hidden": true,
-          "fa_icon": "fas fa-users-cog"
-        },
-        "config_profile_url": {
-          "type": "string",
-          "description": "Institutional config URL link.",
-          "hidden": true,
-          "fa_icon": "fas fa-users-cog"
-        }
-      }
-    },
-    "max_job_request_options": {
-      "title": "Max job request options",
-      "type": "object",
-      "fa_icon": "fab fa-acquisitions-incorporated",
-      "description": "Set the top limit for requested resources for any single job.",
-      "help_text": "If you are running on a smaller system, a pipeline step requesting more resources than are available may cause the Nextflow to stop the run with an error. These options allow you to cap the maximum resources requested by any single job so that the pipeline will run on your system.\n\nNote that you can not _increase_ the resources requested by any job using these options. For that you will need your own configuration file. See [the nf-core website](https://nf-co.re/usage/configuration) for details.",
-      "properties": {
-        "max_cpus": {
-          "type": "integer",
-          "description": "Maximum number of CPUs that can be requested for any single job.",
-          "default": 16,
-          "fa_icon": "fas fa-microchip",
-          "hidden": true,
-          "help_text": "Use to set an upper-limit for the CPU requirement for each process. Should be an integer e.g. `--max_cpus 1`"
-        },
-        "max_memory": {
-          "type": "string",
-          "description": "Maximum amount of memory that can be requested for any single job.",
-          "default": "128.GB",
-          "fa_icon": "fas fa-memory",
-          "pattern": "^\\d+(\\.\\d+)?\\.?\\s*(K|M|G|T)?B$",
-          "hidden": true,
-          "help_text": "Use to set an upper-limit for the memory requirement for each process. Should be a string in the format integer-unit e.g. `--max_memory '8.GB'`"
-        },
-        "max_time": {
-          "type": "string",
-          "description": "Maximum amount of time that can be requested for any single job.",
-          "default": "240.h",
-          "fa_icon": "far fa-clock",
-          "pattern": "^(\\d+\\.?\\s*(s|m|h|day)\\s*)+$",
-          "hidden": true,
-          "help_text": "Use to set an upper-limit for the time requirement for each process. Should be a string in the format integer-unit e.g. `--max_time '2.h'`"
         }
       }
     },
@@ -741,66 +38,10 @@
       "description": "Less common options for the pipeline, typically set in a config file.",
       "help_text": "These options are common to all nf-core pipelines and allow you to customise some of the core preferences for how the pipeline runs.\n\nTypically these options would be set in a Nextflow config file loaded for all pipeline runs, such as `~/.nextflow/config`.",
       "properties": {
-        "help": {
-          "type": "boolean",
-          "description": "Display help text.",
-          "fa_icon": "fas fa-question-circle",
-          "hidden": true
-        },
         "version": {
           "type": "boolean",
           "description": "Display version and exit.",
           "fa_icon": "fas fa-question-circle",
-          "hidden": true
-        },
-        "publish_dir_mode": {
-          "type": "string",
-          "default": "copy",
-          "description": "Method used to save pipeline results to output directory.",
-          "help_text": "The Nextflow `publishDir` option specifies which intermediate files should be saved to the output directory. This option tells the pipeline what method should be used to move these files. See [Nextflow docs](https://www.nextflow.io/docs/latest/process.html#publishdir) for details.",
-          "fa_icon": "fas fa-copy",
-          "enum": [
-            "symlink",
-            "rellink",
-            "link",
-            "copy",
-            "copyNoFollow",
-            "move"
-          ],
-          "hidden": true
-        },
-        "email_on_fail": {
-          "type": "string",
-          "description": "Email address for completion summary, only when pipeline fails.",
-          "fa_icon": "fas fa-exclamation-triangle",
-          "pattern": "^([a-zA-Z0-9_\\-\\.]+)@([a-zA-Z0-9_\\-\\.]+)\\.([a-zA-Z]{2,5})$",
-          "help_text": "An email address to send a summary email to when the pipeline is completed - ONLY sent if the pipeline does not exit successfully.",
-          "hidden": true
-        },
-        "plaintext_email": {
-          "type": "boolean",
-          "description": "Send plain-text email instead of HTML.",
-          "fa_icon": "fas fa-remove-format",
-          "hidden": true
-        },
-        "monochrome_logs": {
-          "type": "boolean",
-          "description": "Do not use coloured log outputs.",
-          "fa_icon": "fas fa-palette",
-          "hidden": true
-        },
-        "hook_url": {
-          "type": "string",
-          "description": "Incoming hook URL for messaging service",
-          "fa_icon": "fas fa-people-group",
-          "help_text": "Incoming hook URL for messaging service. Currently, MS Teams and Slack are supported.",
-          "hidden": true
-        },
-        "tracedir": {
-          "type": "string",
-          "description": "Directory to keep pipeline Nextflow logs and reports.",
-          "default": "pipeline_info",
-          "fa_icon": "fas fa-cogs",
           "hidden": true
         },
         "validate_params": {
@@ -808,76 +49,480 @@
           "description": "Boolean whether to validate parameters against the schema at runtime",
           "fa_icon": "fas fa-check-square",
           "hidden": true
-        },
-        "show_hidden_params": {
-          "type": "boolean",
-          "fa_icon": "far fa-eye-slash",
-          "description": "Show all params when using `--help`",
-          "hidden": true,
-          "help_text": "By default, parameters set as _hidden_ in the schema are not shown on the command line when a user runs with `--help`. Specifying this option will tell the pipeline to show all parameters."
-        },
-        "schema_ignore_params": {
-          "type": "string",
-          "default": "fasta",
-          "description": "ignore parameters not required"
         }
       }
     }
   },
   "allOf": [
     {
-      "$ref": "#/definitions/input_output_options"
+      "$ref": "#/$defs/input_output_options"
     },
     {
-      "$ref": "#/definitions/workflow_parameters"
-    },
-    {
-      "$ref": "#/definitions/nanopore_parameters"
-    },
-    {
-      "$ref": "#/definitions/illumina_parameters"
-    },
-    {
-      "$ref": "#/definitions/subsampling_options"
-    },
-    {
-      "$ref": "#/definitions/taxonomy_qc_parameters"
-    },
-    {
-      "$ref": "#/definitions/multiqc_options"
-    },
-    {
-      "$ref": "#/definitions/assembly_parameters"
-    },
-    {
-      "$ref": "#/definitions/assembly_qc_parameters"
-    },
-    {
-      "$ref": "#/definitions/gene_annotation_parameters"
-    },
-    {
-      "$ref": "#/definitions/pangenome_parameters"
-    },
-    {
-      "$ref": "#/definitions/plasmids_parameters"
-    },
-    {
-      "$ref": "#/definitions/phage_parameters"
-    },
-    {
-      "$ref": "#/definitions/crispr_parameters"
-    },
-    {
-      "$ref": "#/definitions/amr_parameters"
-    },
-    {
-      "$ref": "#/definitions/institutional_config_options"
-    },
-    {
-      "$ref": "#/definitions/max_job_request_options"
-    },
-    {
-      "$ref": "#/definitions/generic_options"
+      "$ref": "#/$defs/generic_options"
     }
-  ]
+  ],
+  "properties": {
+    "classifier": {
+      "type": "string",
+      "default": "kraken2"
+    },
+    "fasta": {
+      "type": "string",
+      "default": "test.fa"
+    },
+    "tracedir": {
+      "type": "string",
+      "default": "[:]/pipeline_info"
+    },
+    "skip_subsampling": {
+      "type": "boolean",
+      "default": true
+    },
+    "depth_cut_off": {
+      "type": "integer",
+      "default": 50
+    },
+    "subsampling_genomesize": {
+      "type": "integer",
+      "default": 5000000
+    },
+    "skip_confindr": {
+      "type": "boolean"
+    },
+    "confindr_db": {
+      "type": "string"
+    },
+    "skip_seqqc": {
+      "type": "boolean"
+    },
+    "skip_trimming": {
+      "type": "boolean"
+    },
+    "trim_tool": {
+      "type": "string",
+      "default": "fastp"
+    },
+    "adapter_fasta": {
+      "type": "string"
+    },
+    "save_trimmed_fail": {
+      "type": "boolean"
+    },
+    "save_merged": {
+      "type": "boolean",
+      "default": true
+    },
+    "discard_trimmed_pass": {
+      "type": "boolean"
+    },
+    "max_multiqc_email_size": {
+      "type": "string",
+      "default": "25.MB"
+    },
+    "multiqc_title": {
+      "type": "string",
+      "default": "BACPAQ"
+    },
+    "multiqc_logo": {
+      "type": "string",
+      "default": "/scratch/mzanwar/nf-seqqc/docs/images/LogoCIDGOH2.png"
+    },
+    "multiqc_methods_description": {
+      "type": "string"
+    },
+    "skip_nanocomp": {
+      "type": "boolean"
+    },
+    "skip_pycoqc": {
+      "type": "boolean"
+    },
+    "skip_porechop": {
+      "type": "boolean"
+    },
+    "nanopore_summary_file": {
+      "type": "string"
+    },
+    "assembly_genomesize": {
+      "type": "string",
+      "default": "\\'\\"
+    },
+    "min_contig_len": {
+      "type": "integer",
+      "default": 500
+    },
+    "min_contig_coverage": {
+      "type": "integer",
+      "default": 2
+    },
+    "min_input_read_len": {
+      "type": "integer",
+      "default": 1000
+    },
+    "min_input_quality": {
+      "type": "integer",
+      "default": 0
+    },
+    "skip_medaka": {
+      "type": "boolean"
+    },
+    "racon_rounds": {
+      "type": "integer",
+      "default": 0
+    },
+    "medaka_rounds": {
+      "type": "integer",
+      "default": 0
+    },
+    "medaka_model": {
+      "type": "string",
+      "default": "r1041_e82_400bps_hac_v4.3.0"
+    },
+    "skip_dehosting": {
+      "type": "boolean"
+    },
+    "skip_combinekreports": {
+      "type": "boolean"
+    },
+    "skip_kreport2krona": {
+      "type": "boolean"
+    },
+    "skip_bracken": {
+      "type": "boolean"
+    },
+    "skip_kraken2": {
+      "type": "boolean"
+    },
+    "skip_combinebrackenoutputs": {
+      "type": "boolean"
+    },
+    "skip_quality_report": {
+      "type": "boolean"
+    },
+    "kraken2_db": {
+      "type": "string"
+    },
+    "classified_reads": {
+      "type": "boolean",
+      "default": true
+    },
+    "unclassified_reads": {
+      "type": "boolean",
+      "default": true
+    },
+    "centrifuge_db": {
+      "type": "string"
+    },
+    "save_unaligned": {
+      "type": "boolean",
+      "default": true
+    },
+    "save_aligned": {
+      "type": "boolean",
+      "default": true
+    },
+    "sam_format": {
+      "type": "boolean",
+      "default": true
+    },
+    "dehosting_aligner": {
+      "type": "string",
+      "default": "minimap2"
+    },
+    "host_genome": {
+      "type": "string"
+    },
+    "host_genome_id": {
+      "type": "string",
+      "default": "GRCh38"
+    },
+    "bwa_sort_bam": {
+      "type": "string",
+      "default": "sort"
+    },
+    "bam_format": {
+      "type": "boolean",
+      "default": true
+    },
+    "cigar_paf_format": {
+      "type": "boolean"
+    },
+    "cigar_bam": {
+      "type": "boolean"
+    },
+    "interleaved": {
+      "type": "boolean"
+    },
+    "publish_dir_mode": {
+      "type": "string",
+      "default": "copy"
+    },
+    "email": {
+      "type": "string"
+    },
+    "email_on_fail": {
+      "type": "string"
+    },
+    "plaintext_email": {
+      "type": "boolean"
+    },
+    "monochrome_logs": {
+      "type": "boolean"
+    },
+    "hook_url": {
+      "type": "string"
+    },
+    "show_hidden_params": {
+      "type": "boolean"
+    },
+    "schema_ignore_params": {
+      "type": "string",
+      "default": "genomes,fasta"
+    },
+    "skip_checkm": {
+      "type": "boolean"
+    },
+    "skip_quast": {
+      "type": "boolean"
+    },
+    "skip_busco": {
+      "type": "boolean"
+    },
+    "sr_assembler": {
+      "type": "string",
+      "default": "spades"
+    },
+    "nanopore_qual": {
+      "type": "string",
+      "default": "raw"
+    },
+    "checkm_db": {
+      "type": "string"
+    },
+    "reference_genome_fasta": {
+      "type": "string"
+    },
+    "reference_genome_gff": {
+      "type": "string"
+    },
+    "combine_quast": {
+      "type": "boolean"
+    },
+    "busco_lineage": {
+      "type": "string",
+      "default": "bacteria"
+    },
+    "busco_lineages_path": {
+      "type": "string"
+    },
+    "busco_config": {
+      "type": "boolean"
+    },
+    "reference_gff": {
+      "type": "string"
+    },
+    "config_profile_name": {
+      "type": "string"
+    },
+    "config_profile_description": {
+      "type": "string"
+    },
+    "custom_config_version": {
+      "type": "string",
+      "default": "master"
+    },
+    "custom_config_base": {
+      "type": "string",
+      "default": "https://raw.githubusercontent.com/nf-core/configs/master"
+    },
+    "config_profile_contact": {
+      "type": "string"
+    },
+    "config_profile_url": {
+      "type": "string"
+    },
+    "skip_QC": {
+      "type": "boolean"
+    },
+    "skip_taxonomy_qc": {
+      "type": "boolean"
+    },
+    "skip_assembly": {
+      "type": "boolean"
+    },
+    "skip_assembly_qc": {
+      "type": "boolean"
+    },
+    "skip_rmlst": {
+      "type": "boolean"
+    },
+    "max_memory": {
+      "type": "string",
+      "default": "128.GB"
+    },
+    "max_cpus": {
+      "type": "integer",
+      "default": 16
+    },
+    "max_time": {
+      "type": "string",
+      "default": "240.h"
+    },
+    "skip_annotation": {
+      "type": "boolean"
+    },
+    "skip_gene_annotation": {
+      "type": "boolean"
+    },
+    "skip_abricate_summary": {
+      "type": "boolean"
+    },
+    "amrfinderplus_db": {
+      "type": "string"
+    },
+    "skip_resfinder": {
+      "type": "boolean"
+    },
+    "skip_virsorter2": {
+      "type": "boolean"
+    },
+    "skip_crispr_analysis": {
+      "type": "boolean"
+    },
+    "amr_finderplus_db": {
+      "type": "string"
+    },
+    "skip_amr_annotation": {
+      "type": "boolean"
+    },
+    "skip_rgi": {
+      "type": "boolean"
+    },
+    "skip_abricate": {
+      "type": "boolean"
+    },
+    "abricate_db": {
+      "type": "string",
+      "default": "card"
+    },
+    "skip_abritamr": {
+      "type": "boolean"
+    },
+    "skip_amrfinderplus": {
+      "type": "boolean"
+    },
+    "resfinder_db": {
+      "type": "string"
+    },
+    "pointfinder_db": {
+      "type": "string"
+    },
+    "disinfinder_db": {
+      "type": "string"
+    },
+    "resfinder_species": {
+      "type": "string",
+      "default": "other"
+    },
+    "skip_prokka": {
+      "type": "boolean"
+    },
+    "skip_bakta": {
+      "type": "boolean"
+    },
+    "bakta_db": {
+      "type": "string"
+    },
+    "prodigal_training_file": {
+      "type": "string"
+    },
+    "annotation_protein_file": {
+      "type": "string"
+    },
+    "skip_phage_annotation": {
+      "type": "boolean"
+    },
+    "virsorter_db": {
+      "type": "string"
+    },
+    "virsorter_virus_grp": {
+      "type": "string",
+      "default": "dsDNAphage,ssDNA"
+    },
+    "virsorter_min_len": {
+      "type": "integer",
+      "default": 5000
+    },
+    "virsorter_min_score": {
+      "type": "number",
+      "default": 0.4
+    },
+    "skip_pangenome_analysis": {
+      "type": "boolean"
+    },
+    "pangenome_input": {
+      "type": "string",
+      "default": "bakta"
+    },
+    "skip_roary": {
+      "type": "boolean"
+    },
+    "skip_pirate": {
+      "type": "boolean"
+    },
+    "skip_panaroo": {
+      "type": "boolean"
+    },
+    "clean_mode": {
+      "type": "string",
+      "default": "moderate"
+    },
+    "skip_peppan": {
+      "type": "boolean"
+    },
+    "skip_plasmid_analysis": {
+      "type": "boolean"
+    },
+    "skip_plasmidfinder": {
+      "type": "boolean"
+    },
+    "skip_mobsuite": {
+      "type": "boolean"
+    },
+    "skip_cctyper": {
+      "type": "boolean"
+    },
+    "skip_variant_viz": {
+      "type": "boolean"
+    },
+    "skip_variant_detection": {
+      "type": "boolean"
+    },
+    "reference_genome": {
+      "type": "string"
+    },
+    "snp_threshold": {
+      "type": "number",
+      "default": 0.95
+    },
+    "skip_gubbins": {
+      "type": "boolean"
+    },
+    "snp_minqual": {
+      "type": "integer",
+      "default": 100
+    },
+    "snp_mincov": {
+      "type": "integer",
+      "default": 10
+    },
+    "skip_coresnpfilter": {
+      "type": "boolean"
+    },
+    "skip_igvreports": {
+      "type": "boolean"
+    },
+    "skip_iqtree": {
+      "type": "boolean"
+    }
+  }
 }

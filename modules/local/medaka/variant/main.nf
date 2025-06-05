@@ -13,7 +13,7 @@ process MEDAKA_VARIANT {
     path(reference)
 
     output:
-    tuple val(meta), path("*/${meta.id}.vcf")       , emit: alignment_vcf
+    tuple val(meta), path("*/${meta.id}*.vcf")    , emit: alignment_vcf
     tuple val(meta), path("*/*annotated.vcf")   , emit: annotated_vcf
     tuple val(meta), path("*/*sorted.vcf")      , emit: sorted_vcf
     tuple val(meta), path("*/*.bam.bai")        , emit: bam_bai
@@ -34,9 +34,9 @@ process MEDAKA_VARIANT {
         -t ${task.cpus} \\
         ${args} 
 
-    mv ${prefix}/medaka.vcf ${prefix}/${meta.id}.vcf
-    mv ${prefix}/calls_to_ref.bam ${prefix}/${meta.id}.bam
-    mv ${prefix}/calls_to_ref.bam.bai ${prefix}/${meta.id}.bam.bai
+    mv ${prefix}/medaka.vcf ${prefix}/${prefix}.vcf
+    mv ${prefix}/calls_to_ref.bam ${prefix}/${prefix}.bam
+    mv ${prefix}/calls_to_ref.bam.bai ${prefix}/${prefix}.bam.bai
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
