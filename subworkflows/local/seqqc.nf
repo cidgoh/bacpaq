@@ -65,7 +65,6 @@ workflow SEQQC {
     ch_input
 
     main:
-    def multiqc_report = []
     ch_versions = Channel.empty()
     ch_tax_reads = Channel.empty()
     ch_assembly_reads = Channel.empty()
