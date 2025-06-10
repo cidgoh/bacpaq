@@ -42,6 +42,10 @@ workflow BACPAQ {
     main:
     ch_versions = Channel.empty()
     ch_multiqc_files = Channel.empty()
+    ch_illumina = Channel.empty()
+    ch_onp = Channel.empty()
+    ch_genome = Channel.empty()
+    ch_reads = Channel.empty()
     def convertEmptyToNull = { value ->
         if (value.toString().trim().isEmpty() || (value instanceof List && value.isEmpty())) {
             return null
@@ -102,6 +106,8 @@ workflow BACPAQ {
         seqqc_reads_illumina = SEQQC.out.seqqc_reads_illumina
         seqqc_reads_nanopore = SEQQC.out.seqqc_reads_nanopore
         ch_reads = seqqc_reads_illumina.mix(seqqc_reads_nanopore)
+        println("SEQQC reads: ${ch_reads.view()}")
+        println("SEQQC contigs: ${ch_genome.view()}")
     }
     else {
         log.info("Skipping seqqc workflow as it is not in params.workflows")
@@ -129,12 +135,14 @@ workflow BACPAQ {
     //
     // VARIANT DETECTION WORKFLOW
     //
-    if ('variant_detection' in workflows && ch_reads && ch_genome) {
+    if ('variant_detection' in workflows) {
         // collect all inputs into a single channel
         //ch_variant_input = ch_genome.concat(ch_reads)
         //.concat(ch_illumina)
-
-        VARIANT_DETECTION(ch_reads, ch_genome)
+        ch_assembly = ch_genome.map { meta, genome ->
+            return [[id: meta.id, mode: meta.mode + '_assembly'], [genome]]
+        }
+        VARIANT_DETECTION(ch_reads, ch_assembly)
         ch_versions = ch_versions.mix(VARIANT_DETECTION.out.versions)
     }
     /*if (!params.skip_variant_detection) {
