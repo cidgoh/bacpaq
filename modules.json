@@ -584,6 +584,11 @@
             "git_sha": "666652151335353eef2fcd58880bcef5bc2928e1",
             "installed_by": ["modules"]
           },
+          "tabix/tabix": {
+            "branch": "master",
+            "git_sha": "05954dab2ff481bcb999f24455da29a5828af08d",
+            "installed_by": ["modules"]
+          },
           "trimgalore": {
             "branch": "master",
             "git_sha": "8c5eeedd45e295fc9a4f164631da6a8b37e6b9c6",
