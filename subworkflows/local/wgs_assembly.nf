@@ -37,7 +37,7 @@ workflow WGS_ASSEMBLY {
             }
         ch_medaka = nanopore_reads.join(GUNZIP.out.gunzip)
         MEDAKA(
-            ch_medaka, 
+            ch_medaka,
             ch_medaka_model.first()
         )
         GUNZIP_MEDAKA(
@@ -57,7 +57,7 @@ workflow WGS_ASSEMBLY {
         illumina_contigs.map { tuple(it[0], it[1]) },
         illumina_contigs.map { it[1].getName().split('\\.')[-1] },
     )
-    
+    //renamed_contigs = renamed_contigs.mix(RENAME_CTG.out)
     // flye output channels
     renamed_contigs = renamed_contigs.mix(nanopore_contigs)
     assembly_log = assembly_log.mix(FLYE.out.log)
@@ -67,7 +67,7 @@ workflow WGS_ASSEMBLY {
     ch_versions = ch_versions.mix(FLYE.out.versions)
 
     // illumina output channels
-    renamed_contigs = renamed_contigs.mix(illumina_contigs)
+    renamed_contigs = renamed_contigs.mix(RENAME_CTG.out)
     corrections = corrections.mix(SHOVILL.out.corrections)
     assembly_log = assembly_log.mix(SHOVILL.out.log)
     raw_contigs = raw_contigs.mix(SHOVILL.out.raw_contigs)
