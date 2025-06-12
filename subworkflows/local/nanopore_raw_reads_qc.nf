@@ -6,7 +6,7 @@ include { PYCOQC                    } from '../../modules/nf-core/pycoqc'
 workflow NANOPORE_RAW_READS_QC {
     take:
     ch_merged_reads
-    nanopore_summary_file
+    nanopore_summary_file       //
 
     main:
     ch_versions = Channel.empty()
@@ -43,15 +43,16 @@ workflow NANOPORE_RAW_READS_QC {
             ch_qc_reads
                 .map { [it[1]] }
                 .collect()
-                .map { reads -> [[id: params.nanopore_summary_file_id], reads] }
-                .set { ch_collected_reads }
+                .map { reads ->
+                 [ [id: ( params.nanopore_summary_file ? file(nanopore_summary_file).baseName : "null" )], reads ] }
+                .set { ch_collected_reads}
 
             NANOCOMP(ch_collected_reads)
             ch_versions = ch_versions.mix(NANOCOMP.out.versions)
         }
-        if (!params.skip_pycoqc) {
+        if (!params.skip_pycoqc && params.nanopore_summary_file_id != null) {
             PYCOQC(
-                [[id: params.nanopore_summary_file_id], nanopore_summary_file]
+                [[id: file(nanopore_summary_file).baseName ], nanopore_summary_file]
             )
             ch_versions = ch_versions.mix(PYCOQC.out.versions)
         }

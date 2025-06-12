@@ -187,7 +187,7 @@
           },
           "dragonflye": {
             "branch": "master",
-            "git_sha": "666652151335353eef2fcd58880bcef5bc2928e1",
+            "git_sha": "05954dab2ff481bcb999f24455da29a5828af08d",
             "installed_by": ["modules"]
           },
           "fastp": {
@@ -200,9 +200,19 @@
             "git_sha": "dc94b6ee04a05ddb9f7ae050712ff30a13149164",
             "installed_by": ["modules"]
           },
+          "flye": {
+            "branch": "master",
+            "git_sha": "05954dab2ff481bcb999f24455da29a5828af08d",
+            "installed_by": ["modules"]
+          },
           "gubbins": {
             "branch": "master",
             "git_sha": "666652151335353eef2fcd58880bcef5bc2928e1",
+            "installed_by": ["modules"]
+          },
+          "gunzip": {
+            "branch": "master",
+            "git_sha": "05954dab2ff481bcb999f24455da29a5828af08d",
             "installed_by": ["modules"]
           },
           "hamronization/abricate": {
@@ -257,22 +267,22 @@
           },
           "krona/kronadb": {
             "branch": "master",
-            "git_sha": "666652151335353eef2fcd58880bcef5bc2928e1",
+            "git_sha": "4789f43ab82b70a6719890d2ffe43685979960bd",
             "installed_by": ["modules"]
           },
           "krona/ktimporttaxonomy": {
             "branch": "master",
-            "git_sha": "666652151335353eef2fcd58880bcef5bc2928e1",
+            "git_sha": "05954dab2ff481bcb999f24455da29a5828af08d",
             "installed_by": ["modules"]
           },
           "krona/ktimporttext": {
             "branch": "master",
-            "git_sha": "666652151335353eef2fcd58880bcef5bc2928e1",
+            "git_sha": "05954dab2ff481bcb999f24455da29a5828af08d",
             "installed_by": ["modules"]
           },
           "krona/ktupdatetaxonomy": {
             "branch": "master",
-            "git_sha": "666652151335353eef2fcd58880bcef5bc2928e1",
+            "git_sha": "05954dab2ff481bcb999f24455da29a5828af08d",
             "installed_by": ["modules"]
           },
           "medaka": {
@@ -572,6 +582,16 @@
           "snippy/run": {
             "branch": "master",
             "git_sha": "666652151335353eef2fcd58880bcef5bc2928e1",
+            "installed_by": ["modules"]
+          },
+          "tabix/bgzip": {
+            "branch": "master",
+            "git_sha": "05954dab2ff481bcb999f24455da29a5828af08d",
+            "installed_by": ["modules"]
+          },
+          "tabix/tabix": {
+            "branch": "master",
+            "git_sha": "05954dab2ff481bcb999f24455da29a5828af08d",
             "installed_by": ["modules"]
           },
           "trimgalore": {

@@ -17,27 +17,7 @@
 // for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
 
 
-// Check if input database paths are valid
-/*if (!params.skip_kraken2 && !Utils.fileExists(params.kraken2_db)) {
-    log.error "Path to Kraken2 database is not valid"
-    exit 1
-}
-if ((params.classifier == 'centrifuge') && !Utils.fileExists(params.centrifuge_db)) {
-    log.error "Path to Centrifuge database is not valid"
-    exit 1
-}
-if (!params.skip_checkm && !Utils.fileExists(params.checkm_db)) {
-    log.error "Path to CheckM database is not valid"
-    exit 1
-}
-if (!params.skip_confindr && !Utils.fileExists(params.confindr_db)) {
-    log.error "Path to Confindr database is not valid"
-    exit 1
-}
-if (!params.skip_busco && !Utils.fileExists(params.busco_lineages_path)) {
-    log.error "Path to BUSCO lineages database is not valid"
-    exit 1
-}*/
+
 /*
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -85,7 +65,6 @@ workflow SEQQC {
     ch_input
 
     main:
-    def multiqc_report = []
     ch_versions = Channel.empty()
     ch_tax_reads = Channel.empty()
     ch_assembly_reads = Channel.empty()
@@ -116,7 +95,7 @@ workflow SEQQC {
 
         NANOPORE_RAW_READS_QC(
             ch_reads_merged,
-            params.nanopore_summary_file
+            params.nanopore_summary_file,
         )
 
         ch_versions = ch_versions.mix(NANOPORE_RAW_READS_QC.out.versions)
@@ -144,7 +123,7 @@ workflow SEQQC {
     if (!params.skip_taxonomy_qc) {
         TAXONOMY_QC(
             ch_tax_reads,
-            params.host_genome
+            params.host_genome,
         )
         ch_assembly_reads = TAXONOMY_QC.out.reads
         ch_versions = ch_versions.mix(TAXONOMY_QC.out.versions)
@@ -164,7 +143,7 @@ workflow SEQQC {
         // SUBWORKFLOW: Run WGS ASSEMBLY on reads
         WGS_ASSEMBLY(
             ch_assembly_reads.illumina,
-            ch_assembly_reads.nanopore
+            ch_assembly_reads.nanopore,
         )
         ch_contigs = WGS_ASSEMBLY.out.ch_contigs
         ch_versions = ch_versions.mix(WGS_ASSEMBLY.out.versions)
@@ -182,14 +161,15 @@ workflow SEQQC {
                 ch_contigs
             )
             ch_versions = ch_versions.mix(ASSEMBLY_QC.out.versions)
-            ch_multiqc_files = ch_multiqc_files.mix(ASSEMBLY_QC.out.quast_tsv.collect().ifEmpty([]))
-            ch_multiqc_files = ch_multiqc_files.mix(ASSEMBLY_QC.out.quast_tsv.collect{it[1]}.ifEmpty([]))
+            ch_multiqc_files = ch_multiqc_files.mix(ASSEMBLY_QC.out.quast_tsv.collect { it[1] }.ifEmpty([]))
             ch_multiqc_files = ch_multiqc_files.mix(ASSEMBLY_QC.out.busco_short_summaries_txt.collect { it[1] }.ifEmpty([]))
         }
     }
 
     emit:
-    contigs       = ch_contigs
-    multiqc_files = ch_multiqc_files
-    versions      = ch_versions
+    seqqc_reads_illumina = ch_assembly_reads.illumina
+    seqqc_reads_nanopore = ch_assembly_reads.nanopore
+    contigs              = ch_contigs
+    multiqc_files        = ch_multiqc_files
+    versions             = ch_versions
 }

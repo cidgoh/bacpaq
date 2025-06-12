@@ -42,6 +42,10 @@ workflow BACPAQ {
     main:
     ch_versions = Channel.empty()
     ch_multiqc_files = Channel.empty()
+    ch_illumina = Channel.empty()
+    ch_onp = Channel.empty()
+    ch_genome = Channel.empty()
+    ch_reads = Channel.empty()
     def convertEmptyToNull = { value ->
         if (value.toString().trim().isEmpty() || (value instanceof List && value.isEmpty())) {
             return null
@@ -87,19 +91,37 @@ workflow BACPAQ {
             genome != null
         }
         .map { meta, fastq_1, fastq_2, fastq_dir, genome ->
-            return [[id: meta.id], [genome]]
+            return [[id: meta.id, mode: 'assembly'], genome]
         }
     ch_reads = ch_illumina.concat(ch_onp)
 
-
+    def workflows = params.workflows.split(',').collect { it.trim() }
+    //ch_seqqc_reads = Channel.empty()
+    if ('seqqc' in workflows) {
+        // Run the seqqc workflow
+        SEQQC(ch_reads)
+        ch_genome = SEQQC.out.contigs
+        ch_multiqc_files = ch_multiqc_files.mix(SEQQC.out.multiqc_files)
+        ch_versions = ch_versions.mix(SEQQC.out.versions)
+        seqqc_reads_illumina = SEQQC.out.seqqc_reads_illumina
+        seqqc_reads_nanopore = SEQQC.out.seqqc_reads_nanopore
+        ch_reads = seqqc_reads_illumina.mix(seqqc_reads_nanopore)
+        println("SEQQC reads: ${ch_reads.view()}")
+        println("SEQQC contigs: ${ch_genome.view()}")
+    }
+    else {
+        log.info("Skipping seqqc workflow as it is not in params.workflows")
+    }
+    /*
     if (!params.skip_seqqc) {
         SEQQC(ch_reads)
         ch_genome = SEQQC.out.contigs
         ch_multiqc_files = ch_multiqc_files.mix(SEQQC.out.multiqc_files)
         ch_versions = ch_versions.mix(SEQQC.out.versions)
-    }
+        qc_reads = SEQQC.out.seqqc_reads
+    }*/
 
-    if (!params.skip_annotation) {
+    if ('annotation' in workflows) {
         if (ch_genome) {
             ANNOTATION(ch_genome)
             ch_multiqc_files = ch_multiqc_files.mix(ANNOTATION.out.multiqc_files)
@@ -113,15 +135,25 @@ workflow BACPAQ {
     //
     // VARIANT DETECTION WORKFLOW
     //
-    if (!params.skip_variant_detection) {
+    if ('variant_detection' in workflows) {
+        // collect all inputs into a single channel
+        //ch_variant_input = ch_genome.concat(ch_reads)
+        //.concat(ch_illumina)
+        ch_assembly = ch_genome.map { meta, genome ->
+            return [[id: meta.id, mode: meta.mode + '_assembly'], [genome]]
+        }
+        VARIANT_DETECTION(ch_reads, ch_assembly)
+        ch_versions = ch_versions.mix(VARIANT_DETECTION.out.versions)
+    }
+    /*if (!params.skip_variant_detection) {
         // collect all inputs into a single channel
         ch_variant_input = ch_genome
             .concat(ch_onp)
             .concat(ch_illumina)
-        
+
         VARIANT_DETECTION(ch_variant_input)
         ch_versions = ch_versions.mix(VARIANT_DETECTION.out.versions)
-    }
+    }*/
 
     //
     // Collate and save software versions
