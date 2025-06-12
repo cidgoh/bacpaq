@@ -36,9 +36,12 @@ workflow VARIANT_DETECTION {
     // VARIANT VIZ SUBWORKFLOW
     if (!params.skip_variant_viz) {
 
-        ch_vcf = VARIANT_CALLING.out.vcf_snippy
-            .concat(VARIANT_CALLING.out.vcf_medaka)
-            .concat(VARIANT_CALLING.out.vcf_nucmer)
+        ch_vcf = VARIANT_CALLING.out.vcf_bgz_snippy
+            .concat(VARIANT_CALLING.out.vcf_bgz_medaka)
+            .concat(VARIANT_CALLING.out.vcf_bgz_nucmer)
+        ch_vci = VARIANT_CALLING.out.vci_snippy
+            .concat(VARIANT_CALLING.out.vci_medaka)
+            .concat(VARIANT_CALLING.out.vci_nucmer)
         ch_bam = VARIANT_CALLING.out.bam_snippy
             .concat(VARIANT_CALLING.out.bam_medaka)
             .concat(VARIANT_CALLING.out.bam_nucmer_sorted)
@@ -49,6 +52,7 @@ workflow VARIANT_DETECTION {
 
         VARIANT_VIS(
             ch_vcf,
+            ch_vci,
             ch_bam,
             ch_bai,
             ch_aln_fa,
