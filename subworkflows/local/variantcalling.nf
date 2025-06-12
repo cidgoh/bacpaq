@@ -9,6 +9,8 @@ include { NUCMER_SAM     } from '../../modules/local/nucmersam'
 include { SAMTOOLS_VIEW  } from '../../modules/nf-core/samtools/view'
 include { SAMTOOLS_INDEX } from '../../modules/nf-core/samtools/index'
 include { SAMTOOLS_SORT  } from '../../modules/nf-core/samtools/sort'
+include { TABIX_TABIX as TABIX_SNIPPY; TABIX_TABIX as TABIX_MEDAKA; TABIX_TABIX as TABIX_NUCMER; TABIX_TABIX as TABIX_CORE } from '../../modules/nf-core/tabix/tabix'
+include { TABIX_BGZIP as BGZIP_SNIPPY; TABIX_BGZIP as BGZIP_MEDAKA; TABIX_BGZIP as BGZIP_NUCMER; TABIX_BGZIP as BGZIP_CORE } from '../../modules/nf-core/tabix/bgzip'
 
 
 workflow VARIANT_CALLING {
@@ -23,6 +25,10 @@ workflow VARIANT_CALLING {
     ch_vcf_snippy = Channel.empty()
     ch_vcf_medaka = Channel.empty()
     ch_vcf_gubbins = Channel.empty()
+    ch_vcf_bgz_nucmer = Channel.empty()
+    ch_vcf_bgz_snippy = Channel.empty()
+    ch_vcf_bgz_medaka = Channel.empty()
+    ch_vcf_gubbins = Channel.empty()
     ch_sam_nucmer = Channel.empty()
     ch_bam_nucmer = Channel.empty()
     ch_bam_snippy = Channel.empty()
@@ -30,6 +36,9 @@ workflow VARIANT_CALLING {
     ch_bai_snippy = Channel.empty()
     ch_bai_medaka = Channel.empty()
     ch_bai_nucmer = Channel.empty()
+    ch_vci_snippy = Channel.empty()
+    ch_vci_medaka = Channel.empty()
+    ch_vci_nucmer = Channel.empty()
     // snippy output channels
     ch_tab_snippy = Channel.empty()
     ch_csv_snippy = Channel.empty()
@@ -52,7 +61,9 @@ workflow VARIANT_CALLING {
     ch_core_aln = Channel.empty()
     ch_core_tab = Channel.empty()
     ch_core_vcf = Channel.empty()
+    ch_core_vcf_bgz = Channel.empty()
     ch_core_txt = Channel.empty()
+    ch_core_vci = Channel.empty()
 
     // branch input channel according to meta.mode
     ch_reads
@@ -96,7 +107,12 @@ workflow VARIANT_CALLING {
     DELTA2VCF(NUCMER.out.delta)
     ch_versions = ch_versions.mix(DELTA2VCF.out.versions)
     ch_vcf_nucmer = DELTA2VCF.out.vcf
-
+    BGZIP_NUCMER(ch_vcf_nucmer) // compress the VCF file
+    ch_versions = ch_versions.mix(BGZIP_NUCMER.out.versions)
+    ch_vcf_bgz_nucmer = BGZIP_NUCMER.out.output
+    TABIX_NUCMER(ch_vcf_bgz_nucmer) // index the VCF file
+    ch_versions = ch_versions.mix(TABIX_NUCMER.out.versions)
+    ch_vci_nucmer = TABIX_NUCMER.out.tbi 
 
     // NANOPORE: RUN MEDAKA
     ch_medaka = ch_input_seq.nanopore
@@ -104,6 +120,12 @@ workflow VARIANT_CALLING {
     ch_vcf_medaka = MEDAKA_VARIANT.out.alignment_vcf
     ch_bam_medaka = MEDAKA_VARIANT.out.bam
     ch_bai_medaka = MEDAKA_VARIANT.out.bam_bai
+    BGZIP_MEDAKA(ch_vcf_medaka) // compress the VCF file
+    ch_versions = ch_versions.mix(BGZIP_MEDAKA.out.versions)
+    ch_vcf_bgz_medaka = BGZIP_MEDAKA.out.output
+    TABIX_MEDAKA(ch_vcf_bgz_medaka) // index the VCF file
+    ch_versions = ch_versions.mix(TABIX_MEDAKA.out.versions)
+    ch_vci_medaka = TABIX_MEDAKA.out.tbi
 
     // ILLUMINA: RUN SNIPPY
     ch_snippy = ch_input_seq.illumina
@@ -128,6 +150,13 @@ workflow VARIANT_CALLING {
     ch_vcf_gz_snippy = SNIPPY_RUN.out.vcf_gz
     ch_txt_snippy = SNIPPY_RUN.out.txt
 
+    BGZIP_SNIPPY(ch_vcf_snippy) // compress the VCF file
+    ch_versions = ch_versions.mix(BGZIP_SNIPPY.out.versions)
+    ch_vcf_bgz_snippy = BGZIP_SNIPPY.out.output
+    TABIX_SNIPPY(ch_vcf_bgz_snippy) // index the VCF file
+    ch_versions = ch_versions.mix(TABIX_SNIPPY.out.versions)
+    ch_vci_snippy = TABIX_SNIPPY.out.tbi
+
     ch_snippy_aligned_fa = SNIPPY_RUN.out.aligned_fa
         .map { it[1] }
         .collect()
@@ -146,6 +175,13 @@ workflow VARIANT_CALLING {
     ch_core_tab = SNIPPY_CORE.out.tab
     ch_core_vcf = SNIPPY_CORE.out.vcf
     ch_core_txt = SNIPPY_CORE.out.txt
+
+    BGZIP_CORE(ch_core_vcf) // compress the VCF file
+    ch_versions = ch_versions.mix(BGZIP_CORE.out.versions)
+    ch_core_vcf_bgz = BGZIP_CORE.out.output
+    TABIX_CORE(ch_core_vcf_bgz) // index the VCF file
+    ch_versions = ch_versions.mix(TABIX_CORE.out.versions)
+    ch_core_vci = TABIX_CORE.out.tbi
 
     // filter recombinant sites
     if (!params.skip_gubbins) {
@@ -173,6 +209,9 @@ workflow VARIANT_CALLING {
     vcf_snippy        = ch_vcf_snippy
     vcf_medaka        = ch_vcf_medaka
     vcf_gubbins       = ch_vcf_gubbins
+    vcf_bgz_nucmer        = ch_vcf_bgz_nucmer
+    vcf_bgz_snippy        = ch_vcf_bgz_snippy
+    vcf_bgz_medaka        = ch_vcf_bgz_medaka
     sam_nucmer        = ch_sam_nucmer
     bam_snippy        = ch_bam_snippy
     bam_medaka        = ch_bam_medaka
@@ -181,6 +220,9 @@ workflow VARIANT_CALLING {
     bai_snippy        = ch_bai_snippy
     bai_medaka        = ch_bai_medaka
     bai_nucmer        = ch_bai_nucmer
+    vci_snippy        = ch_vci_snippy
+    vci_medaka        = ch_vci_medaka
+    vci_nucmer        = ch_vci_nucmer
     // snippy outputs
     tab_snippy        = ch_tab_snippy
     csv_snippy        = ch_csv_snippy
@@ -202,4 +244,5 @@ workflow VARIANT_CALLING {
     core_txt          = ch_core_txt
     full_aln          = ch_full_aln
     core_aln          = ch_core_aln
+    core_vci          = ch_core_vci
 }

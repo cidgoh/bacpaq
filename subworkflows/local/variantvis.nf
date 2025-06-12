@@ -7,6 +7,7 @@ include { FAI2BED                      } from '../../modules/local/fai2bed/main'
 workflow VARIANT_VIS {
     take:
     ch_vcf     // [meta, vcf]
+    ch_vci     // [meta, vci]
     ch_bam     // [meta, bam]
     ch_bam_bai // [meta, bam_bai]
     ch_aln_fa  // [meta, aln_fa]
@@ -40,8 +41,14 @@ workflow VARIANT_VIS {
             .map { it[1] }
             .collect()
             .map { [[id: 'igv'], it] }
+        ch_IGVREPORTS_vci = ch_vci
+            .map { it[1] }
+            .collect()
+            .map { [[id: 'igv'], it] }
+        ch_IGVREPORTS_VCF_DATA = ch_IGVREPORTS_vcf
+            .combine(ch_IGVREPORTS_vci, by: 0)
             .combine(ch_reference_bed, by: 0)
-            .map { meta, vcf, bed -> [meta, bed, vcf, []] }
+            .map { meta, vcf, vci, bed -> [meta, bed, vcf, vci] }
         ch_IGVREPORTS_bam = ch_bam
             .map { it[1] }
             .collect()
@@ -55,7 +62,7 @@ workflow VARIANT_VIS {
             .combine(ch_reference_bed, by: 0)
             .map { meta, bam, bai, bed -> [meta, bed, bam, bai] }
 
-        IGVREPORTS_VCF(ch_IGVREPORTS_vcf, ch_IGVREPORTS_ref)
+        IGVREPORTS_VCF(ch_IGVREPORTS_VCF_DATA, ch_IGVREPORTS_ref)
         ch_igvreports_vcf = IGVREPORTS_VCF.out.report
         ch_versions = ch_versions.mix(IGVREPORTS_VCF.out.versions)
         IGVREPORTS_BAM(ch_IGVREPORTS_BAM_DATA, ch_IGVREPORTS_ref)
