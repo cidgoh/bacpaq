@@ -702,6 +702,11 @@
         "skip_resfinder": {
           "type": "boolean",
           "description": "Skip Resfinder in AMR annotation"
+        },
+        "card_db": {
+          "type": "string",
+          "format": "path",
+          "description": "Path to the RGI database. Required for RGI."
         }
       }
     },
