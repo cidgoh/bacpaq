@@ -103,7 +103,7 @@ workflow AMR_ANNOTATION {
             exit(1)
         }
 
-        RESFINDER(genome)
+        RESFINDER(genome, params.resfinder_db, params.pointfinder_db)
         resfinder_report = RESFINDER.out.resfinder_results_table
     }
 
