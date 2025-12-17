@@ -8,12 +8,14 @@ process RESFINDER {
         'biocontainers/resfinder:4.1.11--hdfd78af_0' }"
     input:
     tuple val(meta), path(fasta)
+    tuple path(resfinder_db)
+    tuple path(pointfinder_db)
 
     output:
     tuple val(meta), path("*_pheno_table_*.txt")                    , emit: specie_pheno_table, optional: true
-    tuple val(meta), path("*_pheno_table.txt")                      , emit: pheno_table
-    tuple val(meta), path("*_PointFinder_prediction.txt")           , emit: pointfinder_pred
-    tuple val(meta), path("*_PointFinder_results.txt")              , emit: pointfinder_results
+    tuple val(meta), path("*_pheno_table.txt")                      , emit: pheno_table, optional: true
+    tuple val(meta), path("*_PointFinder_prediction.txt")           , emit: pointfinder_pred, optional: true
+    tuple val(meta), path("*_PointFinder_results.txt")              , emit: pointfinder_results, optional: true
     tuple val(meta), path("*_ResFinder_Hit_in_genome_seq.fsa")      , emit: resfinder_hit
     tuple val(meta), path("*_ResFinder_Resistance_gene_seq.fsa")    , emit: resfinder_resistance_gene_seq
     tuple val(meta), path("*_ResFinder_results_table.txt")          , emit: resfinder_results_table
@@ -33,10 +35,10 @@ process RESFINDER {
         $args \\
         -o results
 
-    mv results/pheno_table_*.txt ${prefix}_pheno_table_species.txt
-    mv results/pheno_table.txt   ${prefix}_pheno_table.txt
-    mv results/PointFinder_prediction.txt ${prefix}_PointFinder_prediction.txt
-    mv results/PointFinder_results.txt ${prefix}_PointFinder_results.txt
+    if test -z results/pheno_table_*.txt; then mv results/pheno_table_*.txt ${prefix}_pheno_table_species.txt; fi
+    if test -z results/pheno_table.txt; then mv results/pheno_table.txt ${prefix}_pheno_table.txt; fi
+    if test -z results/PointFinder_prediction.txt; then mv results/PointFinder_prediction.txt ${prefix}_PointFinder_prediction.txt; fi
+    if test -z results/PointFinder_results.txt; then mv results/PointFinder_results.txt ${prefix}_PointFinder_results.txt; fi
     mv results/ResFinder_Hit_in_genome_seq.fsa ${prefix}_ResFinder_Hit_in_genome_seq.fsa
     mv results/ResFinder_Resistance_gene_seq.fsa ${prefix}_ResFinder_Resistance_gene_seq.fsa
     mv results/ResFinder_results_table.txt ${prefix}_ResFinder_results_table.txt
