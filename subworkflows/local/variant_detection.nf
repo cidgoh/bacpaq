@@ -30,24 +30,25 @@ workflow VARIANT_DETECTION {
     // VARIANT CALLING SUBWORKFLOW
     VARIANT_CALLING(reads, genome)
     ch_versions = ch_versions.mix(VARIANT_CALLING.out.versions)
-    ch_multiqc_files = ch_multiqc_files.mix(VARIANT_CALLING.out.txt_snippy)
+    ch_multiqc_files = ch_multiqc_files.mix(VARIANT_CALLING.out.txt_snippy_reads)
+    ch_multiqc_files = ch_multiqc_files.mix(VARIANT_CALLING.out.txt_snippy_contigs)
     ch_multiqc_files = ch_multiqc_files.mix(VARIANT_CALLING.out.core_txt)
 
     // VARIANT VIZ SUBWORKFLOW
     if (!params.skip_variant_viz) {
 
-        ch_vcf = VARIANT_CALLING.out.vcf_bgz_snippy
+        ch_vcf = VARIANT_CALLING.out.vcf_bgz_snippy_reads
             .concat(VARIANT_CALLING.out.vcf_bgz_medaka)
-            .concat(VARIANT_CALLING.out.vcf_bgz_nucmer)
-        ch_vci = VARIANT_CALLING.out.vci_snippy
+            .concat(VARIANT_CALLING.out.vcf_bgz_snippy_contigs)
+        ch_vci = VARIANT_CALLING.out.vci_snippy_reads
             .concat(VARIANT_CALLING.out.vci_medaka)
-            .concat(VARIANT_CALLING.out.vci_nucmer)
-        ch_bam = VARIANT_CALLING.out.bam_snippy
+            .concat(VARIANT_CALLING.out.vci_snippy_contigs)
+        ch_bam = VARIANT_CALLING.out.bam_snippy_reads
             .concat(VARIANT_CALLING.out.bam_medaka)
-            .concat(VARIANT_CALLING.out.bam_nucmer_sorted)
-        ch_bai = VARIANT_CALLING.out.bai_snippy
+            .concat(VARIANT_CALLING.out.bam_snippy_contigs)
+        ch_bai = VARIANT_CALLING.out.bai_snippy_reads
             .concat(VARIANT_CALLING.out.bai_medaka)
-            .concat(VARIANT_CALLING.out.bai_nucmer)
+            .concat(VARIANT_CALLING.out.bai_snippy_contigs)
         ch_aln_fa = VARIANT_CALLING.out.core_aln
 
         VARIANT_VIS(
