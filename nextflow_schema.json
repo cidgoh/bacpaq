@@ -283,7 +283,7 @@
           "type": "string",
           "description": "Specify the host genome file",
           "format": "path",
-          "pattern": "^\\S+\\.fasta$"
+          "pattern": "^\\S+\\.(fasta|fna|fa)$"
         },
         "host_genome_id": {
           "type": "string",
