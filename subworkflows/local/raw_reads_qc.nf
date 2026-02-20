@@ -37,6 +37,8 @@ workflow RAW_READS_QC {
     confindr_log = Channel.empty()
     confindr_report = Channel.empty()
     confindr_rmlst = Channel.empty()
+    ch_confindr_results = Channel.empty()
+    aggregate_confidr = Channel.empty()
 
 
     //
