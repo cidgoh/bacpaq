@@ -33,6 +33,10 @@ workflow RAW_READS_QC {
     fastp_report = Channel.empty()
     raw_fastqc = Channel.empty()
     trim_fastqc = Channel.empty()
+    confindr_csv = Channel.empty()
+    confindr_log = Channel.empty()
+    confindr_report = Channel.empty()
+    confindr_rmlst = Channel.empty()
 
 
     //
