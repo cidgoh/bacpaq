@@ -25,6 +25,7 @@ workflow RAW_READS_QC {
     take:
     ch_raw_reads
 
+
     main:
     ch_versions = Channel.empty()
     trimmomatic_report = Channel.empty()
@@ -32,7 +33,24 @@ workflow RAW_READS_QC {
     fastp_report = Channel.empty()
     raw_fastqc = Channel.empty()
     trim_fastqc = Channel.empty()
+    confindr_csv = Channel.empty()
+    confindr_log = Channel.empty()
+    confindr_report = Channel.empty()
+    confindr_rmlst = Channel.empty()
+    ch_confindr_results = Channel.empty()
+    aggregate_confidr = Channel.empty()
 
+
+    //
+    // Validate database paths
+    //
+
+    if (!params.skip_confindr) {
+        if (params.confindr_db == null || !Utils.fileExists(params.confindr_db)) {
+            log.error "Path to Confindr database is not valid"
+            exit 1
+            }
+        }
 
     // use rasusa to randomly subsample sequencing reads
     if (!params.skip_subsampling) {

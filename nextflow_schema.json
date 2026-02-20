@@ -5,6 +5,19 @@
   "description": "Quality control workflow for short-reads (Illumina) and long-reads (Oxford Nanopore) sequencing data including WGS, Amplicon and Metagenomics",
   "type": "object",
   "definitions": {
+    "workflow_control": {
+      "title": "Workflow Control",
+      "type": "object",
+      "description": "Define the parameters for controlling the execution of high-level workflows",
+      "default": "",
+      "properties": {
+        "workflows": {
+          "type": "string",
+          "default": "seqqc",
+          "description": "Choose which workflows to run [seqqc|annotation|variant_detection]. Multiple workflows can be run in tandem by supplying comma-separated values"
+        }
+      }
+    },
     "input_output_options": {
       "title": "Input/output options",
       "type": "object",
@@ -20,8 +33,7 @@
           "schema": "assets/schema_input.json",
           "description": "Path to comma-separated file containing information about the samples in the experiment.",
           "help_text": "You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row. See [usage docs](https://nf-co.re/seqqc/usage#samplesheet-input).",
-          "fa_icon": "fas fa-file-csv",
-          "default": "samplesheet.csv"
+          "fa_icon": "fas fa-file-csv"
         },
         "outdir": {
           "type": "string",
@@ -45,28 +57,17 @@
         }
       }
     },
-    "workflow_parameters": {
-      "title": "Workflow parameters",
-      "type": "object",
-      "description": "Define high level Workflow parameters",
-      "default": "",
-      "properties": {
-        "skip_annotation": {
-          "type": "boolean",
-          "description": "Skip the entire annotation process"
-        },
-        "skip_seqqc": {
-          "type": "boolean",
-          "description": "Skip seqqc workflow"
-        }
-      }
-    },
     "nanopore_parameters": {
       "title": "Nanopore parameters",
       "type": "object",
       "description": "Define the sequencing and QC parameters for Nanopore data",
       "default": "",
       "properties": {
+        "nanopore_qual": {
+          "type": "string",
+          "default": "raw",
+          "description": "Quality of input nanopore reads for long-read assembly [raw, hq, corr]"
+        },
         "nanopore_summary_file": {
           "type": "string",
           "description": "File produced during basecalling, which contains high-level information on every read analysed by the basecaller (only required if mode = nanopore))",
@@ -74,9 +75,10 @@
         },
         "nanopore_summary_file_id": {
           "type": "string",
-          "default": "test",
+          "default": "pycoqc_report",
           "description": "User defined id for the nanopore summary file (only required if mode = nanopore))",
-          "fa_icon": "fas fa-address-card"
+          "fa_icon": "fas fa-address-card",
+          "hidden": true
         },
         "skip_porechop": {
           "type": "boolean",
@@ -119,7 +121,7 @@
           "type": "string",
           "default": "fastp",
           "enum": ["fastp", "trimgalore", "trimmomatic"],
-          "description": "Specify the trimming tool"
+          "description": "Specify the trimming tool [fastp|trimgalore|trimmomatic]"
         },
         "adapter_fasta": {
           "type": "string",
@@ -130,11 +132,23 @@
         "save_merged": {
           "type": "boolean",
           "default": true,
-          "description": "Specify to save merged reads in Fastp"
+          "description": "Specify to save merged reads in Fastp",
+          "hidden": true
         },
         "save_trimmed_fail": {
           "type": "boolean",
-          "description": "Specify to save failed reads in Fastp"
+          "description": "Specify to save failed reads in Fastp",
+          "hidden": true
+        },
+        "discard_trimmed_pass": {
+          "type": "boolean",
+          "description": "Discard trimmed reads",
+          "hidden": true
+        },
+        "skip_quality_report": {
+          "type": "boolean",
+          "description": "Do not generate quality report during dehosting",
+          "hidden": true
         }
       },
       "fa_icon": "fas fa-microscope"
@@ -152,7 +166,7 @@
         },
         "depth_cut_off": {
           "type": "string",
-          "default": "50",
+          "default": 50,
           "description": "Depth of coverage cutoff"
         },
         "subsampling_genomesize": {
@@ -176,7 +190,7 @@
           "type": "string",
           "default": "kraken2",
           "enum": ["kraken2", "centrifuge"],
-          "description": "Specify the classifier"
+          "description": "Specify the classifier [kraken2|centrifuge]"
         },
         "skip_kraken2": {
           "type": "boolean",
@@ -269,12 +283,13 @@
           "type": "string",
           "description": "Specify the host genome file",
           "format": "path",
-          "pattern": "^\\S+\\.fasta$"
+          "pattern": "^\\S+\\.(fasta|fna|fa)$"
         },
         "host_genome_id": {
           "type": "string",
           "default": "GRCh38",
-          "description": "Specify to sort bam file for bwa"
+          "description": "Specify to sort bam file for bwa",
+          "hidden": true
         }
       }
     },
@@ -287,8 +302,7 @@
         "multiqc_title": {
           "type": "string",
           "description": "MultiQC report title. Printed as page header, used for filename if not otherwise specified.",
-          "fa_icon": "fas fa-file-signature",
-          "default": "BACPAQ"
+          "fa_icon": "fas fa-file-signature"
         },
         "max_multiqc_email_size": {
           "type": "string",
@@ -333,7 +347,7 @@
           "type": "string",
           "default": "spades",
           "enum": ["skesa", "spades", "megahit"],
-          "description": "Specify short read assembler"
+          "description": "Specify short read assembler [skesa|spades|megahit]"
         },
         "assembly_genomesize": {
           "type": "string",
@@ -360,19 +374,13 @@
           "default": 0,
           "description": "Minimum average sequence quality for DragonFlye"
         },
-        "racon_rounds": {
-          "type": "integer",
-          "default": 1,
-          "description": "Number of polishing rounds to conduct with Racon"
-        },
-        "medaka_rounds": {
-          "type": "integer",
-          "default": 1,
-          "description": "Number of polishing rounds to conduct with Medaka (requires a model to be specified)"
+        "skip_medaka": {
+          "type": "boolean",
+          "description": "Skip medaka genome polishing"
         },
         "medaka_model": {
           "type": "string",
-          "default": "r941_min_fast_g507",
+          "default": "r1041_e82_400bps_hac_v4.3.0",
           "description": "Path to model to be used for Medaka"
         }
       }
@@ -403,10 +411,6 @@
           "type": "string",
           "description": "Specify reference genome GFF file for QUAST"
         },
-        "skip_checkM": {
-          "type": "boolean",
-          "description": "Skip CheckM"
-        },
         "checkm_db": {
           "type": "string",
           "description": "Specify CheckM database"
@@ -422,12 +426,15 @@
         },
         "busco_lineages_path": {
           "type": "string",
-          "default": "/mnt/cidgoh-object-storage/database/busco",
           "description": "Specify Busco lineage path"
         },
         "busco_config": {
           "type": "boolean",
           "description": "Specify Busco configuration"
+        },
+        "skip_checkm": {
+          "type": "boolean",
+          "description": "Skip single copy marker gene analysis with CheckM"
         },
         "skip_rmlst": {
           "type": "boolean",
@@ -464,6 +471,53 @@
         "annotation_protein_file": {
           "type": "string",
           "description": "Specify annotation protein file"
+        }
+      }
+    },
+    "variant_detection_parameters": {
+      "title": "Variant detection parameters",
+      "type": "object",
+      "description": "Define the parameters for variant calling workflow",
+      "default": "",
+      "properties": {
+        "reference_genome": {
+          "type": "string",
+          "description": "Path to reference genome used for variant detection"
+        },
+        "skip_variant_viz": {
+          "type": "boolean",
+          "description": "Skip the entire variant visualization subworkflow"
+        },
+        "skip_coresnpfilter": {
+          "type": "boolean",
+          "description": "Skip core SNP filtering"
+        },
+        "snp_threshold": {
+          "type": "number",
+          "default": 0.95,
+          "description": "Core SNP threshold, defined as the fraction of genomes that contain a valid genotype in a polymorphic site"
+        },
+        "snp_mincov": {
+          "type": "integer",
+          "default": 10,
+          "description": "Minimum coverage required to call a SNP"
+        },
+        "snp_minqual": {
+          "type": "integer",
+          "default": 100,
+          "description": "Minimum quality score of SNPs"
+        },
+        "skip_gubbins": {
+          "type": "boolean",
+          "description": "Skip recombination detection with Gubbins"
+        },
+        "skip_iqtree": {
+          "type": "boolean",
+          "description": "Skip phylogenetic reconstruction with IQTree during variant detection"
+        },
+        "skip_igvreports": {
+          "type": "boolean",
+          "description": "Skip creation of igvreports during variant detection"
         }
       }
     },
@@ -633,7 +687,7 @@
         },
         "resfinder_species": {
           "type": "string",
-          "default": "ecoli",
+          "default": "other",
           "description": "Species in the sample, supported species can be seen at https://github.com/cadms/resfinder"
         },
         "skip_abricate_summary": {
@@ -648,6 +702,11 @@
         "skip_resfinder": {
           "type": "boolean",
           "description": "Skip Resfinder in AMR annotation"
+        },
+        "card_db": {
+          "type": "string",
+          "format": "path",
+          "description": "Path to the RGI database. Required for RGI."
         }
       }
     },
@@ -799,7 +858,7 @@
         "tracedir": {
           "type": "string",
           "description": "Directory to keep pipeline Nextflow logs and reports.",
-          "default": "pipeline_info",
+          "default": "[:]/pipeline_info",
           "fa_icon": "fas fa-cogs",
           "hidden": true
         },
@@ -807,7 +866,8 @@
           "type": "boolean",
           "description": "Boolean whether to validate parameters against the schema at runtime",
           "fa_icon": "fas fa-check-square",
-          "hidden": true
+          "hidden": true,
+          "default": true
         },
         "show_hidden_params": {
           "type": "boolean",
@@ -818,7 +878,7 @@
         },
         "schema_ignore_params": {
           "type": "string",
-          "default": "fasta",
+          "default": "genomes,fasta",
           "description": "ignore parameters not required"
         }
       }
@@ -826,10 +886,10 @@
   },
   "allOf": [
     {
-      "$ref": "#/definitions/input_output_options"
+      "$ref": "#/definitions/workflow_control"
     },
     {
-      "$ref": "#/definitions/workflow_parameters"
+      "$ref": "#/definitions/input_output_options"
     },
     {
       "$ref": "#/definitions/nanopore_parameters"
@@ -854,6 +914,9 @@
     },
     {
       "$ref": "#/definitions/gene_annotation_parameters"
+    },
+    {
+      "$ref": "#/definitions/variant_detection_parameters"
     },
     {
       "$ref": "#/definitions/pangenome_parameters"

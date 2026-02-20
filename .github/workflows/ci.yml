@@ -12,7 +12,7 @@ on:
         options:
           - 'ubuntu-latest'
           - 'self-hosted'
-        default: 'ubuntu-latest'
+        default: 'self-hosted'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -29,7 +29,7 @@ env:
 jobs:
   discover-modules:
     name: Discover Modules with Tests
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     outputs:
       module_list: ${{ steps.get-modules.outputs.module_list }}
     steps:
@@ -59,7 +59,7 @@ jobs:
 
   nf-test:
     needs: discover-modules
-    runs-on: ${{ github.event.inputs.runners || 'ubuntu-latest' }}
+    runs-on: self-hosted
     strategy:
       fail-fast: false
       matrix:

@@ -1,5 +1,5 @@
 report_comment: >
-  bacpaq is a bioinformatics best-practice pipeline for bacterial genomic analysis for short-reads (Illumina) and long-reads (Oxford Nanopore) sequencing data. Currently bacpaq supports WGS-based analyses, however, we plan to integrate Microbiome (Amplicon and Shotgun Metagenomics) analyses in future.
+  bacpaq is a bioinformatics best-practice pipeline for bacterial genomic analysis for short-reads (Illumina) and long-reads (Oxford Nanopore) sequencing data. Currently bacpaq supports WGS-based analyses.
 
 report_section_order:
   "cidgoh-bacpaq-methods-description":
@@ -10,11 +10,11 @@ report_section_order:
     order: -1002
 
 export_plots: true
-
 disable_version_detection: true
 data_format: "yaml"
 
 run_modules:
+  - custom_content
   - fastqc
   - fastp
   - trimmomatic
@@ -26,9 +26,22 @@ run_modules:
   - prokka
   - bakta
   - busco
+  - snippy
 
+# prettify headings of report
+custom_logo_url: https://github.com/cidgoh/bacpaq/
+custom_logo_title: "cidgoh/bacpaq"
+title: "BACPAQ"
+
+#
 # Module order
+#
+
 top_modules:
+  - custom_content:
+      name: "Dummy section"
+      anchor: "dummy_section"
+      info: "Dummy section"
   - "fastqc":
       name: "FastQC: raw reads"
       path_filters_exclude:
@@ -87,66 +100,85 @@ top_modules:
         - "*rawassemblies.tsv"
       contents: "Assembly\t"
       num_lines: 2
-
-  - "prokka":
-      name: "Prokka"
-      info: "Prokka is a software tool for the rapid annotation of prokaryotic genomes."
-      contents: "contigs:"
-      fn: "*.txt"
-
-  - "bakta":
-      name: "Bakta"
-      info: "Bakta is a software tool for the rapid annotation of prokaryotic genomes."
-      contents: "Bakta:"
-      fn: "*.txt"
-
   - "busco":
       info: "assesses genome assembly and annotation completeness with Benchmarking Universal Single-Copy Orthologs. In case BUSCO's automated lineage selection was used, only generic results for the selected domain are shown and only for genome bins and kept, unbinned contigs for which the BUSCO analysis was successfull, i.e. not for contigs for which no BUSCO genes could be found. Bins for which a specific virus lineage was selected are also not shown."
       fn: short_summary*
       contents: "BUSCO version is:"
       num_lines: 1
+  - "prokka":
+      name: "Prokka"
+      info: "Prokka is a software tool for the rapid annotation of prokaryotic genomes."
+      contents: "contigs:"
+      fn: "*.txt"
+  - "bakta":
+      name: "Bakta"
+      info: "Bakta is a software tool for the rapid annotation of prokaryotic genomes."
+      contents: "Bakta:"
+      fn: "*.txt"
+  - "snippy/snippy":
+      name: "Snippy"
+      info: "Snippy is a tool for rapid bacterial variant calling and annotation."
+      contents: "snippy"
+      fn: "*.txt"
+  - "snippy/snippy-core":
+      name: "Snippy core"
+      info: "Snippy core is a tool for rapid bacterial variant calling and annotation."
+      contents_re: "ID\tLENGTH\tALIGNED\tUNALIGNED\tVARIANT\tHET\tMASKED\tLOWCOV"
+      num_lines: 1
+      fn: "*.txt"
 
 sp:
   kraken:
     fn_re: ".*[kraken2|centrifuge].*report.txt"
   quast:
-    fn_re: "report.*.tsv"
+    fn_re: ".*report.tsv"
 
+## Tool specific configuration
+prokka_fn_snames: True
+
+#
 # clean names
+#
+
 fn_clean_exts:
   - ".gz"
   - ".fastq"
+  - ".txt"
+  - ".report.txt"
 
 extra_fn_clean_exts:
   - type: regex
     pattern: "_T{1,2}.*"
 
-## Prettification
-custom_logo_url: https://github.com/cidgoh/bacpaq/
-custom_logo_title: "cidgoh/bacpaq"
+# add a proper label to contig stats
+sample_names_replace_regex: True
+sample_names_replace:
+  "(^.*\\w)_(illumina$|nanopore$)": "\\1_\\2_assembly"
 
-## Report Title
-title: "BACPAQ"
+# merge paired end samples
+table_sample_merge:
+  "[Read 1]":
+    - type: regex
+      pattern: "_[rR]?1$"
+  "[Read 2]":
+    - type: regex
+      pattern: "_[rR]?2$"
+  "Nanopore":
+    - type: regex
+      pattern: "_nanopore_reads$"
 
-## Tool specific configuration
-prokka_fn_snames: True
+#
+# General Stats table customization
+#
 
-## General Stats customisation
 table_columns_visible:
   "FastQC: raw reads":
     avg_sequence_length: True
   "FastQC: after preprocessing":
     avg_sequence_length: True
-  "fastp":
-    pct_duplication: False
-    after_filtering_q30_rate: False
-    after_filtering_q30_bases: False
-    filtering_result_passed_filter_reads: 3300
-    after_filtering_gc_content: False
-    pct_surviving: True
-    pct_adapter: True
-  "Kraken2": True
-  "Centrifuge": True
+  "fastp": False
+  "Kraken2": False
+  "Centrifuge": False
   "QUAST: assembly":
     N75: True
     L50: True
@@ -154,8 +186,10 @@ table_columns_visible:
     "Largest contig": True
     "Total length": True
     N50: True
-  "Prokka": True
-  "Bakta": True
+  "Prokka":
+    Organism: False
+  "Bakta":
+    Organism: False
 
 table_columns_placement:
   "FastQC: raw reads":
@@ -195,14 +229,14 @@ table_columns_placement:
     contigs: 20000
     bases: 21000
     CDS: 22000
-    organism: 23000
-    plasmid: 24000
+    plasmid: 23000
+    organism: 23500
   Bakta:
-    contigs: 20000
-    bases: 21000
-    CDS: 22000
-    organism: 23000
-    plasmid: 24000
+    contigs: 24000
+    bases: 25000
+    CDS: 26000
+    plasmid: 27000
+    organism: 2750
 
 table_columns_name:
   "FastQC: raw reads":
@@ -219,6 +253,10 @@ table_columns_name:
     median_sequence_length: "Median length (processed)"
     total_sequences: "M Seqs (processed)"
     percent_fails: "% Fails (processed)"
+  "Prokka":
+    contigs: "Contigs annotated (n)"
+  "Bakta":
+    contigs: "Contigs annotated (n)"
 
 custom_table_header_config:
   general_stats_table:
