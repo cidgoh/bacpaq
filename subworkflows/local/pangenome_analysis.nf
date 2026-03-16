@@ -11,6 +11,14 @@ workflow PANGENOME_ANALYSIS {
     main:
 
     ch_versions = Channel.empty()
+    roary_results = Channel.empty()
+    roary_alignment = Channel.empty()
+    pirate_results = Channel.empty()
+    pirate_alignment = Channel.empty()
+    panaroo_results = Channel.empty()
+    panaroo_alignment = Channel.empty()
+    peppan_gff = Channel.empty()
+    peppan_fna = Channel.empty()
 
     if (params.reference_gff) {
         ch_reference_gff = params.reference_gff

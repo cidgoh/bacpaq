@@ -40,6 +40,11 @@ workflow RAW_READS_QC {
     ch_confindr_results = Channel.empty()
     aggregate_confidr = Channel.empty()
 
+    confindr_csv = Channel.empty()
+    confindr_log = Channel.empty()
+    confindr_report = Channel.empty()
+    confindr_rmlst = Channel.empty()
+    aggregate_confidr = Channel.empty()
 
     //
     // Validate database paths
